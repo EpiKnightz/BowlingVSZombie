@@ -12,6 +12,12 @@ class AZombieManager : AActor
     UPROPERTY()
     float SpawnSize;
 
+    UPROPERTY(BlueprintReadWrite)
+    float SpawnTimeMin = 1;
+
+    UPROPERTY(BlueprintReadWrite)
+    float SpawnTimeMax = 2;
+
     float countdown = 1;
 
     UFUNCTION(BlueprintOverride)
@@ -29,7 +35,7 @@ class AZombieManager : AActor
             FVector SpawnLocation = SpawnPosition.Location;
             SpawnLocation.Y = Math::RandRange(-SpawnSize,SpawnSize);
             AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate,SpawnLocation,SpawnPosition.Rotator()));
-            countdown = Math::RandRange(1.0f,2.0f);
+            countdown = Math::RandRange(SpawnTimeMin,SpawnTimeMax);
 
             int randomZombieIdx = Math::RandRange(0,ZombieList.Num()-1);
 
