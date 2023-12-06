@@ -1,45 +1,44 @@
 class AZombieManager : AActor
 {
-    UPROPERTY()
-    TSubclassOf<AZombie> ZombieTemplate;
+	UPROPERTY()
+	TSubclassOf<AZombie> ZombieTemplate;
 
-    UPROPERTY()
-    TArray<USkeletalMesh> ZombieList;
+	UPROPERTY()
+	TArray<USkeletalMesh> ZombieList;
 
-    UPROPERTY()
-    FTransform SpawnPosition;
+	UPROPERTY()
+	FTransform SpawnPosition;
 
-    UPROPERTY()
-    float SpawnSize;
+	UPROPERTY()
+	float SpawnSize;
 
-    UPROPERTY(BlueprintReadWrite)
-    float SpawnTimeMin = 1;
+	UPROPERTY(BlueprintReadWrite)
+	float SpawnTimeMin = 1;
 
-    UPROPERTY(BlueprintReadWrite)
-    float SpawnTimeMax = 2;
+	UPROPERTY(BlueprintReadWrite)
+	float SpawnTimeMax = 2;
 
-    float countdown = 1;
+	float countdown = 1;
 
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
-    {
+	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+	}
 
-    }
+	UFUNCTION(BlueprintOverride)
+	void Tick(float DeltaSeconds)
+	{
+		countdown -= DeltaSeconds;
+		if (countdown <= 0)
+		{
+			FVector SpawnLocation = SpawnPosition.Location;
+			SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
+			AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
+			countdown = Math::RandRange(SpawnTimeMin, SpawnTimeMax);
 
-    UFUNCTION(BlueprintOverride)
-    void Tick(float DeltaSeconds)
-    {
-        countdown -= DeltaSeconds;
-        if (countdown <= 0)
-        {
-            FVector SpawnLocation = SpawnPosition.Location;
-            SpawnLocation.Y = Math::RandRange(-SpawnSize,SpawnSize);
-            AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate,SpawnLocation,SpawnPosition.Rotator()));
-            countdown = Math::RandRange(SpawnTimeMin,SpawnTimeMax);
+			int randomZombieIdx = Math::RandRange(0, ZombieList.Num() - 1);
 
-            int randomZombieIdx = Math::RandRange(0,ZombieList.Num()-1);
-
-            SpawnedActor.SetSkeletonMesh(ZombieList[randomZombieIdx]);
-        }
-    }
+			SpawnedActor.SetSkeletonMesh(ZombieList[randomZombieIdx]);
+		}
+	}
 }
