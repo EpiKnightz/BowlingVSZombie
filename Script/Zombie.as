@@ -1,5 +1,7 @@
 delegate void FAttackHitDelegate();
 
+const float ENDSCREEN_MOVING_LIMIT = 1800.f;
+
 class AZombie : AActor
 {
 	UPROPERTY(BlueprintReadWrite)
@@ -60,6 +62,7 @@ class AZombie : AActor
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
 	bool bIsAttacking = false;
+	float bMovingLimit = 900;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -111,18 +114,24 @@ class AZombie : AActor
 			{
 				loc.Z -= MoveSpeed * DeltaSeconds;
 			}
-			else if (loc.X < 900)
+			else if (loc.X < bMovingLimit || !bIsAttacking)
 			{
 				loc.X += MoveSpeed * DeltaSeconds;
-				if (loc.X > 900)
-					loc.X = 900;
+				if (loc.X > bMovingLimit)
+				{
+					if (AttackHitEvent.IsBound())
+					{
+						loc.X = bMovingLimit;
+						bIsAttacking = true;
+						Attacking(nullptr, false);
+					}
+					else
+					{
+						bMovingLimit = ENDSCREEN_MOVING_LIMIT;
+					}
+				}
 			}
-			else if (loc.X == 900 && bIsAttacking == false)
-			{
-				bIsAttacking = true;
-				Attacking(nullptr, false);
-			}
-			if (loc.Z <= -10)
+			if (loc.Z <= -10 || loc.X > 1600)
 			{
 				DestroyActor();
 			}
@@ -177,7 +186,7 @@ class AZombie : AActor
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageBlendingOut.Clear();
-		ZombieSkeleton.GetAnimInstance().Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)]);
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)]);
 	}
 
 	UFUNCTION()
@@ -211,5 +220,15 @@ class AZombie : AActor
 	void AttackHit()
 	{
 		AttackHitEvent.ExecuteIfBound();
+	}
+
+	UFUNCTION()
+	void StopAttacking()
+	{
+		Print("Yo");
+		delayMove = 0;
+		bIsAttacking = false;
+		AnimateInst.Montage_Stop(0.5f);
+		bMovingLimit = ENDSCREEN_MOVING_LIMIT;
 	}
 }

@@ -1,3 +1,4 @@
+delegate void FObstacleDestroyedDelegate();
 class AObstacle : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)
@@ -10,14 +11,18 @@ class AObstacle : AActor
 	UPROPERTY(BlueprintReadWrite)
 	int HP = 200;
 
+	FObstacleDestroyedDelegate ObstDestrEvent;
+
 	UFCTweenBPActionFloat FloatTween;
 	// FRotator OriginalRot;
+	FVector OriginalLoc;
 	bool bIsDestroyed = false;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		// OriginalRot = ObstacleMesh.GetRelativeRotation();
+		OriginalLoc = GetActorLocation();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -27,21 +32,28 @@ class AObstacle : AActor
 		if (zomb != nullptr)
 		{
 			zomb.AttackHitEvent.BindUFunction(this, n"AttackHit");
+			ObstDestrEvent.BindUFunction(zomb, n"StopAttacking");
 		}
 	}
 
 	UFUNCTION(BlueprintEvent)
 	void AttackHit()
 	{
-		if (FloatTween != nullptr)
+		if (!bIsDestroyed)
 		{
-			FloatTween.Stop();
-			FloatTween.ApplyEasing.Clear();
+			if (UpdateHP(-100) > 0)
+			{
+				if (FloatTween != nullptr)
+				{
+					FloatTween.Stop();
+					FloatTween.ApplyEasing.Clear();
+				}
+				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -4.f, 0.125f, EFCEase::OutElastic);
+				FloatTween.bUYoyo = true;
+				FloatTween.ApplyEasing.AddUFunction(this, n"Shake");
+				FloatTween.Start();
+			}
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -4.f, 0.125f, EFCEase::OutElastic);
-		FloatTween.bUYoyo = true;
-		FloatTween.ApplyEasing.AddUFunction(this, n"Shake");
-		FloatTween.Start();
 	}
 
 	UFUNCTION()
@@ -56,8 +68,30 @@ class AObstacle : AActor
 		if (HP <= 0 && !bIsDestroyed)
 		{
 			bIsDestroyed = true;
+			ObstDestrEvent.ExecuteIfBound();
 			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (FloatTween != nullptr)
+			{
+				FloatTween.Stop();
+				FloatTween.ApplyEasing.Clear();
+			}
+			FloatTween = UFCTweenBPActionFloat::TweenFloat(-10.f, -120.f, 2.f, EFCEase::InExpo);
+			FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
+			FloatTween.OnComplete.AddUFunction(this, n"Dead");
+			FloatTween.Start();
 		}
 		return HP;
+	}
+
+	UFUNCTION()
+	void GoingDown(float32 Change)
+	{
+		SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, Change));
+	}
+
+	UFUNCTION()
+	void Dead()
+	{
+		DestroyActor();
 	}
 }
