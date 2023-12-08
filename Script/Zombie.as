@@ -1,14 +1,10 @@
 delegate void FAttackHitDelegate();
+delegate void FZombieDieDelegate();
 
 const float ENDSCREEN_MOVING_LIMIT = 1800.f;
 
 class AZombie : AActor
 {
-	UPROPERTY(BlueprintReadWrite)
-	float MoveSpeed = 100;
-	UPROPERTY(BlueprintReadWrite)
-	int HP = 200;
-
 	UPROPERTY(RootComponent, DefaultComponent)
 	UCapsuleComponent Collider;
 
@@ -55,9 +51,16 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent DeadSFX;
 
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	float MoveSpeed = 100;
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	int HP = 200;
+
 	UZombieAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
+	FZombieDieDelegate ZombDieEvent;
 
+	float baseMoveSpeed;
 	float delayMove = 3;
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
@@ -101,6 +104,7 @@ class AZombie : AActor
 		}
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		AnimateInst.Montage_Play(EmergeAnim);
+		baseMoveSpeed = MoveSpeed;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -109,6 +113,11 @@ class AZombie : AActor
 		delayMove -= DeltaSeconds;
 		if (delayMove <= 0)
 		{
+			if (MoveSpeed == 0)
+			{
+				MoveSpeed = baseMoveSpeed;
+			}
+
 			FVector loc = GetActorLocation();
 			if (bIsDead)
 			{
@@ -139,6 +148,10 @@ class AZombie : AActor
 			{
 				SetActorLocation(loc);
 			}
+		}
+		else if (MoveSpeed > 0)
+		{
+			MoveSpeed = 0;
 		}
 	}
 
@@ -180,6 +193,7 @@ class AZombie : AActor
 	void Dead(UAnimMontage Montage, bool bInterrupted)
 	{
 		ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], true);
+		ZombDieEvent.ExecuteIfBound();
 	}
 
 	UFUNCTION()
@@ -209,7 +223,7 @@ class AZombie : AActor
 			AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
 			AnimateInst.OnMontageBlendingOut.Clear();
 			AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Dead");
-			delayMove = 2.2f;
+			delayMove = 1.5f;
 			bIsDead = true;
 			FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
 		}
@@ -226,7 +240,7 @@ class AZombie : AActor
 	void StopAttacking()
 	{
 		Print("Yo");
-		delayMove = 0;
+		delayMove = 2;
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
 		bMovingLimit = ENDSCREEN_MOVING_LIMIT;

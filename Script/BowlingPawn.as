@@ -23,6 +23,9 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction TouchAction;
 
+	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction BackAction;
+
 	UPROPERTY(DefaultComponent)
 	UInstancedStaticMeshComponent PredictLine;
 	default PredictLine.SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -80,6 +83,10 @@ class ABowlingPawn : APawn
 		FEnhancedInputActionHandlerDynamicSignature ReleaseTriggered;
 		ReleaseTriggered.BindUFunction(this, n"ReleaseTriggered");
 		EnhancedInputComponent.BindAction(TouchAction, ETriggerEvent::Completed, ReleaseTriggered);
+
+		FEnhancedInputActionHandlerDynamicSignature BackTriggered;
+		BackTriggered.BindUFunction(this, n"BackTriggered");
+		EnhancedInputComponent.BindAction(BackAction, ETriggerEvent::Completed, BackTriggered);
 	}
 
 	FVector2D PressLoc;
@@ -135,7 +142,7 @@ class ABowlingPawn : APawn
 		PlayerController.GetInputTouchState(ETouchIndex::Touch1, HoldX, HoldY, bIsPressed);
 		if ((HoldY - PressLoc.Y) < -0.001f)
 		{
-			HoldY = HoldY - PressLoc.Y;
+			HoldY = float32(HoldY - PressLoc.Y);
 		}
 		else
 		{
@@ -169,5 +176,11 @@ class ABowlingPawn : APawn
 
 		PredictLine.ClearInstances();
 		PressLoc = FVector2D::ZeroVector;
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void BackTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
+	{
+		Gameplay::OpenLevel(FName("MainMenu"));
 	}
 }

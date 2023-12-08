@@ -75,7 +75,7 @@ class AObstacle : AActor
 				FloatTween.Stop();
 				FloatTween.ApplyEasing.Clear();
 			}
-			FloatTween = UFCTweenBPActionFloat::TweenFloat(-10.f, -120.f, 2.f, EFCEase::InExpo);
+			FloatTween = UFCTweenBPActionFloat::TweenFloat(-10.f, -120.f, 2.f, EFCEase::InQuart);
 			FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
 			FloatTween.OnComplete.AddUFunction(this, n"Dead");
 			FloatTween.Start();
