@@ -1,4 +1,4 @@
-delegate void FObstacleDestroyedDelegate();
+event void FObstacleDestroyedDelegate();
 class AObstacle : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)
@@ -12,10 +12,15 @@ class AObstacle : AActor
 	UNiagaraComponent NiagaraComp;
 
 	UPROPERTY(BlueprintReadWrite)
-	int HP = 200;
+	int BaseHP = 200;
+
+	int HP;
 
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem BrokenVFX;
+
+	UPROPERTY(BlueprintReadWrite, Category = Mesh)
+	TArray<UStaticMesh> BrokenMesh;
 
 	FObstacleDestroyedDelegate ObstDestrEvent;
 
@@ -29,16 +34,17 @@ class AObstacle : AActor
 	{
 		// OriginalRot = ObstacleMesh.GetRelativeRotation();
 		OriginalLoc = GetActorLocation();
+		HP = BaseHP;
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
 		AZombie zomb = Cast<AZombie>(OtherActor);
-		if (zomb != nullptr)
+		if (zomb != nullptr && !zomb.AttackHitEvent.IsBound())
 		{
 			zomb.AttackHitEvent.BindUFunction(this, n"AttackHit");
-			ObstDestrEvent.BindUFunction(zomb, n"StopAttacking");
+			ObstDestrEvent.AddUFunction(zomb, n"StopAttacking");
 		}
 	}
 
@@ -47,7 +53,6 @@ class AObstacle : AActor
 	{
 		if (!bIsDestroyed)
 		{
-			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
 			if (UpdateHP(-10) > 0)
 			{
 				if (FloatTween != nullptr)
@@ -71,11 +76,29 @@ class AObstacle : AActor
 
 	int UpdateHP(int Change)
 	{
+		if (HP > 150 && (HP + Change) <= 150)
+		{
+			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			ObstacleMesh.StaticMesh = BrokenMesh[0];
+			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9f));
+		}
+		else if (HP > 100 && (HP + Change) <= 100)
+		{
+			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			ObstacleMesh.StaticMesh = BrokenMesh[1];
+			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.75f));
+		}
+		else if (HP > 50 && (HP + Change) <= 50)
+		{
+			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			ObstacleMesh.StaticMesh = BrokenMesh[2];
+			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.5f));
+		}
 		HP += Change;
 		if (HP <= 0 && !bIsDestroyed)
 		{
 			bIsDestroyed = true;
-			ObstDestrEvent.ExecuteIfBound();
+			ObstDestrEvent.Broadcast();
 			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			if (FloatTween != nullptr)
 			{

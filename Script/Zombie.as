@@ -239,8 +239,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void StopAttacking()
 	{
-		Print("Yo");
-		delayMove = 2;
+		delayMove = 1.5f;
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
 		bMovingLimit = ENDSCREEN_MOVING_LIMIT;
