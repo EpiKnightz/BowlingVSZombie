@@ -8,8 +8,14 @@ class AObstacle : AActor
 	UStaticMeshComponent ObstacleMesh;
 	default ObstacleMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UNiagaraComponent NiagaraComp;
+
 	UPROPERTY(BlueprintReadWrite)
 	int HP = 200;
+
+	UPROPERTY(BlueprintReadWrite, Category = VFX)
+	UNiagaraSystem BrokenVFX;
 
 	FObstacleDestroyedDelegate ObstDestrEvent;
 
@@ -41,7 +47,8 @@ class AObstacle : AActor
 	{
 		if (!bIsDestroyed)
 		{
-			if (UpdateHP(-100) > 0)
+			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			if (UpdateHP(-10) > 0)
 			{
 				if (FloatTween != nullptr)
 				{
