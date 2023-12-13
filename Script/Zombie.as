@@ -1,5 +1,6 @@
 delegate void FAttackHitDelegate();
 delegate void FZombieDieDelegate();
+delegate void FZombieReachHomeDelegate(int Damage);
 
 const float ENDSCREEN_MOVING_LIMIT = 1800.f;
 
@@ -59,6 +60,7 @@ class AZombie : AActor
 	UZombieAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
 	FZombieDieDelegate ZombDieEvent;
+	FZombieReachHomeDelegate ZombieReachEvent;
 
 	float baseMoveSpeed;
 	float delayMove = 3;
@@ -142,6 +144,10 @@ class AZombie : AActor
 			}
 			if (loc.Z <= -10 || loc.X > 1600)
 			{
+				if (!bIsDead)
+				{
+					ZombieReachEvent.ExecuteIfBound(10);
+				}
 				DestroyActor();
 			}
 			else

@@ -14,5 +14,6 @@ class ABowlingPlayerController : APlayerController
 			// add the mapping context so we get controls
 			Subsystem.AddMappingContext(InputMappingContext, 0, FModifyContextOptions());
 		}
+		bShowMouseCursor = true;
 	}
 }

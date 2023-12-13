@@ -21,11 +21,6 @@ class AZombieManager : AActor
 	float countdown = 1;
 
 	UFUNCTION(BlueprintOverride)
-	void BeginPlay()
-	{
-	}
-
-	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
 		countdown -= DeltaSeconds;
@@ -39,6 +34,10 @@ class AZombieManager : AActor
 			int randomZombieIdx = Math::RandRange(0, ZombieList.Num() - 1);
 
 			SpawnedActor.SetSkeletonMesh(ZombieList[randomZombieIdx]);
+
+			ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
+			SpawnedActor.ZombDieEvent.BindUFunction(GM, n"ScoreUp");
+			SpawnedActor.ZombieReachEvent.BindUFunction(GM, n"HPLost");
 		}
 	}
 }
