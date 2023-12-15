@@ -1,4 +1,4 @@
-delegate void FAttackHitDelegate();
+delegate void FAttackHitDelegate(int Damage);
 delegate void FZombieDieDelegate();
 delegate void FZombieReachHomeDelegate(int Damage);
 
@@ -53,16 +53,20 @@ class AZombie : AActor
 	UFMODEvent DeadSFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	float MoveSpeed = 100;
+	float MoveSpeed = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	int HP = 200;
+	int HP = 1;
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	int Atk = 1;
 
 	UZombieAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
 	FZombieDieDelegate ZombDieEvent;
 	FZombieReachHomeDelegate ZombieReachEvent;
 
+	int baseHP;
 	float baseMoveSpeed;
+	int baseAtk;
 	float delayMove = 3;
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
@@ -106,7 +110,6 @@ class AZombie : AActor
 		}
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		AnimateInst.Montage_Play(EmergeAnim);
-		baseMoveSpeed = MoveSpeed;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -239,7 +242,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void AttackHit()
 	{
-		AttackHitEvent.ExecuteIfBound();
+		AttackHitEvent.ExecuteIfBound(Atk);
 	}
 
 	UFUNCTION()
@@ -249,5 +252,13 @@ class AZombie : AActor
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
 		bMovingLimit = ENDSCREEN_MOVING_LIMIT;
+	}
+
+	UFUNCTION()
+	void SetData(int iHP, int iAtk, int iSpeed)
+	{
+		HP = baseHP = iHP;
+		Atk = baseAtk = iAtk;
+		MoveSpeed = baseMoveSpeed = iSpeed;
 	}
 }

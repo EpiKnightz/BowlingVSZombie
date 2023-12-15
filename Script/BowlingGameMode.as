@@ -61,14 +61,14 @@ class ABowlingGameMode : AGameModeBase
 	UFUNCTION()
 	void Win()
 	{
-		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
+		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 		EventWin.ExecuteIfBound();
 	}
 
 	UFUNCTION()
 	void Lose()
 	{
-		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
+		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 		EventLose.ExecuteIfBound();
 	}
 }

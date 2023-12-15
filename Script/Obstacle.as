@@ -49,11 +49,11 @@ class AObstacle : AActor
 	}
 
 	UFUNCTION(BlueprintEvent)
-	void AttackHit()
+	void AttackHit(int Damage)
 	{
 		if (!bIsDestroyed)
 		{
-			if (UpdateHP(-10) > 0)
+			if (UpdateHP(-Damage) > 0)
 			{
 				if (FloatTween != nullptr)
 				{
