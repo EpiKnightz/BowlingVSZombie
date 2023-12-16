@@ -29,23 +29,24 @@ class AZombieManager : AActor
 		countdown -= DeltaSeconds;
 		if (countdown <= 0)
 		{
+			FZombieDT Row;
+			ZombieDataTable.FindRow(FName("" + Math::RandRange(1, 3)), Row);
+
 			FVector SpawnLocation = SpawnPosition.Location;
 			SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
-			AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
-			countdown = Math::RandRange(SpawnTimeMin, SpawnTimeMax);
+			SpawnLocation.Z *= Row.Scale.Z;
 
-			// ZombieDataTable.GetRow();
-			FZombieDT Row;
-			ZombieDataTable.FindRow(FName("NewRow"), Row);
-			SpawnedActor.SetData(Row.HP, Row.Atk, Row.Speed);
+			AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
+			SpawnedActor.SetData(Row.HP, Row.Atk, Row.Speed, Row.AtkSpeed, Row.Scale);
 
 			int randomZombieIdx = Math::RandRange(0, ZombieList.Num() - 1);
-
 			SpawnedActor.SetSkeletonMesh(ZombieList[randomZombieIdx]);
 
 			ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
 			SpawnedActor.ZombDieEvent.BindUFunction(GM, n"ScoreUp");
 			SpawnedActor.ZombieReachEvent.BindUFunction(GM, n"HPLost");
+
+			countdown = Math::RandRange(SpawnTimeMin, SpawnTimeMax);
 		}
 	}
 }

@@ -14,4 +14,10 @@ struct FZombieDT
 
 	UPROPERTY()
 	int Speed = 100;
+
+	UPROPERTY()
+	float AtkSpeed = 1.f;
+
+	UPROPERTY()
+	FVector Scale = FVector::OneVector;
 };

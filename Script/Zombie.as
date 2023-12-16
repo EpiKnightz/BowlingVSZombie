@@ -58,6 +58,8 @@ class AZombie : AActor
 	int HP = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	int Atk = 1;
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	float AtkSpeed = 1;
 
 	UZombieAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
@@ -67,6 +69,7 @@ class AZombie : AActor
 	int baseHP;
 	float baseMoveSpeed;
 	int baseAtk;
+	float baseAtkSpeed;
 	float delayMove = 3;
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
@@ -209,7 +212,7 @@ class AZombie : AActor
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageBlendingOut.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)]);
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed);
 	}
 
 	UFUNCTION()
@@ -255,10 +258,13 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void SetData(int iHP, int iAtk, int iSpeed)
+	void SetData(int iHP, int iAtk, int iSpeed, float iAtkSpd, FVector iScale)
 	{
 		HP = baseHP = iHP;
 		Atk = baseAtk = iAtk;
 		MoveSpeed = baseMoveSpeed = iSpeed;
+		AtkSpeed = baseAtkSpeed = iAtkSpd;
+		SetActorScale3D(iScale);
+		// SetActorLocation
 	}
 }
