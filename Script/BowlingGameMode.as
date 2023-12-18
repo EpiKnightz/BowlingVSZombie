@@ -39,7 +39,7 @@ class ABowlingGameMode : AGameModeBase
 	void ScoreUp()
 	{
 		Score++;
-		if (Score >= 10)
+		if (Score == 14)
 		{
 			Win();
 		}
