@@ -9,8 +9,14 @@ struct FZombieDT
 	UPROPERTY()
 	int HP = 100;
 
+	// Atk is amount of power dealing to obstacles
 	UPROPERTY()
 	int Atk = 10;
+
+	// Dmg is amount of power dealing to Player's HP
+	UPROPERTY()
+	int Dmg = 10;
+
 
 	UPROPERTY()
 	int Speed = 100;
@@ -20,4 +26,10 @@ struct FZombieDT
 
 	UPROPERTY()
 	FVector Scale = FVector::OneVector;
+
+	UPROPERTY()
+	TArray<USkeletalMesh> ZombieModelList;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UStaticMesh> WeaponList;
 };

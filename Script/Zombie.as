@@ -172,6 +172,10 @@ class AZombie : AActor
 		ZombieSkeleton.SkeletalMeshAsset = mesh;
 	}
 
+	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield)
+	{
+	}
+
 	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{

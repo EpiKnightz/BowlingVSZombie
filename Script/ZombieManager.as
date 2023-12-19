@@ -4,9 +4,6 @@ class AZombieManager : AActor
 	TSubclassOf<AZombie> ZombieTemplate;
 
 	UPROPERTY()
-	TArray<USkeletalMesh> ZombieList;
-
-	UPROPERTY()
 	FTransform SpawnPosition;
 
 	UPROPERTY()
@@ -39,8 +36,8 @@ class AZombieManager : AActor
 			AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
 			SpawnedActor.SetData(Row.HP, Row.Atk, Row.Speed, Row.AtkSpeed, Row.Scale);
 
-			int randomZombieIdx = Math::RandRange(0, ZombieList.Num() - 1);
-			SpawnedActor.SetSkeletonMesh(ZombieList[randomZombieIdx]);
+			int randomZombieIdx = Math::RandRange(0, Row.ZombieModelList.Num() - 1);
+			SpawnedActor.SetSkeletonMesh(Row.ZombieModelList[randomZombieIdx]);
 
 			ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
 			SpawnedActor.ZombDieEvent.BindUFunction(GM, n"ScoreUp");
