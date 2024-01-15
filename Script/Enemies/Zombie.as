@@ -2,7 +2,17 @@ delegate void FAttackHitDelegate(int Damage);
 delegate void FZombieDieDelegate();
 delegate void FZombieReachHomeDelegate(int Damage);
 
-const float ENDSCREEN_MOVING_LIMIT = 1800.f;
+const float ENDSCREEN_MOVING_LIMIT = 1650.f;
+
+enum EAttackType
+{
+	Punch,
+	OneHand,
+	DualWield,
+	Shield,
+	Pistol,
+	Gun
+}
 
 class AZombie : AActor
 {
@@ -26,8 +36,8 @@ class AZombie : AActor
 	default StatusEffect.Activate(false);
 	default StatusEffect.AutoActivate = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	UAnimMontage EmergeAnim;
+	// UPROPERTY(BlueprintReadWrite, Category = Animation)
+	// UAnimMontage EmergeAnim;
 
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage DamageAnim;
@@ -37,6 +47,9 @@ class AZombie : AActor
 
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	TArray<UAnimMontage> WeaponAttackAnim;
+
+	UPROPERTY(BlueprintReadWrite, Category = Animation)
+	TArray<UAnimMontage> ShieldAttackAnim;
 
 	TArray<UAnimMontage> AttackAnim;
 
@@ -59,7 +72,15 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	int Atk = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	int Dmg = 1;
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	float AtkSpeed = 1;
+
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	EAttackType AtkType = EAttackType::Punch;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsEmergeDone = false;
 
 	UZombieAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
@@ -69,50 +90,27 @@ class AZombie : AActor
 	int baseHP;
 	float baseMoveSpeed;
 	int baseAtk;
+	int baseDmg;
 	float baseAtkSpeed;
-	float delayMove = 3;
+	float delayMove = 2.f;
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
 	bool bIsAttacking = false;
-	float bMovingLimit = 900;
+	float bMovingLimit;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
-		if (Math::RandBool() == true)
-		{
-			RightHandWp.StaticMesh = WeaponList[Math::RandRange(0, WeaponList.Num() - 1)];
-			AttackAnim = WeaponAttackAnim;
-		}
-		else
-		{
-			RightHandWp.StaticMesh = nullptr;
-		}
-		if (Math::RandBool() == true)
-		{
-			LeftHandWp.StaticMesh = WeaponList[Math::RandRange(0, WeaponList.Num() - 1)];
-			AttackAnim = WeaponAttackAnim;
-			if (RightHandWp.StaticMesh == nullptr)
-			{
-				AnimateInst.bIsMirror = true;
-			}
-			else
-			{
-				AnimateInst.bIsMirror = Math::RandBool();
-			}
-		}
-		else
-		{
-			LeftHandWp.StaticMesh = nullptr;
-		}
-		if (RightHandWp.StaticMesh == nullptr && LeftHandWp.StaticMesh == nullptr)
-		{
-			AttackAnim = NoWpnAttackAnim;
-			AnimateInst.bIsMirror = Math::RandBool();
-		}
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		AnimateInst.Montage_Play(EmergeAnim);
+		// AnimateInst.Montage_Play(EmergeAnim);
+		System::SetTimer(this, n"EmergeDone", delayMove, true);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void EmergeDone()
+	{
+		bIsEmergeDone = true;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -152,7 +150,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					ZombieReachEvent.ExecuteIfBound(10);
+					ZombieReachEvent.ExecuteIfBound(Dmg);
 				}
 				DestroyActor();
 			}
@@ -172,36 +170,77 @@ class AZombie : AActor
 		ZombieSkeleton.SkeletalMeshAsset = mesh;
 	}
 
-	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield)
+	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield, EAttackType iAtkType)
 	{
+		AtkType = iAtkType;
+		RightHandWp.StaticMesh = RightHand;
+		LeftHandWp.StaticMesh = LeftHand;
+		if (RightHand != nullptr || LeftHand != nullptr)
+		{
+			AttackAnim = WeaponAttackAnim;
+			AnimateInst.bIsMirror = bCanDualWield ? Math::RandBool() : (LeftHand != nullptr && AtkType != EAttackType::Shield);
+		}
+		else
+		{
+			AttackAnim = NoWpnAttackAnim;
+			AnimateInst.bIsMirror = Math::RandBool();
+		}
+
+		if (AtkType == EAttackType::Shield)
+		{
+			LeftHandWp.AttachTo(ZombieSkeleton, FName("LeftShield"));
+			AttackAnim = ShieldAttackAnim;
+		}
 	}
 
 	UFUNCTION()
+	/**
+	 * Handles damage taken by the zombie actor. Checks the source of damage, applies damage, plays animations and sound effects,
+	 * applies status effects if hit by a fire attack, and prints debug message.
+	 */
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		Print("Hello");
 		if (HP > 0)
 		{
 			ABowling pawn = Cast<ABowling>(OtherActor);
 			if (pawn != nullptr)
 			{
-				if (UpdateHP(-50) > 0)
-				{
-					AnimateInst.Montage_Play(DamageAnim);
-					FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-					if (bIsAttacking)
-					{
-						AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Attacking");
-					}
-					if (pawn.Status == EStatus::Fire)
-					{
-						StatusEffect.Activate(true);
-						System::SetTimer(this, n"Burning", 1, true);
-					}
-					delayMove = 1;
-				}
-				Print("Hit:" + HP);
+				TakeHit(50, pawn.Status);
+				// Print("Hit:" + HP);
 			}
+		}
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorBeginOverlap(AActor OtherActor)
+	{
+		if (HP > 0)
+		{
+			ABullet pawn2 = Cast<ABullet>(OtherActor);
+			if (pawn2 != nullptr)
+			{
+				TakeHit(10);
+			}
+		}
+	}
+
+	UFUNCTION()
+	void TakeHit(int Damage, EStatus status = EStatus::None)
+	{
+		if (UpdateHP(-Damage) > 0)
+		{
+			AnimateInst.Montage_Play(DamageAnim);
+			FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
+			if (bIsAttacking)
+			{
+				AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Attacking");
+			}
+			if (status == EStatus::Fire)
+			{
+				StatusEffect.Activate(true);
+				System::SetTimer(this, n"Burning", 1, true);
+			}
+			delayMove = 1;
 		}
 	}
 
@@ -262,13 +301,16 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void SetData(int iHP, int iAtk, int iSpeed, float iAtkSpd, FVector iScale)
+	void SetData(int iHP, int iAtk, int iDmg, int iSpeed, float iAtkSpd, FVector iScale)
 	{
 		HP = baseHP = iHP;
 		Atk = baseAtk = iAtk;
+		Dmg = baseDmg = iDmg;
 		MoveSpeed = baseMoveSpeed = iSpeed;
 		AtkSpeed = baseAtkSpeed = iAtkSpd;
 		SetActorScale3D(iScale);
+		bMovingLimit = 900 - (iScale.Y - 1) * 75.f;
+		Print("" + bMovingLimit);
 		// SetActorLocation
 	}
 }

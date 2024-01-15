@@ -1,9 +1,4 @@
-enum EStatus
-{
-	None,
-	Fire,
-	Ice
-}
+delegate void FBowlingHitDelegate(AActor OtherActor);
 
 class ABowling : AActor
 {
@@ -26,6 +21,8 @@ class ABowling : AActor
 	UPROPERTY(BlueprintReadOnly)
 	EStatus Status = EStatus::Fire;
 
+	FBowlingHitDelegate OnHit;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -35,10 +32,17 @@ class ABowling : AActor
 		{
 			StatusEffect.Activate(true);
 		}
+		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 	}
 
 	void Fire(FVector Direction, float Force)
 	{
 		Collider.AddForce(Direction * Force);
+	}
+
+	UFUNCTION()
+	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
+	{
+		OnHit.ExecuteIfBound(OtherActor);
 	}
 }

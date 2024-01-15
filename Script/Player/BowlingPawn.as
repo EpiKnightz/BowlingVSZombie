@@ -95,31 +95,39 @@ class ABowlingPawn : APawn
 	void TouchTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
 		PredictLine.ClearInstances();
-		// MovementComp.SetActive(false);
 		SetActorRotation(FRotator(0, 0, 0));
-		// bool bIsPressed;
-		// PlayerController.GetInputTouchState(ETouchIndex::Touch1, PressX, PressY, bIsPressed);
 		PlayerController.ProjectWorldLocationToScreen(GetActorLocation(), PressLoc);
-		// Print("Touch triggered " + PressLoc.X + "|" + PressLoc.Y );
+		DrawPredictLine();
+	}
+
+	FString DebugTxt;
+
+	UFUNCTION(BlueprintCallable)
+	void DrawPredictLine()
+	{
+		PredictLine.ClearInstances();
 		FPredictProjectilePathParams PredictProjectilePathParams;
 		PredictProjectilePathParams.StartLocation = GetActorLocation();
+		PredictProjectilePathParams.bTraceWithCollision = true;
 		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
-		PredictProjectilePathParams.LaunchVelocity = -GetActorForwardVector() * 15000;
+		FVector predictVector = -GetActorForwardVector() * 3000;
+		PredictProjectilePathParams.LaunchVelocity = predictVector;
 		PredictProjectilePathParams.OverrideGravityZ = 0.001f;
-		PredictProjectilePathParams.ProjectileRadius = 1;
+		PredictProjectilePathParams.ProjectileRadius = 36;
 		PredictProjectilePathParams.MaxSimTime = 1.15f;
-		PredictProjectilePathParams.bTraceWithCollision = false;
+		// PredictProjectilePathParams.DrawDebugType = EDrawDebugTrace::Persistent;
+		// PredictProjectilePathParams.bTraceWithCollision = false;
 		TArray<TObjectPtr<AActor>> ignoreList;
 		ignoreList.Add(this);
 		PredictProjectilePathParams.ActorsToIgnore = ignoreList;
 		FPredictProjectilePathResult PredictProjectilePathResult;
 		Gameplay::Blueprint_PredictProjectilePath_Advanced(PredictProjectilePathParams, PredictProjectilePathResult);
 
-		for (int i = 2; i < PredictProjectilePathResult.PathData.Num() - 1; i++)
+		for (int i = 1; i < PredictProjectilePathResult.PathData.Num() - 1; i++)
 		{
 			FTransform transform = FTransform::Identity;
 			transform.SetLocation(PredictProjectilePathResult.PathData[i].Location);
-			transform.SetScale3D(FVector(1, 1, 1));
+			transform.SetScale3D(FVector(0.15f));
 			PredictLine.AddInstance(transform);
 		}
 
@@ -127,8 +135,29 @@ class ABowlingPawn : APawn
 		{
 			FTransform transform = FTransform::Identity;
 			transform.SetLocation(PredictProjectilePathResult.HitResult.Location);
-			transform.SetScale3D(FVector(1, 1, 1));
+			transform.SetScale3D(FVector(0.25f));
 			PredictLine.AddInstance(transform);
+
+			// Draw a seconde line for the bounce
+			PredictProjectilePathParams.MaxSimTime = (1.15f - PredictProjectilePathResult.HitResult.Time);
+			PredictProjectilePathParams.StartLocation = PredictProjectilePathResult.HitResult.Location;
+			PredictProjectilePathParams.LaunchVelocity = Math::GetReflectionVector(predictVector, PredictProjectilePathResult.HitResult.Normal);
+			FPredictProjectilePathResult PredictProjectilePathResult2;
+			PredictProjectilePathParams.ActorsToIgnore.Add(PredictProjectilePathResult.HitResult.GetActor());
+			Gameplay::Blueprint_PredictProjectilePath_Advanced(PredictProjectilePathParams, PredictProjectilePathResult2);
+			// FString tmp = "Line " + PredictProjectilePathResult2.PathData.Num() + " | " + PredictProjectilePathParams.LaunchVelocity + " | " + PredictProjectilePathParams.MaxSimTime + " | " + PredictProjectilePathResult2.HitResult.GetActor().ActorNameOrLabel;
+			// if (DebugTxt != tmp)
+			// {
+			// 	DebugTxt = tmp;
+			// 	Print(DebugTxt, 100);
+			// }
+			for (int j = 1; j < PredictProjectilePathResult2.PathData.Num() - 1; j++)
+			{
+				FTransform transform2 = FTransform::Identity;
+				transform2.SetLocation(PredictProjectilePathResult2.PathData[j].Location);
+				transform2.SetScale3D(FVector(0.15f));
+				PredictLine.AddInstance(transform2);
+			}
 		}
 	}
 
@@ -164,6 +193,7 @@ class ABowlingPawn : APawn
 		}
 		SetActorRotation(FRotator(0, Yaw, 0));
 		// SetActorLocation(OriginalPos.X - (PressX-HoldX)/100,OriginalPos.Y - (),OriginalPos.Z);
+		DrawPredictLine();
 	}
 
 	UFUNCTION(BlueprintCallable)

@@ -1,8 +1,18 @@
-delegate void UpdateScoreDelegate(int NewScore);
-delegate void UpdateHPDelegate(int NewHP);
-delegate void WinDelegate();
-delegate void LoseDelegate();
+delegate void OnScoreChanged(int NewScore);
+delegate void OnHPChanged(int NewHP);
+delegate void OnWin();
+delegate void OnLose();
 class ABowlingGameMode : AGameModeBase
+/**
+ * BowlingGameMode implements the core gameplay logic for a simple bowling game.
+ *
+ * It keeps track of the current score and health points, and raises events when they change.
+ * It also has logic to determine when the player wins or loses the game.
+ *
+ * The class contains UPROPERTY declarations for the key gameplay variables,
+ * delegates for the score/HP update events, and UFUNCTIONs that encapsulate
+ * the core gameplay logic like increasing score, taking damage, winning and losing.
+ */
 {
 	// Set DefaultPawn in blueprints
 	UPROPERTY(BlueprintReadWrite)
@@ -11,10 +21,10 @@ class ABowlingGameMode : AGameModeBase
 	UPROPERTY(BlueprintReadWrite)
 	int HP = 100;
 
-	UpdateScoreDelegate EventUpdateScore;
-	UpdateHPDelegate EventUpdateHP;
-	WinDelegate EventWin;
-	LoseDelegate EventLose;
+	OnScoreChanged EventUpdateScore;
+	OnHPChanged EventUpdateHP;
+	OnWin EventWin;
+	OnLose EventLose;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
@@ -36,7 +46,7 @@ class ABowlingGameMode : AGameModeBase
 	}
 
 	UFUNCTION()
-	void ScoreUp()
+	void ScoreChange()
 	{
 		Score++;
 		if (Score == 14)
@@ -47,7 +57,7 @@ class ABowlingGameMode : AGameModeBase
 	}
 
 	UFUNCTION()
-	void HPLost(int Damage)
+	void HPChange(int Damage)
 	{
 		HP -= Damage;
 		if (HP <= 0)

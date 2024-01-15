@@ -1,3 +1,14 @@
+enum ESocketType
+// ESocketType is an enumeration of socket types that can be equipped on a character
+{
+	None,
+	Hand,
+	Shield,
+	Pistol,
+	Gun,
+	DualWield
+}
+
 struct FZombieDT
 {
 	UPROPERTY()
@@ -17,7 +28,6 @@ struct FZombieDT
 	UPROPERTY()
 	int Dmg = 10;
 
-
 	UPROPERTY()
 	int Speed = 100;
 
@@ -30,6 +40,15 @@ struct FZombieDT
 	UPROPERTY()
 	TArray<USkeletalMesh> ZombieModelList;
 
+	UPROPERTY()
+	ESocketType RightSocketType;
+
 	UPROPERTY(BlueprintReadWrite)
-	TArray<UStaticMesh> WeaponList;
+	TArray<UStaticMesh> RightWeaponList;
+
+	UPROPERTY()
+	ESocketType LeftSocketType;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UStaticMesh> LeftWeaponList;
 };
