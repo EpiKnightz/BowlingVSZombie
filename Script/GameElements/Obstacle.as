@@ -8,8 +8,8 @@ class AObstacle : AActor
 	UStaticMeshComponent ObstacleMesh;
 	default ObstacleMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	UPROPERTY(DefaultComponent, Attach = Collider)
-	UNiagaraComponent NiagaraComp;
+	// UPROPERTY(DefaultComponent, Attach = Collider)
+	// UNiagaraComponent NiagaraComp;
 
 	UPROPERTY(BlueprintReadWrite)
 	int BaseHP = 200;
@@ -78,19 +78,22 @@ class AObstacle : AActor
 	{
 		if (HP > 150 && (HP + Change) <= 150)
 		{
-			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			// NiagaraComp =
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
 			ObstacleMesh.StaticMesh = BrokenMesh[0];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9f));
 		}
 		else if (HP > 100 && (HP + Change) <= 100)
 		{
-			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			// NiagaraComp =
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
 			ObstacleMesh.StaticMesh = BrokenMesh[1];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.75f));
 		}
 		else if (HP > 50 && (HP + Change) <= 50)
 		{
-			NiagaraComp = Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			// NiagaraComp =
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
 			ObstacleMesh.StaticMesh = BrokenMesh[2];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.5f));
 		}

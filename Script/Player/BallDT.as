@@ -2,7 +2,9 @@ enum EStatus
 {
 	None,
 	Fire,
-	Ice
+	Ice,
+	Poison,
+	Rupture
 }
 
 struct FBallDT
@@ -14,8 +16,14 @@ struct FBallDT
 	FString Description = "BowlingDes";
 
 	UPROPERTY()
+	UStaticMesh BowlingMesh;
+
+	UPROPERTY()
 	int Atk = 50;
 
 	UPROPERTY()
 	EStatus StatusEffect;
+
+	UPROPERTY()
+	UNiagaraSystem StatusVFX;
 };

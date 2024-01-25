@@ -4,7 +4,19 @@ class ABullet : AActor
 	UCapsuleComponent Collider;
 
 	UPROPERTY(DefaultComponent)
-	UStaticMeshComponent BulletMesh;
+	UNiagaraComponent BulletSystem;
+
+	UPROPERTY(BlueprintReadWrite, Category = VFX)
+	UNiagaraSystem HitVFX;
+
+	UPROPERTY(BlueprintReadWrite, Category = SFX)
+	UFMODEvent FiredSFX;
+
+	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+		FMODBlueprint::PlayEventAtLocation(this, FiredSFX, GetActorTransform(), true);
+	}
 
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
@@ -14,5 +26,12 @@ class ABullet : AActor
 		{
 			DestroyActor();
 		}
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorBeginOverlap(AActor OtherActor)
+	{
+		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
+		DestroyActor();
 	}
 }

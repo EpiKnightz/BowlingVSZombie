@@ -2,6 +2,8 @@ delegate void FBowlingHitDelegate(AActor OtherActor);
 
 class ABowling : AActor
 {
+	default LifeSpan = 5;
+
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
 	default Collider.SimulatePhysics = true;
@@ -11,14 +13,26 @@ class ABowling : AActor
 	default BowlingMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
-	UParticleSystemComponent StatusEffect;
-	default StatusEffect.Activate(false);
-	default StatusEffect.AutoActivate = false;
+	UNiagaraComponent EffectSystem;
+	default EffectSystem.Activate(false);
+	default EffectSystem.AutoActivate = false;
 
 	UPROPERTY(BlueprintReadOnly)
 	UMaterialInstanceDynamic MaterialInstance;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(DefaultComponent)
+	UProjectileMovementComponent MovementComp;
+	default MovementComp.bShouldBounce = true;
+	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.AutoActivate = false;
+	default MovementComp.MaxSpeed = 3000;
+	default MovementComp.Velocity = FVector(-1, 0, 0);
+	default MovementComp.Bounciness = 0.8;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	float Attack = 10;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Stats")
 	EStatus Status = EStatus::Fire;
 
 	FBowlingHitDelegate OnHit;
@@ -28,21 +42,35 @@ class ABowling : AActor
 	{
 		MaterialInstance = Material::CreateDynamicMaterialInstance(BowlingMesh.GetMaterial(0));
 		BowlingMesh.SetMaterial(0, MaterialInstance);
-		if (Status == EStatus::Fire)
-		{
-			StatusEffect.Activate(true);
-		}
+
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 	}
 
 	void Fire(FVector Direction, float Force)
 	{
-		Collider.AddForce(Direction * Force);
+		MovementComp.InitialSpeed = Force;
+		MovementComp.Velocity *= Force;
+		MovementComp.Activate();
+		if (Status != EStatus::None)
+		{
+			EffectSystem.Activate();
+		}
 	}
 
 	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
+		// Print("Real: " + Hit.Location, 100);
+		// Print("Real vector: " + MovementComp.Velocity, 100);
 		OnHit.ExecuteIfBound(OtherActor);
+	}
+
+	UFUNCTION()
+	void SetData(FBallDT Data)
+	{
+		BowlingMesh.StaticMesh = Data.BowlingMesh;
+		Attack = Data.Atk;
+		Status = Data.StatusEffect;
+		EffectSystem.Asset = Data.StatusVFX;
 	}
 }

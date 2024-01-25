@@ -1,21 +1,10 @@
 class ABowlingPawn : APawn
 {
 	UPROPERTY(DefaultComponent, RootComponent)
-	USphereComponent Collider;
-
-	UPROPERTY(DefaultComponent, Attach = Collider)
 	UStaticMeshComponent BowlingMesh;
 
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
-
-	// UPROPERTY( DefaultComponent )
-	// UProjectileMovementComponent MovementComp;
-	// default MovementComp.bShouldBounce = true;
-	// default MovementComp.ProjectileGravityScale = 0;
-	// default MovementComp.AutoActivate = false;
-	// default MovementComp.MaxSpeed = 1500;
-	// default MovementComp.InitialSpeed = 2500;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
@@ -34,8 +23,11 @@ class ABowlingPawn : APawn
 	UPROPERTY()
 	TSubclassOf<ABowling> BowlingTemplate;
 
+	UPROPERTY(BlueprintReadWrite)
+	UDataTable BowlingDataTable;
+
 	UPROPERTY()
-	float BowlingSpeed = 5000;
+	float BowlingSpeed = 1000;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent ThrowSFX;
@@ -110,13 +102,14 @@ class ABowlingPawn : APawn
 		PredictProjectilePathParams.StartLocation = GetActorLocation();
 		PredictProjectilePathParams.bTraceWithCollision = true;
 		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
-		FVector predictVector = -GetActorForwardVector() * 3000;
+		FVector predictVector = -GetActorForwardVector() * BowlingSpeed;
 		PredictProjectilePathParams.LaunchVelocity = predictVector;
 		PredictProjectilePathParams.OverrideGravityZ = 0.001f;
 		PredictProjectilePathParams.ProjectileRadius = 36;
 		PredictProjectilePathParams.MaxSimTime = 1.15f;
-		// PredictProjectilePathParams.DrawDebugType = EDrawDebugTrace::Persistent;
-		// PredictProjectilePathParams.bTraceWithCollision = false;
+		// PredictProjectilePathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+		// PredictProjectilePathParams.DrawDebugTime = 5;
+		//  PredictProjectilePathParams.bTraceWithCollision = false;
 		TArray<TObjectPtr<AActor>> ignoreList;
 		ignoreList.Add(this);
 		PredictProjectilePathParams.ActorsToIgnore = ignoreList;
@@ -131,17 +124,21 @@ class ABowlingPawn : APawn
 			PredictLine.AddInstance(transform);
 		}
 
-		if (PredictProjectilePathResult.HitResult.GetActor() != nullptr)
+		if (PredictProjectilePathResult.HitResult.GetActor() != nullptr && PredictProjectilePathResult.HitResult.Component.GetCollisionObjectType() == ECollisionChannel::ECC_WorldStatic)
 		{
+			;
 			FTransform transform = FTransform::Identity;
 			transform.SetLocation(PredictProjectilePathResult.HitResult.Location);
 			transform.SetScale3D(FVector(0.25f));
 			PredictLine.AddInstance(transform);
 
+			// Print("Predict: " + PredictProjectilePathResult.HitResult.Location, 100);
+
 			// Draw a seconde line for the bounce
 			PredictProjectilePathParams.MaxSimTime = (1.15f - PredictProjectilePathResult.HitResult.Time);
 			PredictProjectilePathParams.StartLocation = PredictProjectilePathResult.HitResult.Location;
 			PredictProjectilePathParams.LaunchVelocity = Math::GetReflectionVector(predictVector, PredictProjectilePathResult.HitResult.Normal);
+			// Print("Predict velocity: " + PredictProjectilePathParams.LaunchVelocity, 100);
 			FPredictProjectilePathResult PredictProjectilePathResult2;
 			PredictProjectilePathParams.ActorsToIgnore.Add(PredictProjectilePathResult.HitResult.GetActor());
 			Gameplay::Blueprint_PredictProjectilePath_Advanced(PredictProjectilePathParams, PredictProjectilePathResult2);
@@ -191,16 +188,23 @@ class ABowlingPawn : APawn
 		{
 			Yaw = Yaw * Math::Lerp(0.9f, 1, (Angle - 75) / 15);
 		}
-		SetActorRotation(FRotator(0, Yaw, 0));
-		// SetActorLocation(OriginalPos.X - (PressX-HoldX)/100,OriginalPos.Y - (),OriginalPos.Z);
-		DrawPredictLine();
+		if (!Math::IsNearlyEqual(Yaw, GetActorRotation().Yaw))
+		{
+			SetActorRotation(FRotator(0, Yaw, 0));
+			// SetActorLocation(OriginalPos.X - (PressX-HoldX)/100,OriginalPos.Y - (),OriginalPos.Z);
+			DrawPredictLine();
+		}
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
+		FBallDT Row;
+		BowlingDataTable.FindRow(FName("Item_" + Math::RandRange(0, 4)), Row);
+
 		ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
-		SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed * 5000);
+		SpawnedActor.SetData(Row);
+		SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed);
 
 		FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 
@@ -211,6 +215,6 @@ class ABowlingPawn : APawn
 	UFUNCTION(BlueprintCallable)
 	void BackTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		Gameplay::OpenLevel(FName("MainMenu"));
+		Gameplay::OpenLevel(n"MainMenu");
 	}
 }

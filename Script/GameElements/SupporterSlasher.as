@@ -1,5 +1,9 @@
-class ASupporterSlasher : ASupporterGun
+class ASupporterSlasher : ACompanion
 {
+#if EDITOR
+	default RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
+#endif
+
 	UPROPERTY(BlueprintReadWrite)
 	float RotateTimer = 1;
 
@@ -8,8 +12,8 @@ class ASupporterSlasher : ASupporterGun
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		RightHandWp.AttachTo(SupporterSkeleton, FName("RightHand"));
-		ASupporterGun::BeginPlay();
+		RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
+		Super::BeginPlay();
 	}
 
 	UFUNCTION(BlueprintOverride, Meta = (NoSuperCall))
@@ -20,7 +24,7 @@ class ASupporterSlasher : ASupporterGun
 		{
 			if (CurrentTimer <= 0)
 			{
-				AnimateInst.Montage_Play(FiringAnim);
+				AnimateInst.Montage_Play(AttackAnim);
 				System::SetTimer(this, n"SetRotate", 0.15f, false);
 
 				TArray<EObjectTypeQuery> traceObjectTypes;

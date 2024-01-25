@@ -1,4 +1,4 @@
-class UZombieAnimInst : UAnimInstance
+class UCustomAnimInst : UAnimInstance
 {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
 	bool bIsMirror = false;

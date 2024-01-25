@@ -1,40 +1,24 @@
-class ASupporterGun : AActor
+class ASupporterGun : ACompanion
 {
-	UPROPERTY(RootComponent, DefaultComponent)
-	UCapsuleComponent Collider;
-
-	UPROPERTY(DefaultComponent)
-	USkeletalMeshComponent SupporterSkeleton;
-
-	UPROPERTY(DefaultComponent, Attach = SupporterSkeleton, AttachSocket = RightGun)
-	UStaticMeshComponent RightHandWp;
-
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	UAnimMontage FiringAnim;
+#if EDITOR
+	default RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
+#endif
 
 	UPROPERTY(BlueprintReadWrite, Category = Bullet)
 	TSubclassOf<ABullet> BulletTemplate;
 
-	UPROPERTY(BlueprintReadWrite, Category = Bullet)
-	int NumberOfBullets = 3;
+	// UPROPERTY(DefaultComponent, Attach = Collider)
+	// UNiagaraComponent NiagaraComp;
 
-	int BulletsLeft = 3;
-
-	UZombieAnimInst AnimateInst;
-	UFCTweenBPActionFloat FloatTween;
+	UPROPERTY(BlueprintReadWrite, Category = VFX)
+	UNiagaraSystem MuzzleVFX;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		AnimateInst = Cast<UZombieAnimInst>(SupporterSkeleton.GetAnimInstance());
-		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		BulletsLeft = NumberOfBullets;
+		RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
+		Super::BeginPlay();
 	}
-
-	// UFUNCTION()
-	// void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
-	// {
-	// }
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
@@ -42,22 +26,24 @@ class ASupporterGun : AActor
 		ABowling pawn = Cast<ABowling>(OtherActor);
 		if (pawn != nullptr)
 		{
-			Fire();
-			System::SetTimer(this, n"Fire", 0.15f, true);
-			AnimateInst.Montage_Play(FiringAnim);
+			// Attack();
+			System::SetTimer(this, n"Attack", 0.15f, true);
+			AnimateInst.Montage_Play(AttackAnim);
 		}
 	}
 
 	UFUNCTION()
-	void Fire()
+	void Attack()
 	{
 		// ABullet SpawnedActor = Cast<ABullet>()
-		SpawnActor(BulletTemplate, GetActorLocation(), GetActorRotation());
-		BulletsLeft--;
-		if (BulletsLeft <= 0)
+		Niagara::SpawnSystemAtLocation(MuzzleVFX, RightHandWp.GetSocketLocation(n"Muzzle"), FRotator(0, 180, 0));
+		SpawnActor(BulletTemplate, RightHandWp.GetSocketLocation(n"Muzzle"), GetActorRotation());
+		AtksLeft--;
+		if (AtksLeft <= 0)
 		{
-			System::ClearTimer(this, "Fire");
-			BulletsLeft = NumberOfBullets;
+			// NiagaraComp =
+			System::ClearTimer(this, "Attack");
+			AtksLeft = NumberOfAtks;
 		}
 	}
 }

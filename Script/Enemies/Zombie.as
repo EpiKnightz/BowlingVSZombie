@@ -32,12 +32,15 @@ class AZombie : AActor
 	TArray<UStaticMesh> WeaponList;
 
 	UPROPERTY(DefaultComponent, Attach = ZombieSkeleton, AttachSocket = SpineSocket)
-	UParticleSystemComponent StatusEffect;
+	UNiagaraComponent StatusEffect;
 	default StatusEffect.Activate(false);
 	default StatusEffect.AutoActivate = false;
 
 	// UPROPERTY(BlueprintReadWrite, Category = Animation)
 	// UAnimMontage EmergeAnim;
+
+	UPROPERTY(BlueprintReadWrite, Category = VFX)
+	UNiagaraSystem SmackVFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage DamageAnim;
@@ -75,14 +78,16 @@ class AZombie : AActor
 	int Dmg = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	float AtkSpeed = 1;
-
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	EAttackType AtkType = EAttackType::Punch;
+
+	UPROPERTY(BlueprintReadWrite)
+	UDataTable ZombieStatusTable;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsEmergeDone = false;
 
-	UZombieAnimInst AnimateInst;
+	UCustomAnimInst AnimateInst;
 	FAttackHitDelegate AttackHitEvent;
 	FZombieDieDelegate ZombDieEvent;
 	FZombieReachHomeDelegate ZombieReachEvent;
@@ -101,7 +106,7 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
+		AnimateInst = Cast<UCustomAnimInst>(ZombieSkeleton.GetAnimInstance());
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		// AnimateInst.Montage_Play(EmergeAnim);
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
@@ -188,7 +193,7 @@ class AZombie : AActor
 
 		if (AtkType == EAttackType::Shield)
 		{
-			LeftHandWp.AttachTo(ZombieSkeleton, FName("LeftShield"));
+			LeftHandWp.AttachTo(ZombieSkeleton, n"LeftShield");
 			AttackAnim = ShieldAttackAnim;
 		}
 	}
@@ -227,6 +232,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void TakeHit(int Damage, EStatus status = EStatus::None)
 	{
+		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 		if (UpdateHP(-Damage) > 0)
 		{
 			AnimateInst.Montage_Play(DamageAnim);
@@ -237,8 +243,12 @@ class AZombie : AActor
 			}
 			if (status == EStatus::Fire)
 			{
+				FZombieStatusDT Row;
+				ZombieStatusTable.FindRow(FName("Fire"), Row);
+				StatusEffect.Asset = Row.StatusVFX;
 				StatusEffect.Activate(true);
-				System::SetTimer(this, n"Burning", 1, true);
+				UBurningComponent Burning = UBurningComponent::GetOrCreate(this, n"BurningComponent");
+				Burning.StartBurning(Row.Param2, Row.Duration, int(Row.Param1));
 			}
 			delayMove = 1;
 		}
@@ -256,15 +266,6 @@ class AZombie : AActor
 	{
 		AnimateInst.OnMontageBlendingOut.Clear();
 		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed);
-	}
-
-	UFUNCTION()
-	void Burning()
-	{
-		if (UpdateHP(-10) <= 0)
-		{
-			System::ClearTimer(this, "Burning");
-		}
 	}
 
 	int UpdateHP(int Changes)
@@ -310,7 +311,6 @@ class AZombie : AActor
 		AtkSpeed = baseAtkSpeed = iAtkSpd;
 		SetActorScale3D(iScale);
 		bMovingLimit = 900 - (iScale.Y - 1) * 75.f;
-		Print("" + bMovingLimit);
-		// SetActorLocation
+		// Print("" + bMovingLimit);
 	}
 }
