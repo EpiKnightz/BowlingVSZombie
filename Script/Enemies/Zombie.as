@@ -97,6 +97,7 @@ class AZombie : AActor
 	int baseAtk;
 	int baseDmg;
 	float baseAtkSpeed;
+	float speedModifier = 1;
 	float delayMove = 2.f;
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
@@ -136,7 +137,7 @@ class AZombie : AActor
 			}
 			else if (loc.X < bMovingLimit || !bIsAttacking)
 			{
-				loc.X += MoveSpeed * DeltaSeconds;
+				loc.X += MoveSpeed * DeltaSeconds * speedModifier;
 				if (loc.X > bMovingLimit)
 				{
 					if (AttackHitEvent.IsBound())
@@ -198,11 +199,11 @@ class AZombie : AActor
 		}
 	}
 
-	UFUNCTION()
 	/**
 	 * Handles damage taken by the zombie actor. Checks the source of damage, applies damage, plays animations and sound effects,
 	 * applies status effects if hit by a fire attack, and prints debug message.
 	 */
+	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
 		if (HP > 0)
@@ -210,7 +211,7 @@ class AZombie : AActor
 			ABowling pawn = Cast<ABowling>(OtherActor);
 			if (pawn != nullptr)
 			{
-				TakeHit(50, pawn.Status);
+				TakeHit(int(pawn.Attack), pawn.Status);
 				// Print("Hit:" + HP);
 			}
 		}
@@ -241,16 +242,36 @@ class AZombie : AActor
 			{
 				AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Attacking");
 			}
-			if (status == EStatus::Fire)
-			{
-				FZombieStatusDT Row;
-				ZombieStatusTable.FindRow(FName("Fire"), Row);
-				StatusEffect.Asset = Row.StatusVFX;
-				StatusEffect.Activate(true);
-				UBurningComponent Burning = UBurningComponent::GetOrCreate(this, n"BurningComponent");
-				Burning.StartBurning(Row.Param2, Row.Duration, int(Row.Param1));
-			}
+			CheckForStatusEffects(status);
 			delayMove = 1;
+		}
+	}
+
+	void CheckForStatusEffects(EStatus status)
+	{
+		if (status != EStatus::None)
+		{
+			FZombieStatusDT Row;
+			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
+			if (Row.Duration != 0)
+			{
+				switch (status)
+				{
+					case EStatus::Fire:
+						UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						break;
+					case EStatus::Chill:
+						UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						break;
+					case EStatus::Freeze:
+						UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						break;
+					case EStatus::Poison:
+						break;
+					default:
+						break;
+				}
+			}
 		}
 	}
 
@@ -265,7 +286,7 @@ class AZombie : AActor
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageBlendingOut.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed);
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed * speedModifier);
 	}
 
 	int UpdateHP(int Changes)

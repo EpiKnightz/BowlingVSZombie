@@ -16,9 +16,9 @@ struct FZombieStatusDT
 
 	/// 1st parameter for the status effect. Usually the damage amount.
 	UPROPERTY()
-	float Param1;
+	float Param1; // Slow amount
 
 	/// 2nd parameter for the status effect. Usually the percentage of effectiveness.
 	UPROPERTY()
-	float Param2;
-};
+	float Param2; // Times to freeze
+}

@@ -79,21 +79,21 @@ class AObstacle : AActor
 		if (HP > 150 && (HP + Change) <= 150)
 		{
 			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 40));
 			ObstacleMesh.StaticMesh = BrokenMesh[0];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9f));
 		}
 		else if (HP > 100 && (HP + Change) <= 100)
 		{
 			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 30));
 			ObstacleMesh.StaticMesh = BrokenMesh[1];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.75f));
 		}
 		else if (HP > 50 && (HP + Change) <= 50)
 		{
 			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
+			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 20));
 			ObstacleMesh.StaticMesh = BrokenMesh[2];
 			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.5f));
 		}

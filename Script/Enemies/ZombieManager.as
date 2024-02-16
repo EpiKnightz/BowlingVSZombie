@@ -34,6 +34,12 @@ class AZombieManager : AActor
 	float countdown = 1;
 
 	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+		ActorTickEnabled = false;
+	}
+
+	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
 		countdown -= DeltaSeconds;

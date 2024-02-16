@@ -1,6 +1,9 @@
 
 class UUIZombieGameplay : UUserWidget
 {
+	UPROPERTY(BlueprintReadWrite)
+	ABowlingPawn BowlingPawn;
+
 	UFUNCTION(BlueprintEvent)
 	void UpdateScore(int NewScore)
 	{

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"search.exclude": {
+			"**/*.Cache": true,
+			"**/*.Headers": true,
+		}
+	}
+}

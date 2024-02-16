@@ -2,7 +2,8 @@ enum EStatus
 {
 	None,
 	Fire,
-	Ice,
+	Chill,
+	Freeze,
 	Poison,
 	Rupture
 }

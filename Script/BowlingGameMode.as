@@ -43,6 +43,28 @@ class ABowlingGameMode : AGameModeBase
 		// Reset UI;
 		EventUpdateScore.ExecuteIfBound(Score);
 		EventUpdateHP.ExecuteIfBound(HP);
+
+		UserWidget.BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+
+		System::SetTimer(this, n"StartGame", 5, false);
+		PauseGame();
+	}
+
+	UFUNCTION()
+	void StartGame()
+	{
+		AZombieManager zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager::StaticClass()));
+		zombMangr.ActorTickEnabled = true;
+		ABowlingPawn bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn::StaticClass()));
+		bowlPawn.currentTouchCooldown = 0;
+	}
+
+	void PauseGame()
+	{
+		AZombieManager zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager::StaticClass()));
+		zombMangr.ActorTickEnabled = false;
+		ABowlingPawn bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn::StaticClass()));
+		bowlPawn.currentTouchCooldown = 999999;
 	}
 
 	UFUNCTION()

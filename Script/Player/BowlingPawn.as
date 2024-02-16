@@ -15,6 +15,12 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction BackAction;
 
+	UPROPERTY(BlueprintReadWrite, Category = Input)
+	float TouchCooldown = 1;
+	float currentTouchCooldown = -1;
+	UPROPERTY(BlueprintReadOnly, Category = Input)
+	float CooldownPercent = 1;
+
 	UPROPERTY(DefaultComponent)
 	UInstancedStaticMeshComponent PredictLine;
 	default PredictLine.SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -27,7 +33,11 @@ class ABowlingPawn : APawn
 	UDataTable BowlingDataTable;
 
 	UPROPERTY()
-	float BowlingSpeed = 1000;
+	float BowlingSpeed = 1500;
+	UPROPERTY()
+	float BowlingPowerMark = 1500;
+	UPROPERTY()
+	float bowlingPowerMultiplier = 0;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent ThrowSFX;
@@ -81,15 +91,27 @@ class ABowlingPawn : APawn
 		EnhancedInputComponent.BindAction(BackAction, ETriggerEvent::Completed, BackTriggered);
 	}
 
-	FVector2D PressLoc;
+	FVector PressLoc;
 
 	UFUNCTION(BlueprintCallable)
 	void TouchTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		PredictLine.ClearInstances();
-		SetActorRotation(FRotator(0, 0, 0));
-		PlayerController.ProjectWorldLocationToScreen(GetActorLocation(), PressLoc);
-		DrawPredictLine();
+		if (currentTouchCooldown <= 0)
+		{
+			PredictLine.ClearInstances();
+			FHitResult outResult;
+			TArray<EObjectTypeQuery> objectTypeArray;
+			objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
+			if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
+			{
+				PressLoc = outResult.Location;
+				FVector location = GetActorLocation();
+				location.Z = 0;
+				bowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0, 1);
+				SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).Yaw, 0));
+				DrawPredictLine();
+			}
+		}
 	}
 
 	FString DebugTxt;
@@ -102,7 +124,7 @@ class ABowlingPawn : APawn
 		PredictProjectilePathParams.StartLocation = GetActorLocation();
 		PredictProjectilePathParams.bTraceWithCollision = true;
 		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
-		FVector predictVector = -GetActorForwardVector() * BowlingSpeed;
+		FVector predictVector = -GetActorForwardVector() * BowlingSpeed * bowlingPowerMultiplier * 1.5;
 		PredictProjectilePathParams.LaunchVelocity = predictVector;
 		PredictProjectilePathParams.OverrideGravityZ = 0.001f;
 		PredictProjectilePathParams.ProjectileRadius = 36;
@@ -126,7 +148,6 @@ class ABowlingPawn : APawn
 
 		if (PredictProjectilePathResult.HitResult.GetActor() != nullptr && PredictProjectilePathResult.HitResult.Component.GetCollisionObjectType() == ECollisionChannel::ECC_WorldStatic)
 		{
-			;
 			FTransform transform = FTransform::Identity;
 			transform.SetLocation(PredictProjectilePathResult.HitResult.Location);
 			transform.SetScale3D(FVector(0.25f));
@@ -161,60 +182,62 @@ class ABowlingPawn : APawn
 	UFUNCTION(BlueprintCallable)
 	void HoldTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
+		if (currentTouchCooldown <= 0)
+		{
+			FHitResult outResult;
+			TArray<EObjectTypeQuery> objectTypeArray;
+			objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
+			if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
+			{
+				PressLoc = outResult.Location;
+				FVector location = GetActorLocation();
+				location.Z = 0;
+				float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0, 1);
+				float Yaw = FRotator::MakeFromX(location - PressLoc).Yaw;
 
-		// MaterialInstance.SetVectorParameterValue(FName("Base Color"), FLinearColor(0,1,0));
-		bool bIsPressed;
-		float32 HoldX = 0, HoldY = 0;
-		PlayerController.GetInputTouchState(ETouchIndex::Touch1, HoldX, HoldY, bIsPressed);
-		if ((HoldY - PressLoc.Y) < -0.001f)
-		{
-			HoldY = float32(HoldY - PressLoc.Y);
-		}
-		else
-		{
-			HoldY = -0.001f;
-		}
-		float Yaw = Math::RadiansToDegrees(Math::Atan((PressLoc.X - HoldX) / HoldY));
-		float Angle = Math::Abs(Yaw);
-		if (Angle <= 50)
-		{
-			Yaw = Yaw * 0.65f;
-		}
-		else if (Angle <= 75)
-		{
-			Yaw = Yaw * Math::Lerp(0.65f, 0.9f, (Angle - 50) / 25);
-		}
-		else
-		{
-			Yaw = Yaw * Math::Lerp(0.9f, 1, (Angle - 75) / 15);
-		}
-		if (!Math::IsNearlyEqual(Yaw, GetActorRotation().Yaw))
-		{
-			SetActorRotation(FRotator(0, Yaw, 0));
-			// SetActorLocation(OriginalPos.X - (PressX-HoldX)/100,OriginalPos.Y - (),OriginalPos.Z);
-			DrawPredictLine();
+				if (!Math::IsNearlyEqual(Yaw, GetActorRotation().Yaw) || !Math::IsNearlyEqual(bowlingPowerMultiplier, tempModifier))
+				{
+					bowlingPowerMultiplier = tempModifier;
+					SetActorRotation(FRotator(0, Yaw, 0));
+					DrawPredictLine();
+				}
+			}
 		}
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		FBallDT Row;
-		BowlingDataTable.FindRow(FName("Item_" + Math::RandRange(0, 4)), Row);
+		if (currentTouchCooldown <= 0)
+		{
+			FBallDT Row;
+			BowlingDataTable.FindRow(FName("Item_" + Math::RandRange(0, 4)), Row);
 
-		ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
-		SpawnedActor.SetData(Row);
-		SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed);
+			ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
+			SpawnedActor.SetData(Row);
+			SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed * bowlingPowerMultiplier);
 
-		FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
-
+			FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
+			currentTouchCooldown = TouchCooldown;
+		}
 		PredictLine.ClearInstances();
-		PressLoc = FVector2D::ZeroVector;
+		PressLoc = FVector::ZeroVector;
+		bowlingPowerMultiplier = 0;
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void BackTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
 		Gameplay::OpenLevel(n"MainMenu");
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void Tick(float DeltaSeconds)
+	{
+		if (currentTouchCooldown > 0)
+		{
+			currentTouchCooldown -= DeltaSeconds;
+			CooldownPercent = Math::Clamp(1 - (currentTouchCooldown / TouchCooldown), 0, 1);
+		}
 	}
 }

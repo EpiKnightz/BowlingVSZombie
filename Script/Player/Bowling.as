@@ -2,7 +2,7 @@ delegate void FBowlingHitDelegate(AActor OtherActor);
 
 class ABowling : AActor
 {
-	default LifeSpan = 5;
+	default LifeSpan = 3.5;
 
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
@@ -25,9 +25,13 @@ class ABowling : AActor
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.AutoActivate = false;
-	default MovementComp.MaxSpeed = 3000;
+	default MovementComp.MaxSpeed = 5000;
 	default MovementComp.Velocity = FVector(-1, 0, 0);
 	default MovementComp.Bounciness = 0.8;
+
+	UPROPERTY()
+	float BowlingDeaccel = 100;
+	float DeaccelAddend = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
 	float Attack = 10;
@@ -44,6 +48,19 @@ class ABowling : AActor
 		BowlingMesh.SetMaterial(0, MaterialInstance);
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void Tick(float DeltaSeconds)
+	{
+		if (MovementComp.Velocity.SizeSquared() > 256)
+		{
+			MovementComp.Velocity -= MovementComp.Velocity.GetSafeNormal() * (BowlingDeaccel + DeaccelAddend) * DeltaSeconds;
+		}
+		else if (MovementComp.Velocity != FVector::ZeroVector)
+		{
+			MovementComp.Velocity = FVector::ZeroVector;
+		}
 	}
 
 	void Fire(FVector Direction, float Force)
@@ -72,5 +89,11 @@ class ABowling : AActor
 		Attack = Data.Atk;
 		Status = Data.StatusEffect;
 		EffectSystem.Asset = Data.StatusVFX;
+	}
+
+	UFUNCTION()
+	void SetDeaccelAddend(float Addend)
+	{
+		DeaccelAddend = Addend;
 	}
 }
