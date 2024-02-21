@@ -25,6 +25,8 @@ class ABowlingPawn : APawn
 	UInstancedStaticMeshComponent PredictLine;
 	default PredictLine.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	default PredictLine.SetCastShadow(false);
+	UPROPERTY()
+	float PredictSimTime = 1;
 
 	UPROPERTY()
 	TSubclassOf<ABowling> BowlingTemplate;
@@ -126,9 +128,9 @@ class ABowlingPawn : APawn
 		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
 		FVector predictVector = -GetActorForwardVector() * BowlingSpeed * bowlingPowerMultiplier * 1.5;
 		PredictProjectilePathParams.LaunchVelocity = predictVector;
-		PredictProjectilePathParams.OverrideGravityZ = 0.001f;
+		PredictProjectilePathParams.OverrideGravityZ = 0.0001f;
 		PredictProjectilePathParams.ProjectileRadius = 36;
-		PredictProjectilePathParams.MaxSimTime = 1.15f;
+		PredictProjectilePathParams.MaxSimTime = PredictSimTime;
 		// PredictProjectilePathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 		// PredictProjectilePathParams.DrawDebugTime = 5;
 		//  PredictProjectilePathParams.bTraceWithCollision = false;
@@ -156,12 +158,12 @@ class ABowlingPawn : APawn
 			// Print("Predict: " + PredictProjectilePathResult.HitResult.Location, 100);
 
 			// Draw a seconde line for the bounce
-			PredictProjectilePathParams.MaxSimTime = (1.15f - PredictProjectilePathResult.HitResult.Time);
-			PredictProjectilePathParams.StartLocation = PredictProjectilePathResult.HitResult.Location;
-			PredictProjectilePathParams.LaunchVelocity = Math::GetReflectionVector(predictVector, PredictProjectilePathResult.HitResult.Normal);
+			PredictProjectilePathParams.MaxSimTime = Math::Clamp(PredictSimTime * 0.8 - PredictProjectilePathResult.PathData[PredictProjectilePathResult.PathData.Num() - 1].Time, 0.2, PredictSimTime);
+			PredictProjectilePathParams.LaunchVelocity = Math::GetReflectionVector(predictVector, PredictProjectilePathResult.HitResult.Normal) * 0.6;
+			PredictProjectilePathParams.StartLocation = PredictProjectilePathResult.HitResult.Location + PredictProjectilePathParams.LaunchVelocity.GetSafeNormal();
 			// Print("Predict velocity: " + PredictProjectilePathParams.LaunchVelocity, 100);
 			FPredictProjectilePathResult PredictProjectilePathResult2;
-			PredictProjectilePathParams.ActorsToIgnore.Add(PredictProjectilePathResult.HitResult.GetActor());
+			// PredictProjectilePathParams.ActorsToIgnore.Add(PredictProjectilePathResult.HitResult.GetActor());
 			Gameplay::Blueprint_PredictProjectilePath_Advanced(PredictProjectilePathParams, PredictProjectilePathResult2);
 			// FString tmp = "Line " + PredictProjectilePathResult2.PathData.Num() + " | " + PredictProjectilePathParams.LaunchVelocity + " | " + PredictProjectilePathParams.MaxSimTime + " | " + PredictProjectilePathResult2.HitResult.GetActor().ActorNameOrLabel;
 			// if (DebugTxt != tmp)
@@ -169,12 +171,15 @@ class ABowlingPawn : APawn
 			// 	DebugTxt = tmp;
 			// 	Print(DebugTxt, 100);
 			// }
-			for (int j = 1; j < PredictProjectilePathResult2.PathData.Num() - 1; j++)
+			if (PredictProjectilePathResult2.PathData.Num() > 1)
 			{
-				FTransform transform2 = FTransform::Identity;
-				transform2.SetLocation(PredictProjectilePathResult2.PathData[j].Location);
-				transform2.SetScale3D(FVector(0.15f));
-				PredictLine.AddInstance(transform2);
+				for (int j = 1; j < PredictProjectilePathResult2.PathData.Num() - 1; j++)
+				{
+					FTransform transform2 = FTransform::Identity;
+					transform2.SetLocation(PredictProjectilePathResult2.PathData[j].Location);
+					transform2.SetScale3D(FVector(0.15f));
+					PredictLine.AddInstance(transform2);
+				}
 			}
 		}
 	}

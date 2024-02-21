@@ -21,6 +21,9 @@ class ABowlingGameMode : AGameModeBase
 	UPROPERTY(BlueprintReadWrite)
 	int HP = 100;
 
+	UPROPERTY(BlueprintReadWrite)
+	float DelayTime = 5;
+
 	OnScoreChanged EventUpdateScore;
 	OnHPChanged EventUpdateHP;
 	OnWin EventWin;
@@ -46,7 +49,7 @@ class ABowlingGameMode : AGameModeBase
 
 		UserWidget.BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 
-		System::SetTimer(this, n"StartGame", 5, false);
+		System::SetTimer(this, n"StartGame", DelayTime, false);
 		PauseGame();
 	}
 

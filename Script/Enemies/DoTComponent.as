@@ -1,7 +1,5 @@
 class UDoTComponent : UStatusComponent
 {
-	default ComponentName = n"BurningComponent";
-
 	float Interval;
 	float CurrentInterval = -1;
 	float ParameterPerInterval;

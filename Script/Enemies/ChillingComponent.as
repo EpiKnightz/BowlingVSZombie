@@ -1,7 +1,5 @@
 class UChillingComponent : UStatusComponent
 {
-	default ComponentName = n"ChillingComponent";
-
 	bool IsApplicable() override
 	{
 		UActorComponent Target = UFreezeComponent::Get(Host, n"FreezeComponent");

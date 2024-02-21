@@ -15,7 +15,7 @@ struct FZombieDT
 	FString Name = "Zombie";
 
 	UPROPERTY()
-	FString Description = "Zombie";
+	FText Description = FText::FromString("Zombie");
 
 	UPROPERTY()
 	int HP = 100;

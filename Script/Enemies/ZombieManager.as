@@ -31,22 +31,35 @@ class AZombieManager : AActor
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ZombieDataTable;
 
+	TArray<FSpawnSequenceDT> ZombieSequence;
+
+	UPROPERTY(BlueprintReadWrite)
+	UDataTable SpawnSequenceDT;
+
 	float countdown = 1;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		ActorTickEnabled = false;
+		ZombieDataTable.GetAllRows(ZombieSequence);
+		for (int i = 0; i < ZombieSequence.Num(); i++)
+		{
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
 		countdown -= DeltaSeconds;
+		if (Gameplay::TimeSeconds > ZombieSequence[0].AvailTime)
+		{
+
+		}
 		if (countdown <= 0)
 		{
 			FZombieDT Row;
-			ZombieDataTable.FindRow(FName("" + Math::RandRange(1, 5)), Row);
+			ZombieDataTable.FindRow(FName("Item_" + Math::RandRange(0, 5)), Row);
 
 			FVector SpawnLocation = SpawnPosition.Location;
 			SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);

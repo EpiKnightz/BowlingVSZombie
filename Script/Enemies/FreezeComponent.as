@@ -1,7 +1,5 @@
 class UFreezeComponent : UStatusComponent
 {
-	default ComponentName = n"FreezeComponent";
-
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
 		Host.speedModifier = 0;

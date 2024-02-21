@@ -14,7 +14,7 @@ struct FBallDT
 	FString Name = "Bowling";
 
 	UPROPERTY()
-	FString Description = "BowlingDes";
+	FText Description = FText::FromString("BowlingDes");
 
 	UPROPERTY()
 	UStaticMesh BowlingMesh;

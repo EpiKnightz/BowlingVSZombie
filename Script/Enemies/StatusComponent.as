@@ -1,7 +1,5 @@
 class UStatusComponent : UActorComponent
 {
-	FName ComponentName;
-
 	float Duration;
 	float CurrentDuration = -1;
 
