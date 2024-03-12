@@ -29,10 +29,6 @@ class ASupporterSlasher : ACompanion
 
 				TArray<EObjectTypeQuery> traceObjectTypes;
 				traceObjectTypes.Add(EObjectTypeQuery::Enemy);
-
-				// traceObjectTypes.Add(UEngineTypes::StaticClass().ConvertToObjectType)
-				// traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel3));
-				// // UClass* seekClass = nullptr;
 				TArray<AActor> ignoreActors;
 				TArray<AActor> outActors;
 				System::SphereOverlapActors(GetActorLocation(), 165, traceObjectTypes, nullptr, ignoreActors, outActors);

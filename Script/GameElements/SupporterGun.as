@@ -1,23 +1,24 @@
 class ASupporterGun : ACompanion
 {
-#if EDITOR
-	default RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
-#endif
-
 	UPROPERTY(BlueprintReadWrite, Category = Bullet)
 	TSubclassOf<ABullet> BulletTemplate;
 
-	// UPROPERTY(DefaultComponent, Attach = Collider)
-	// UNiagaraComponent NiagaraComp;
+	UPROPERTY()
+	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem MuzzleVFX;
 
+	APostProcessVolume PPV;
+
+	// ensureMsgf(!AttachmentRules.bWeldSimulatedBodies, TEXT("AttachToComponent when called from a constructor cannot weld simulated bodies. Consider calling SetupAttachment directly instead."));
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
 		Super::BeginPlay();
+		RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
+		PPV = Cast<APostProcessVolume>(Gameplay::GetActorOfClass(APostProcessVolume));
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -38,6 +39,11 @@ class ASupporterGun : ACompanion
 		// ABullet SpawnedActor = Cast<ABullet>()
 		Niagara::SpawnSystemAtLocation(MuzzleVFX, RightHandWp.GetSocketLocation(n"Muzzle"), FRotator(0, 180, 0));
 		SpawnActor(BulletTemplate, RightHandWp.GetSocketLocation(n"Muzzle"), GetActorRotation());
+
+		Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, true);
+		// PPV.bEnabled = true;
+		// System::SetTimer(this, n"DisableEffect", 0.05f, false);
+
 		AtksLeft--;
 		if (AtksLeft <= 0)
 		{
@@ -45,5 +51,11 @@ class ASupporterGun : ACompanion
 			System::ClearTimer(this, "Attack");
 			AtksLeft = NumberOfAtks;
 		}
+	}
+
+	UFUNCTION()
+	void DisableEffect()
+	{
+		PPV.bEnabled = false;
 	}
 }

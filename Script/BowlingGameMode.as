@@ -1,7 +1,7 @@
-delegate void OnScoreChanged(int NewScore);
-delegate void OnHPChanged(int NewHP);
-delegate void OnWin();
-delegate void OnLose();
+delegate void FScoreChangeDelegate(int NewScore);
+delegate void FHPChangedDelegate(int NewHP);
+delegate void FWinDelegate();
+delegate void FLoseDelegate();
 class ABowlingGameMode : AGameModeBase
 /**
  * BowlingGameMode implements the core gameplay logic for a simple bowling game.
@@ -24,17 +24,24 @@ class ABowlingGameMode : AGameModeBase
 	UPROPERTY(BlueprintReadWrite)
 	float DelayTime = 5;
 
-	OnScoreChanged EventUpdateScore;
-	OnHPChanged EventUpdateHP;
-	OnWin EventWin;
-	OnLose EventLose;
+	FScoreChangeDelegate EventUpdateScore;
+	FHPChangedDelegate EventUpdateHP;
+	FWinDelegate EventWin;
+	FLoseDelegate EventLose;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
+	AZombieManager zombMangr;
+	ABowlingPawn bowlPawn;
+	UBowlingGameInstance gameInstance;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
+		bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
+		gameInstance = Cast<UBowlingGameInstance>(Gameplay::GetGameInstance());
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
@@ -48,30 +55,41 @@ class ABowlingGameMode : AGameModeBase
 		EventUpdateHP.ExecuteIfBound(HP);
 
 		UserWidget.BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		UserWidget.ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
+
+		UserWidget.BowlingPawn.ComboUpdateDelegate.BindUFunction(UserWidget, n"UpdateCombo");
+		UserWidget.ZombieManager.ProgressChangedEvent.BindUFunction(UserWidget, n"UpdateLevelProgress");
+		UserWidget.ZombieManager.WarningDelegate.BindUFunction(UserWidget, n"UpdateWarningText");
 
 		System::SetTimer(this, n"StartGame", DelayTime, false);
 		PauseGame();
+		if (gameInstance.CurrentLevel == 1)
+		{
+			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
+			Cast<ALevelSequenceActor>(Gameplay::GetActorOfClass(ALevelSequenceActor)).SequencePlayer.Play();
+		}
+		else
+		{
+			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
+			Cast<ALevelSequenceActor>(Gameplay::GetActorOfClass(ALevelSequenceActor)).SequencePlayer.Stop();
+		}
 	}
 
 	UFUNCTION()
 	void StartGame()
 	{
-		AZombieManager zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager::StaticClass()));
-		zombMangr.ActorTickEnabled = true;
-		ABowlingPawn bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn::StaticClass()));
+		zombMangr.GameStart();
 		bowlPawn.currentTouchCooldown = 0;
 	}
 
 	void PauseGame()
 	{
-		AZombieManager zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager::StaticClass()));
-		zombMangr.ActorTickEnabled = false;
-		ABowlingPawn bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn::StaticClass()));
+		zombMangr.GamePause();
 		bowlPawn.currentTouchCooldown = 999999;
 	}
 
 	UFUNCTION()
-	void ScoreChange()
+	void ScoreChange(FName actorName)
 	{
 		Score++;
 		if (Score == 14)
@@ -82,7 +100,7 @@ class ABowlingGameMode : AGameModeBase
 	}
 
 	UFUNCTION()
-	void HPChange(int Damage)
+	void HPChange(int Damage, FName zombieName)
 	{
 		HP -= Damage;
 		if (HP <= 0)
@@ -91,6 +109,7 @@ class ABowlingGameMode : AGameModeBase
 			Lose();
 		}
 		EventUpdateHP.ExecuteIfBound(HP);
+		zombMangr.UpdateZombieList(zombieName);
 	}
 
 	UFUNCTION()
@@ -105,5 +124,12 @@ class ABowlingGameMode : AGameModeBase
 	{
 		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 		EventLose.ExecuteIfBound();
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void NextLevel()
+	{
+		gameInstance.CurrentLevel++;
+		Gameplay::OpenLevel(n"M_ActionPhaseFinal");
 	}
 }

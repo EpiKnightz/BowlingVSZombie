@@ -15,3 +15,16 @@ http://creativecommons.org/licenses/by/4.0/
 
 Copyright © 2015-2022 · Patrick de Arteaga - Music for Games and Multimedia
 https://patrickdearteaga.com/horror-music/
+
+Icong
+<a href="https://www.flaticon.com/free-icons/progress-bar" title="progress bar icons">Progress bar icons created by juicy_fish - Flaticon</a>
+
+
+
+Note: Zombie as actor
+Not take themself seriously
+Mini game idea
+Time move when you move
+FPS mode
+On-rail fight mode
+Use Shape (like circle, hexa, triangle, square) to convey card aspect

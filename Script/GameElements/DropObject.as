@@ -8,6 +8,12 @@ class ADropObject : AActor
 	UStaticMeshComponent DropMesh;
 
 	UPROPERTY()
+	bool bIsActivated = true;
+
+	UPROPERTY()
+	bool bIsDropping = true;
+
+	UPROPERTY()
 	float StartHeight = 1500;
 
 	UPROPERTY()
@@ -25,17 +31,38 @@ class ADropObject : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		OriginalLoc = GetActorLocation();
-		SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, StartHeight));
-		if (FloatTween != nullptr)
+		Activate(bIsActivated, bIsDropping);
+	}
+
+	UFUNCTION()
+	void Activate(bool isActivated = true, bool isDropping = true)
+	{
+		bIsActivated = isActivated;
+		bIsDropping = isDropping;
+		if (bIsActivated)
 		{
-			FloatTween.Stop();
-			FloatTween.ApplyEasing.Clear();
+			ActorHiddenInGame = false;
+			if (bIsDropping)
+			{
+				ActorTickEnabled = true;
+				OriginalLoc = GetActorLocation();
+				SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, StartHeight));
+				if (FloatTween != nullptr)
+				{
+					FloatTween.Stop();
+					FloatTween.ApplyEasing.Clear();
+				}
+				FloatTween = UFCTweenBPActionFloat::TweenFloat(StartHeight, EndHeight, DropDuration, EFCEase::OutSine);
+				FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
+				FloatTween.UDelay = Delay;
+				FloatTween.Start();
+			}
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(StartHeight, EndHeight, DropDuration, EFCEase::OutSine);
-		FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
-		FloatTween.UDelay = Delay;
-		FloatTween.Start();
+		else
+		{
+			ActorTickEnabled = false;
+			ActorHiddenInGame = true;
+		}
 	}
 
 	UFUNCTION()

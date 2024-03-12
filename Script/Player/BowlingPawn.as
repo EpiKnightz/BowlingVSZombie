@@ -1,3 +1,4 @@
+delegate void FComboUpdateDelegate(int NewValue);
 class ABowlingPawn : APawn
 {
 	UPROPERTY(DefaultComponent, RootComponent)
@@ -34,6 +35,10 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable BowlingDataTable;
 
+	UPROPERTY(BlueprintReadWrite)
+	UDataTable ItemsConfigDT;
+	TArray<FItemsConfigDT> ItemsConfig;
+
 	UPROPERTY()
 	float BowlingSpeed = 1500;
 	UPROPERTY()
@@ -46,6 +51,11 @@ class ABowlingPawn : APawn
 
 	ABowlingPlayerController PlayerController;
 	FVector OriginalPos;
+
+	int ComboCounter = 0;
+	FComboUpdateDelegate ComboUpdateDelegate;
+	UPROPERTY()
+	float ComboExpireTime = 2;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -66,6 +76,8 @@ class ABowlingPawn : APawn
 			}
 		}
 		OriginalPos = GetActorLocation();
+
+		ItemsConfigDT.GetAllRows(ItemsConfig);
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input
@@ -109,7 +121,8 @@ class ABowlingPawn : APawn
 				PressLoc = outResult.Location;
 				FVector location = GetActorLocation();
 				location.Z = 0;
-				bowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0, 1);
+				bowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
+				// Print("Touch " + bowlingPowerMultiplier, 100);
 				SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).Yaw, 0));
 				DrawPredictLine();
 			}
@@ -197,12 +210,13 @@ class ABowlingPawn : APawn
 				PressLoc = outResult.Location;
 				FVector location = GetActorLocation();
 				location.Z = 0;
-				float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0, 1);
+				float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
 				float Yaw = FRotator::MakeFromX(location - PressLoc).Yaw;
 
 				if (!Math::IsNearlyEqual(Yaw, GetActorRotation().Yaw) || !Math::IsNearlyEqual(bowlingPowerMultiplier, tempModifier))
 				{
 					bowlingPowerMultiplier = tempModifier;
+					// Print("Hold " + bowlingPowerMultiplier, 100);
 					SetActorRotation(FRotator(0, Yaw, 0));
 					DrawPredictLine();
 				}
@@ -213,14 +227,17 @@ class ABowlingPawn : APawn
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		if (currentTouchCooldown <= 0)
+		if (currentTouchCooldown <= 0 && bowlingPowerMultiplier != 0)
 		{
 			FBallDT Row;
-			BowlingDataTable.FindRow(FName("Item_" + Math::RandRange(0, 4)), Row);
+			BowlingDataTable.FindRow(ItemsConfig[0].BowlingID[Math::RandRange(0, ItemsConfig[0].BowlingID.Num() - 1)], Row);
 
 			ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
 			SpawnedActor.SetData(Row);
+			// Print("" + bowlingPowerMultiplier, 100);
 			SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed * bowlingPowerMultiplier);
+
+			SpawnedActor.OnHit.BindUFunction(this, n"OnHit");
 
 			FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 			currentTouchCooldown = TouchCooldown;
@@ -233,7 +250,7 @@ class ABowlingPawn : APawn
 	UFUNCTION(BlueprintCallable)
 	void BackTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		Gameplay::OpenLevel(n"MainMenu");
+		Gameplay::OpenLevel(n"M_MainMenu");
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -243,6 +260,31 @@ class ABowlingPawn : APawn
 		{
 			currentTouchCooldown -= DeltaSeconds;
 			CooldownPercent = Math::Clamp(1 - (currentTouchCooldown / TouchCooldown), 0, 1);
+		}
+	}
+
+	UFUNCTION()
+	void OnComboTrigger(int Change)
+	{
+		ComboCounter += Change;
+		System::SetTimer(this, n"ComboExpired", ComboExpireTime, false);
+		ComboUpdateDelegate.ExecuteIfBound(ComboCounter);
+	}
+
+	UFUNCTION()
+	void ComboExpired()
+	{
+		ComboCounter = 0;
+		ComboUpdateDelegate.ExecuteIfBound(ComboCounter);
+	}
+
+	UFUNCTION()
+	void OnHit(AActor OtherActor)
+	{
+		AZombie zomb = Cast<AZombie>(OtherActor);
+		if (zomb != nullptr)
+		{
+			OnComboTrigger(1);
 		}
 	}
 }

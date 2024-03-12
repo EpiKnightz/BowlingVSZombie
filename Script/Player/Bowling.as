@@ -2,11 +2,12 @@ delegate void FBowlingHitDelegate(AActor OtherActor);
 
 class ABowling : AActor
 {
-	default LifeSpan = 3.5;
+	float StopLifeTime = 1;
+	float StopLifeTimeCounter = 0;
 
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
-	default Collider.SimulatePhysics = true;
+	default Collider.SimulatePhysics = false;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UStaticMeshComponent BowlingMesh;
@@ -30,7 +31,7 @@ class ABowling : AActor
 	default MovementComp.Bounciness = 0.8;
 
 	UPROPERTY()
-	float BowlingDeaccel = 100;
+	float BowlingDeaccel = 500;
 	float DeaccelAddend = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
@@ -41,6 +42,9 @@ class ABowling : AActor
 
 	FBowlingHitDelegate OnHit;
 
+	UPROPERTY()
+	TSubclassOf<UCameraShakeBase> ShakeStyle;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -48,12 +52,13 @@ class ABowling : AActor
 		BowlingMesh.SetMaterial(0, MaterialInstance);
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
-		if (MovementComp.Velocity.SizeSquared() > 256)
+		if (MovementComp.Velocity.SizeSquared() > 1000)
 		{
 			MovementComp.Velocity -= MovementComp.Velocity.GetSafeNormal() * (BowlingDeaccel + DeaccelAddend) * DeltaSeconds;
 		}
@@ -61,17 +66,30 @@ class ABowling : AActor
 		{
 			MovementComp.Velocity = FVector::ZeroVector;
 		}
+		else
+		{
+			StopLifeTimeCounter += DeltaSeconds;
+			if (StopLifeTimeCounter > StopLifeTime)
+			{
+				DestroyActor();
+			}
+		}
 	}
 
 	void Fire(FVector Direction, float Force)
 	{
 		MovementComp.InitialSpeed = Force;
-		MovementComp.Velocity *= Force;
+		MovementComp.Velocity = Direction * Force;
 		MovementComp.Activate();
 		if (Status != EStatus::None)
 		{
 			EffectSystem.Activate();
 		}
+	}
+
+	void AddForce(FVector VelocityVector)
+	{
+		MovementComp.Velocity += VelocityVector;
 	}
 
 	UFUNCTION()
@@ -80,6 +98,7 @@ class ABowling : AActor
 		// Print("Real: " + Hit.Location, 100);
 		// Print("Real vector: " + MovementComp.Velocity, 100);
 		OnHit.ExecuteIfBound(OtherActor);
+		// Print("" + MovementComp.Velocity.Size(), 100);
 	}
 
 	UFUNCTION()
@@ -96,4 +115,29 @@ class ABowling : AActor
 	{
 		DeaccelAddend = Addend;
 	}
+
+	UFUNCTION()
+	void ActorBounce(const FHitResult&in Hit, const FVector&in ImpactVelocity)
+	{
+		MovementComp.Velocity *= 0.8;
+		if (Hit.GetComponent().ComponentHasTag(n"Boundary"))
+		{
+			Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
+		}
+		else
+		{
+			ABowling hitActor = Cast<ABowling>(Hit.GetActor());
+			if (hitActor != nullptr)
+			{
+				hitActor.AddForce(ImpactVelocity * 0.8);
+				hitActor.StopLifeTimeCounter = 0;
+			}
+		}
+	}
+
+	// UFUNCTION(BlueprintOverride)
+	// void Destroyed()
+	// {
+	// 	Print("" + MovementComp.Velocity.Size(), 100);
+	// }
 }

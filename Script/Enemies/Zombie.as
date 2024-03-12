@@ -1,6 +1,6 @@
 delegate void FAttackHitDelegate(int Damage);
-delegate void FZombieDieDelegate();
-delegate void FZombieReachHomeDelegate(int Damage);
+delegate void FZombieDieDelegate(FName actorName);
+delegate void FZombieReachHomeDelegate(int Damage, FName actorName);
 
 const float ENDSCREEN_MOVING_LIMIT = 1650.f;
 
@@ -60,7 +60,7 @@ class AZombie : AActor
 	TArray<UAnimMontage> DeadAnims;
 
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimationAsset> DeadLoopAnims;
+	TArray<UAnimSequenceBase> DeadLoopAnims;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent HitSFX;
@@ -156,7 +156,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					ZombieReachEvent.ExecuteIfBound(Dmg);
+					ZombieReachEvent.ExecuteIfBound(Dmg, GetName());
 				}
 				DestroyActor();
 			}
@@ -278,8 +278,10 @@ class AZombie : AActor
 	UFUNCTION()
 	void Dead(UAnimMontage Montage, bool bInterrupted)
 	{
-		ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], true);
-		ZombDieEvent.ExecuteIfBound();
+		// ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], false);
+		AnimateInst.StopSlotAnimation();
+		AnimateInst.PlaySlotAnimationAsDynamicMontage(DeadLoopAnims[currentDeadAnim], n"DefaultSlot", 0, 0);
+		ZombDieEvent.ExecuteIfBound(GetName());
 	}
 
 	UFUNCTION()
