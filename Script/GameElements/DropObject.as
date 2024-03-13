@@ -11,7 +11,7 @@ class ADropObject : AActor
 	bool bIsActivated = true;
 
 	UPROPERTY()
-	bool bIsDropping = true;
+	bool bIsDropping = false;
 
 	UPROPERTY()
 	float StartHeight = 1500;

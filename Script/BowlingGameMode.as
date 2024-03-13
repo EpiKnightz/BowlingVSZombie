@@ -32,6 +32,9 @@ class ABowlingGameMode : AGameModeBase
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
+	UPROPERTY(BlueprintReadWrite)
+	TArray<ULevelSequence> LevelSequence;
+
 	AZombieManager zombMangr;
 	ABowlingPawn bowlPawn;
 	UBowlingGameInstance gameInstance;
@@ -65,14 +68,24 @@ class ABowlingGameMode : AGameModeBase
 		PauseGame();
 		if (gameInstance.CurrentLevel == 1)
 		{
-			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
-			Cast<ALevelSequenceActor>(Gameplay::GetActorOfClass(ALevelSequenceActor)).SequencePlayer.Play();
+			// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
+			bool success;
+			// ULevelStreamingDynamic::LoadLevelInstance("M_Level2", FVector::ZeroVector, FRotator::ZeroRotator, success).OnLevelLoaded.AddUFunction(this, n"PlaySequence");
 		}
 		else
 		{
-			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
+			// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
 			Cast<ALevelSequenceActor>(Gameplay::GetActorOfClass(ALevelSequenceActor)).SequencePlayer.Stop();
 		}
+	}
+
+	UFUNCTION()
+	void PlaySequence()
+	{
+		// TArray<AActor> LSActor;
+		// Gameplay::GetAllActorsOfClass(ALevelSequenceActor, LSActor);
+		// // LSActor.LevelSequenceAsset = LevelSequence[0];
+		// Cast<ALevelSequenceActor>(LSActor[1]).SequencePlayer.Play();
 	}
 
 	UFUNCTION()
