@@ -112,6 +112,7 @@ class ACoin : AActor
 		if (OtherActor.IsA(ABowling) && HomingMovement.GetHomingTargetComponent() == nullptr)
 		{
 			SetTarget(OtherActor.GetOwner().RootComponent);
+			CoinComboDelegate.ExecuteIfBound(CoinData.CoinValue);
 		}
 		if (OtherActor.IsA(ABowlingPawn))
 		{

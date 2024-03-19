@@ -2,7 +2,7 @@ delegate void FScoreChangeDelegate(int NewScore);
 delegate void FHPChangedDelegate(int NewHP);
 delegate void FWinDelegate();
 delegate void FLoseDelegate();
-class ABowlingGameMode : AGameModeBase
+class ABowlingGameMode : AGameMode
 /**
  * BowlingGameMode implements the core gameplay logic for a simple bowling game.
  *
@@ -84,6 +84,7 @@ class ABowlingGameMode : AGameModeBase
 		}
 		else
 		{
+			Gameplay::UnloadStreamLevel(n"M_Level1a", FLatentActionInfo(), true);
 			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
 		}
 	}
@@ -151,18 +152,7 @@ class ABowlingGameMode : AGameModeBase
 	void NextLevel()
 	{
 		gameInstance.CurrentLevel++;
-		Gameplay::OpenLevel(n"M_ActionPhaseFinal");
-		if (gameInstance.CurrentLevel == 2)
-		{
-			// bool success;
-			// ULevelStreamingDynamic::LoadLevelInstance("M_Level2a", FVector::ZeroVector, FRotator::ZeroRotator, success);
-			Gameplay::LoadStreamLevel(n"M_Level2a", true, true, FLatentActionInfo());
-		}
-		else if (gameInstance.CurrentLevel >= 3)
-		{
-			Gameplay::UnloadStreamLevel(n"M_Level1a", FLatentActionInfo(), true);
-			Gameplay::UnloadStreamLevel(n"M_Level2a", FLatentActionInfo(), true);
-		}
+		RestartGame();
 	}
 
 	UFUNCTION()
