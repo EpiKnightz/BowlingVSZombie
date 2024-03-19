@@ -22,7 +22,7 @@ class ABowlingGameMode : AGameModeBase
 	int HP = 100;
 
 	UPROPERTY(BlueprintReadWrite)
-	float DelayTime = 5;
+	int CoinTotal;
 
 	FScoreChangeDelegate EventUpdateScore;
 	FHPChangedDelegate EventUpdateHP;
@@ -32,9 +32,13 @@ class ABowlingGameMode : AGameModeBase
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
-	UPROPERTY(BlueprintReadWrite)
-	TArray<ULevelSequence> LevelSequence;
+	UPROPERTY()
+	UDataTable LevelConfigsDT;
 
+	UPROPERTY()
+	FLevelConfigsDT LevelConfigsData;
+
+	TArray<ULevelSequence> LevelSequence;
 	AZombieManager zombMangr;
 	ABowlingPawn bowlPawn;
 	UBowlingGameInstance gameInstance;
@@ -45,6 +49,7 @@ class ABowlingGameMode : AGameModeBase
 		zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
 		bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
 		gameInstance = Cast<UBowlingGameInstance>(Gameplay::GetGameInstance());
+		// gameInstance.CurrentLevel = 2;
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
@@ -64,28 +69,31 @@ class ABowlingGameMode : AGameModeBase
 		UserWidget.ZombieManager.ProgressChangedEvent.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		UserWidget.ZombieManager.WarningDelegate.BindUFunction(UserWidget, n"UpdateWarningText");
 
-		System::SetTimer(this, n"StartGame", DelayTime, false);
+		LevelConfigsDT.FindRow(FName("Item_" + (gameInstance.CurrentLevel - 1)), LevelConfigsData);
+		zombMangr.SpawnSize = LevelConfigsData.SpawnSize;
+		zombMangr.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
+		System::SetTimer(this, n"StartGame", LevelConfigsData.Delay, false);
 		PauseGame();
-		if (gameInstance.CurrentLevel == 1)
+
+		if (gameInstance.CurrentLevel < 3)
 		{
-			// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
-			bool success;
+			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
+			// bool success;
 			// ULevelStreamingDynamic::LoadLevelInstance("M_Level2", FVector::ZeroVector, FRotator::ZeroRotator, success).OnLevelLoaded.AddUFunction(this, n"PlaySequence");
+			PlaySequence();
 		}
 		else
 		{
-			// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
-			Cast<ALevelSequenceActor>(Gameplay::GetActorOfClass(ALevelSequenceActor)).SequencePlayer.Stop();
+			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
 		}
 	}
 
 	UFUNCTION()
 	void PlaySequence()
 	{
-		// TArray<AActor> LSActor;
-		// Gameplay::GetAllActorsOfClass(ALevelSequenceActor, LSActor);
-		// // LSActor.LevelSequenceAsset = LevelSequence[0];
-		// Cast<ALevelSequenceActor>(LSActor[1]).SequencePlayer.Play();
+		TArray<AActor> LSActor;
+		Gameplay::GetAllActorsOfClass(ALevelSequenceActor, LSActor);
+		Cast<ALevelSequenceActor>(LSActor[gameInstance.CurrentLevel - 1]).SequencePlayer.Play();
 	}
 
 	UFUNCTION()
@@ -144,5 +152,22 @@ class ABowlingGameMode : AGameModeBase
 	{
 		gameInstance.CurrentLevel++;
 		Gameplay::OpenLevel(n"M_ActionPhaseFinal");
+		if (gameInstance.CurrentLevel == 2)
+		{
+			// bool success;
+			// ULevelStreamingDynamic::LoadLevelInstance("M_Level2a", FVector::ZeroVector, FRotator::ZeroRotator, success);
+			Gameplay::LoadStreamLevel(n"M_Level2a", true, true, FLatentActionInfo());
+		}
+		else if (gameInstance.CurrentLevel >= 3)
+		{
+			Gameplay::UnloadStreamLevel(n"M_Level1a", FLatentActionInfo(), true);
+			Gameplay::UnloadStreamLevel(n"M_Level2a", FLatentActionInfo(), true);
+		}
+	}
+
+	UFUNCTION()
+	void CoinGetHandler(int CoinValue)
+	{
+		CoinTotal += CoinValue;
 	}
 }

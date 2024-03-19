@@ -22,6 +22,12 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation ComboAnim;
 
+	UPROPERTY(BindWidget)
+	UCommonNumericTextBlock CoinText;
+
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation CoinAnim;
+
 	UFUNCTION(BlueprintEvent)
 	void UpdateLevelProgress(float NewProgress)
 	{
@@ -48,6 +54,16 @@ class UUIZombieGameplay : UUserWidget
 		{
 			ComboText.SetCurrentValue(NewValue);
 			PlayAnimation(ComboAnim);
+		}
+	}
+
+	UFUNCTION(BlueprintEvent)
+	void UpdateCoin(int NewValue)
+	{
+		if (NewValue > 0)
+		{
+			CoinText.SetCurrentValue(NewValue);
+			PlayAnimation(CoinAnim);
 		}
 	}
 

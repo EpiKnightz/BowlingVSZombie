@@ -57,9 +57,6 @@ class AZombieManager : AActor
 	void BeginPlay()
 	{
 		ActorTickEnabled = false;
-		SpawnSequenceDT.GetAllRows(ZombieSequence);
-		ZombieSequence.Sort();
-		endTimer = ZombieSequence.Last().TimeMark;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -129,7 +126,7 @@ class AZombieManager : AActor
 		SpawnLocation.Z *= Row.Scale.Z;
 
 		AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
-		SpawnedActor.SetData(Row.HP, Row.Atk, Row.Dmg, Row.Speed, Row.AtkSpeed, Row.Scale);
+		SpawnedActor.SetData(Row.HP, Row.Atk, Row.Dmg, Row.Speed, Row.AtkSpeed, Row.Scale, Row.CoinDropAmount);
 
 		int randomZombieIdx = Math::RandRange(0, Row.ZombieModelList.Num() - 1);
 		SpawnedActor.SetSkeletonMesh(Row.ZombieModelList[randomZombieIdx]);
@@ -162,9 +159,9 @@ class AZombieManager : AActor
 		SpawnedZombieList.Add(SpawnedActor.GetName());
 
 		ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
-		SpawnedActor.ZombDieEvent.BindUFunction(GM, n"ScoreChange");
-		SpawnedActor.ZombDieEvent.BindUFunction(this, n"UpdateZombieList");
-		SpawnedActor.ZombieReachEvent.BindUFunction(GM, n"HPChange");
+		SpawnedActor.ZombDieDelegate.BindUFunction(GM, n"ScoreChange");
+		SpawnedActor.ZombDieDelegate.BindUFunction(this, n"UpdateZombieList");
+		SpawnedActor.ZombieReachDelegate.BindUFunction(GM, n"HPChange");
 
 		if (multipleSpawnCount > 0)
 		{
@@ -177,6 +174,9 @@ class AZombieManager : AActor
 	void GameStart()
 	{
 		SetActorTickEnabled(true);
+		SpawnSequenceDT.GetAllRows(ZombieSequence);
+		ZombieSequence.Sort();
+		endTimer = ZombieSequence.Last().TimeMark;
 		for (int i = 0; i < ZombieSequence.Num(); i++)
 		{
 			if (!ZombieSequence[i].WaveWarning.IsEmpty())

@@ -38,6 +38,12 @@ struct FZombieDT
 	FVector Scale = FVector::OneVector;
 
 	UPROPERTY()
+	ECoinType CoinDropType = ECoinType::Bronze;
+
+	UPROPERTY()
+	int CoinDropAmount = 1;
+
+	UPROPERTY()
 	TArray<USkeletalMesh> ZombieModelList;
 
 	UPROPERTY()

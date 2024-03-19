@@ -37,12 +37,12 @@ class ABowlingPawn : APawn
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ItemsConfigDT;
-	TArray<FItemsConfigDT> ItemsConfig;
+	TArray<FItemConfigsDT> ItemsConfig;
 
 	UPROPERTY()
 	float BowlingSpeed = 1500;
 	UPROPERTY()
-	float BowlingPowerMark = 1500;
+	float BowlingPowerMark = 800;
 	UPROPERTY()
 	float bowlingPowerMultiplier = 0;
 
@@ -234,6 +234,7 @@ class ABowlingPawn : APawn
 
 			ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
 			SpawnedActor.SetData(Row);
+			SpawnedActor.SetOwner(this);
 			// Print("" + bowlingPowerMultiplier, 100);
 			SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed * bowlingPowerMultiplier);
 
@@ -286,5 +287,11 @@ class ABowlingPawn : APawn
 		{
 			OnComboTrigger(1);
 		}
+	}
+
+	UFUNCTION()
+	void CoinComboHandler(int value)
+	{
+		OnComboTrigger(1);
 	}
 }

@@ -1,4 +1,4 @@
-struct FItemsConfigDT
+struct FItemConfigsDT
 {
 	UPROPERTY()
 	TArray<FName> BowlingID;

@@ -41,10 +41,11 @@ class AObstacle : AActor
 	void ActorBeginOverlap(AActor OtherActor)
 	{
 		AZombie zomb = Cast<AZombie>(OtherActor);
-		if (zomb != nullptr && !zomb.AttackHitEvent.IsBound())
+		if (zomb != nullptr && !zomb.AttackHitDelegate.IsBound())
 		{
-			zomb.AttackHitEvent.BindUFunction(this, n"AttackHit");
+			zomb.AttackHitDelegate.BindUFunction(this, n"AttackHit");
 			ObstDestrEvent.AddUFunction(zomb, n"StopAttacking");
+			zomb.SetMovingLimit(GetActorLocation().X - 100);
 		}
 	}
 

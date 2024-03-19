@@ -80,6 +80,8 @@ class AZombie : AActor
 	float AtkSpeed = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	EAttackType AtkType = EAttackType::Punch;
+	UPROPERTY(BlueprintReadWrite, Category = Stats)
+	float CoinValue;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ZombieStatusTable;
@@ -87,10 +89,13 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsEmergeDone = false;
 
+	UPROPERTY(Category = Drop)
+	TSubclassOf<ACoin> CoinTemplate;
+
 	UCustomAnimInst AnimateInst;
-	FAttackHitDelegate AttackHitEvent;
-	FZombieDieDelegate ZombDieEvent;
-	FZombieReachHomeDelegate ZombieReachEvent;
+	FAttackHitDelegate AttackHitDelegate;
+	FZombieDieDelegate ZombDieDelegate;
+	FZombieReachHomeDelegate ZombieReachDelegate;
 
 	int baseHP;
 	float baseMoveSpeed;
@@ -102,7 +107,7 @@ class AZombie : AActor
 	int currentDeadAnim = 0;
 	bool bIsDead = false;
 	bool bIsAttacking = false;
-	float bMovingLimit;
+	float MovingLimit;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -135,20 +140,20 @@ class AZombie : AActor
 			{
 				loc.Z -= MoveSpeed * DeltaSeconds;
 			}
-			else if (loc.X < bMovingLimit || !bIsAttacking)
+			else if (loc.X < MovingLimit || !bIsAttacking)
 			{
 				loc.X += MoveSpeed * DeltaSeconds * speedModifier;
-				if (loc.X > bMovingLimit)
+				if (loc.X > MovingLimit)
 				{
-					if (AttackHitEvent.IsBound())
+					if (AttackHitDelegate.IsBound())
 					{
-						loc.X = bMovingLimit;
+						loc.X = MovingLimit;
 						bIsAttacking = true;
 						Attacking(nullptr, false);
 					}
 					else
 					{
-						bMovingLimit = ENDSCREEN_MOVING_LIMIT;
+						MovingLimit = ENDSCREEN_MOVING_LIMIT;
 					}
 				}
 			}
@@ -156,7 +161,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					ZombieReachEvent.ExecuteIfBound(Dmg, GetName());
+					ZombieReachDelegate.ExecuteIfBound(Dmg, GetName());
 				}
 				DestroyActor();
 			}
@@ -281,7 +286,7 @@ class AZombie : AActor
 		// ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], false);
 		AnimateInst.StopSlotAnimation();
 		AnimateInst.PlaySlotAnimationAsDynamicMontage(DeadLoopAnims[currentDeadAnim], n"DefaultSlot", 0, 0);
-		ZombDieEvent.ExecuteIfBound(GetName());
+		ZombDieDelegate.ExecuteIfBound(GetName());
 	}
 
 	UFUNCTION()
@@ -305,6 +310,9 @@ class AZombie : AActor
 			delayMove = 1.5f;
 			bIsDead = true;
 			FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
+
+			ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
+			SpawnedActor.ExpectValueToCoinType(CoinValue);
 		}
 		return HP;
 	}
@@ -312,7 +320,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void AttackHit()
 	{
-		AttackHitEvent.ExecuteIfBound(Atk);
+		AttackHitDelegate.ExecuteIfBound(Atk);
 	}
 
 	UFUNCTION()
@@ -321,11 +329,11 @@ class AZombie : AActor
 		delayMove = 1.5f;
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
-		bMovingLimit = ENDSCREEN_MOVING_LIMIT;
+		MovingLimit = ENDSCREEN_MOVING_LIMIT;
 	}
 
 	UFUNCTION()
-	void SetData(int iHP, int iAtk, int iDmg, int iSpeed, float iAtkSpd, FVector iScale)
+	void SetData(int iHP, int iAtk, int iDmg, int iSpeed, float iAtkSpd, FVector iScale, float iCoinValue)
 	{
 		HP = baseHP = iHP;
 		Atk = baseAtk = iAtk;
@@ -333,7 +341,13 @@ class AZombie : AActor
 		MoveSpeed = baseMoveSpeed = iSpeed;
 		AtkSpeed = baseAtkSpeed = iAtkSpd;
 		SetActorScale3D(iScale);
-		bMovingLimit = 900 - (iScale.Y - 1) * 75.f;
+		CoinValue = iCoinValue;
 		// Print("" + bMovingLimit);
+	}
+
+	UFUNCTION()
+	void SetMovingLimit(float iLimit)
+	{
+		MovingLimit = iLimit - (GetActorScale3D().Y - 1) * 75.f;
 	}
 }
