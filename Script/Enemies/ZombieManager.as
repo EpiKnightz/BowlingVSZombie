@@ -1,6 +1,3 @@
-delegate void OnProgressChanged(float NewProgress);
-delegate void FWarningDelegate(FText Message);
-
 namespace ZombieManager
 {
 	const float WARNING_DURATION = 2.5;
@@ -50,8 +47,8 @@ class AZombieManager : AActor
 	UPROPERTY(BlueprintReadWrite)
 	float CurrentLevelProgress = 0;
 
-	OnProgressChanged ProgressChangedEvent;
-	FWarningDelegate WarningDelegate;
+	FFloatDelegate DOnProgressChanged;
+	FFTextDelegate DOnWarning;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -159,9 +156,9 @@ class AZombieManager : AActor
 		SpawnedZombieList.Add(SpawnedActor.GetName());
 
 		ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
-		SpawnedActor.ZombDieDelegate.BindUFunction(GM, n"ScoreChange");
-		SpawnedActor.ZombDieDelegate.BindUFunction(this, n"UpdateZombieList");
-		SpawnedActor.ZombieReachDelegate.BindUFunction(GM, n"HPChange");
+		SpawnedActor.DOnZombDie.BindUFunction(GM, n"ScoreChange");
+		SpawnedActor.DOnZombDie.BindUFunction(this, n"UpdateZombieList");
+		SpawnedActor.DOnZombieReach.BindUFunction(GM, n"HPChange");
 
 		if (multipleSpawnCount > 0)
 		{
@@ -230,7 +227,7 @@ class AZombieManager : AActor
 			{
 				CurrentLevelProgress = 1;
 			}
-			ProgressChangedEvent.ExecuteIfBound(CurrentLevelProgress);
+			DOnProgressChanged.ExecuteIfBound(CurrentLevelProgress);
 		}
 	}
 
@@ -239,11 +236,11 @@ class AZombieManager : AActor
 	{
 		if (nextSequenceMilestone < ZombieSequence.Num() && !ZombieSequence[nextSequenceMilestone].WaveWarning.IsEmpty())
 		{
-			WarningDelegate.ExecuteIfBound(ZombieSequence[nextSequenceMilestone].WaveWarning);
+			DOnWarning.ExecuteIfBound(ZombieSequence[nextSequenceMilestone].WaveWarning);
 		}
 		else
 		{
-			WarningDelegate.ExecuteIfBound(FText());
+			DOnWarning.ExecuteIfBound(FText());
 		}
 		for (int i = nextSequenceMilestone + 1; i < ZombieSequence.Num(); i++)
 		{

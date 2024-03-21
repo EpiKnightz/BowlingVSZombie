@@ -1,5 +1,3 @@
-delegate void FBowlingHitDelegate(AActor OtherActor);
-
 class ABowling : AActor
 {
 	float StopLifeTime = 1;
@@ -40,7 +38,7 @@ class ABowling : AActor
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
 	EStatus Status = EStatus::Fire;
 
-	FBowlingHitDelegate OnHit;
+	FActorDelegate DOnHit;
 
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
@@ -97,7 +95,7 @@ class ABowling : AActor
 	{
 		// Print("Real: " + Hit.Location, 100);
 		// Print("Real vector: " + MovementComp.Velocity, 100);
-		OnHit.ExecuteIfBound(OtherActor);
+		DOnHit.ExecuteIfBound(OtherActor);
 		// Print("" + MovementComp.Velocity.Size(), 100);
 	}
 

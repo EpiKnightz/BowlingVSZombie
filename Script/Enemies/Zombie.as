@@ -1,7 +1,3 @@
-delegate void FAttackHitDelegate(int Damage);
-delegate void FZombieDieDelegate(FName actorName);
-delegate void FZombieReachHomeDelegate(int Damage, FName actorName);
-
 const float ENDSCREEN_MOVING_LIMIT = 1650.f;
 
 enum EAttackType
@@ -93,9 +89,9 @@ class AZombie : AActor
 	TSubclassOf<ACoin> CoinTemplate;
 
 	UCustomAnimInst AnimateInst;
-	FAttackHitDelegate AttackHitDelegate;
-	FZombieDieDelegate ZombDieDelegate;
-	FZombieReachHomeDelegate ZombieReachDelegate;
+	FIntDelegate DOnAttackHit;
+	FNameDelegate DOnZombDie;
+	FIntNameDelegate DOnZombieReach;
 
 	int baseHP;
 	float baseMoveSpeed;
@@ -145,7 +141,7 @@ class AZombie : AActor
 				loc.X += MoveSpeed * DeltaSeconds * speedModifier;
 				if (loc.X > MovingLimit)
 				{
-					if (AttackHitDelegate.IsBound())
+					if (DOnAttackHit.IsBound())
 					{
 						loc.X = MovingLimit;
 						bIsAttacking = true;
@@ -161,7 +157,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					ZombieReachDelegate.ExecuteIfBound(Dmg, GetName());
+					DOnZombieReach.ExecuteIfBound(Dmg, GetName());
 				}
 				DestroyActor();
 			}
@@ -256,7 +252,7 @@ class AZombie : AActor
 	{
 		if (status != EStatus::None)
 		{
-			FZombieStatusDT Row;
+			FStatusDT Row;
 			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
 			if (Row.Duration != 0)
 			{
@@ -286,7 +282,7 @@ class AZombie : AActor
 		// ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], false);
 		AnimateInst.StopSlotAnimation();
 		AnimateInst.PlaySlotAnimationAsDynamicMontage(DeadLoopAnims[currentDeadAnim], n"DefaultSlot", 0, 0);
-		ZombDieDelegate.ExecuteIfBound(GetName());
+		DOnZombDie.ExecuteIfBound(GetName());
 	}
 
 	UFUNCTION()
@@ -320,7 +316,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void AttackHit()
 	{
-		AttackHitDelegate.ExecuteIfBound(Atk);
+		DOnAttackHit.ExecuteIfBound(Atk);
 	}
 
 	UFUNCTION()

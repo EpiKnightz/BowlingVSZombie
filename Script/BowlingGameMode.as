@@ -1,7 +1,3 @@
-delegate void FScoreChangeDelegate(int NewScore);
-delegate void FHPChangedDelegate(int NewHP);
-delegate void FWinDelegate();
-delegate void FLoseDelegate();
 class ABowlingGameMode : AGameMode
 /**
  * BowlingGameMode implements the core gameplay logic for a simple bowling game.
@@ -10,7 +6,7 @@ class ABowlingGameMode : AGameMode
  * It also has logic to determine when the player wins or loses the game.
  *
  * The class contains UPROPERTY declarations for the key gameplay variables,
- * delegates for the score/HP update events, and UFUNCTIONs that encapsulate
+ * d for the score/HP update events, and UFUNCTIONs that encapsulate
  * the core gameplay logic like increasing score, taking damage, winning and losing.
  */
 {
@@ -24,10 +20,10 @@ class ABowlingGameMode : AGameMode
 	UPROPERTY(BlueprintReadWrite)
 	int CoinTotal;
 
-	FScoreChangeDelegate EventUpdateScore;
-	FHPChangedDelegate EventUpdateHP;
-	FWinDelegate EventWin;
-	FLoseDelegate EventLose;
+	FIntDelegate DOnUpdateScore;
+	FIntDelegate DOnUpdateHP;
+	FVoidDelegate DOnWin;
+	FVoidDelegate DOnLose;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
@@ -53,27 +49,34 @@ class ABowlingGameMode : AGameMode
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
-		EventUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
-		EventUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
-		EventWin.BindUFunction(UserWidget, n"WinUI");
-		EventLose.BindUFunction(UserWidget, n"LoseUI");
+		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
+		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
+		DOnWin.BindUFunction(UserWidget, n"WinUI");
+		DOnLose.BindUFunction(UserWidget, n"LoseUI");
 
 		// Reset UI;
-		EventUpdateScore.ExecuteIfBound(Score);
-		EventUpdateHP.ExecuteIfBound(HP);
+		DOnUpdateScore.ExecuteIfBound(Score);
+		DOnUpdateHP.ExecuteIfBound(HP);
 
 		UserWidget.BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 		UserWidget.ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
 
-		UserWidget.BowlingPawn.ComboUpdateDelegate.BindUFunction(UserWidget, n"UpdateCombo");
-		UserWidget.ZombieManager.ProgressChangedEvent.BindUFunction(UserWidget, n"UpdateLevelProgress");
-		UserWidget.ZombieManager.WarningDelegate.BindUFunction(UserWidget, n"UpdateWarningText");
+		UserWidget.BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
+		UserWidget.ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
+		UserWidget.ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
 		LevelConfigsDT.FindRow(FName("Item_" + (gameInstance.CurrentLevel - 1)), LevelConfigsData);
 		zombMangr.SpawnSize = LevelConfigsData.SpawnSize;
 		zombMangr.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		System::SetTimer(this, n"StartGame", LevelConfigsData.Delay, false);
 		PauseGame();
+		if (LevelConfigsData.Delay > 0)
+		{
+			System::SetTimer(this, n"StartGame", LevelConfigsData.Delay, false);
+		}
+		else
+		{
+			StartGame();
+		}
 
 		if (gameInstance.CurrentLevel < 3)
 		{
@@ -118,7 +121,7 @@ class ABowlingGameMode : AGameMode
 		{
 			Win();
 		}
-		EventUpdateScore.ExecuteIfBound(Score);
+		DOnUpdateScore.ExecuteIfBound(Score);
 	}
 
 	UFUNCTION()
@@ -130,7 +133,7 @@ class ABowlingGameMode : AGameMode
 			HP = 0;
 			Lose();
 		}
-		EventUpdateHP.ExecuteIfBound(HP);
+		DOnUpdateHP.ExecuteIfBound(HP);
 		zombMangr.UpdateZombieList(zombieName);
 	}
 
@@ -138,14 +141,14 @@ class ABowlingGameMode : AGameMode
 	void Win()
 	{
 		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
-		EventWin.ExecuteIfBound();
+		DOnWin.ExecuteIfBound();
 	}
 
 	UFUNCTION()
 	void Lose()
 	{
 		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
-		EventLose.ExecuteIfBound();
+		DOnLose.ExecuteIfBound();
 	}
 
 	UFUNCTION(BlueprintCallable)

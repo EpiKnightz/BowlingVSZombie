@@ -1,3 +1,13 @@
+delegate void FIntDelegate(int Value);
+delegate void FVoidDelegate();
+delegate void FNameDelegate(FName Name);
+delegate void FIntNameDelegate(int Value, FName Name);
+delegate void FActorDelegate(AActor OtherActor);
+delegate void FFloatDelegate(float Value);
+delegate void FFTextDelegate(FText Message);
+
+event void FVoidEvent();
+
 namespace Utilities
 {
 	FName StatusEnumToFName(EStatus Status)

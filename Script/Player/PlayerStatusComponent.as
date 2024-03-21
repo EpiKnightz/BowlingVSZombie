@@ -1,11 +1,11 @@
-class UStatusComponent : UActorComponent
+class UPlayerStatusComponent : UActorComponent
 {
 	float Duration;
 	float CurrentDuration = -1;
 
 	int InitTimes = 0;
 
-	AZombie Host;
+	ABowlingPawn Host;
 
 	UFUNCTION()
 	bool IsApplicable()
@@ -16,11 +16,11 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	void Init(FStatusDT Row)
 	{
-		Host = Cast<AZombie>(GetOwner());
+		Host = Cast<ABowlingPawn>(GetOwner());
 		if (Host != nullptr && IsApplicable())
 		{
-			Host.StatusEffect.Asset = Row.StatusVFX;
-			Host.StatusEffect.Activate(true);
+			// Host.StatusEffect.Asset = Row.StatusVFX;
+			// Host.StatusEffect.Activate(true);
 			Activate();
 			Duration = Row.Duration;
 			CurrentDuration = Duration;
@@ -59,7 +59,7 @@ class UStatusComponent : UActorComponent
 	{
 		CurrentDuration = -1;
 		InitTimes = 0;
-		Host.StatusEffect.Deactivate();
+		// Host.StatusEffect.Deactivate();
 		Deactivate();
 		// ForceDestroyComponent(); //Warning: This could have unintended consequences.
 	}

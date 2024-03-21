@@ -1,4 +1,3 @@
-event void FObstacleDestroyedDelegate();
 class AObstacle : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)
@@ -22,7 +21,7 @@ class AObstacle : AActor
 	UPROPERTY(BlueprintReadWrite, Category = Mesh)
 	TArray<UStaticMesh> BrokenMesh;
 
-	FObstacleDestroyedDelegate ObstDestrEvent;
+	FVoidEvent EOnObstDestr;
 
 	UFCTweenBPActionFloat FloatTween;
 	// FRotator OriginalRot;
@@ -41,10 +40,10 @@ class AObstacle : AActor
 	void ActorBeginOverlap(AActor OtherActor)
 	{
 		AZombie zomb = Cast<AZombie>(OtherActor);
-		if (zomb != nullptr && !zomb.AttackHitDelegate.IsBound())
+		if (zomb != nullptr && !zomb.DOnAttackHit.IsBound())
 		{
-			zomb.AttackHitDelegate.BindUFunction(this, n"AttackHit");
-			ObstDestrEvent.AddUFunction(zomb, n"StopAttacking");
+			zomb.DOnAttackHit.BindUFunction(this, n"AttackHit");
+			EOnObstDestr.AddUFunction(zomb, n"StopAttacking");
 			zomb.SetMovingLimit(GetActorLocation().X - 100);
 		}
 	}
@@ -102,7 +101,7 @@ class AObstacle : AActor
 		if (HP <= 0 && !bIsDestroyed)
 		{
 			bIsDestroyed = true;
-			ObstDestrEvent.Broadcast();
+			EOnObstDestr.Broadcast();
 			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			if (FloatTween != nullptr)
 			{

@@ -17,7 +17,7 @@ class ASupporterPistol : ASupporterGun
 		ABowling pawn = Cast<ABowling>(OtherActor);
 		if (pawn != nullptr)
 		{
-			pawn.OnHit.BindUFunction(this, n"OnHit");
+			pawn.DOnHit.BindUFunction(this, n"OnHit");
 		}
 	}
 

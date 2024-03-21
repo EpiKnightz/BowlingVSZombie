@@ -1,8 +1,16 @@
-delegate void FComboUpdateDelegate(int NewValue);
 class ABowlingPawn : APawn
 {
 	UPROPERTY(DefaultComponent, RootComponent)
-	UStaticMeshComponent BowlingMesh;
+	USphereComponent Collider;
+	default Collider.SimulatePhysics = false;
+
+	UPROPERTY(DefaultComponent)
+	USkeletalMeshComponent BodyMesh;
+	default BodyMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
+
+	UPROPERTY(DefaultComponent, Attach = BodyMesh)
+	USkeletalMeshComponent HeadMesh;
+	default HeadMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
 
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
@@ -53,9 +61,15 @@ class ABowlingPawn : APawn
 	FVector OriginalPos;
 
 	int ComboCounter = 0;
-	FComboUpdateDelegate ComboUpdateDelegate;
+	FIntDelegate DOnComboUpdate;
 	UPROPERTY()
 	float ComboExpireTime = 2;
+
+	UFUNCTION(BlueprintOverride)
+	void ConstructionScript()
+	{
+		HeadMesh.SetLeaderPoseComponent(BodyMesh);
+	}
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -238,7 +252,7 @@ class ABowlingPawn : APawn
 			// Print("" + bowlingPowerMultiplier, 100);
 			SpawnedActor.Fire(-GetActorForwardVector(), BowlingSpeed * bowlingPowerMultiplier);
 
-			SpawnedActor.OnHit.BindUFunction(this, n"OnHit");
+			SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
 
 			FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 			currentTouchCooldown = TouchCooldown;
@@ -269,14 +283,14 @@ class ABowlingPawn : APawn
 	{
 		ComboCounter += Change;
 		System::SetTimer(this, n"ComboExpired", ComboExpireTime, false);
-		ComboUpdateDelegate.ExecuteIfBound(ComboCounter);
+		DOnComboUpdate.ExecuteIfBound(ComboCounter);
 	}
 
 	UFUNCTION()
 	void ComboExpired()
 	{
 		ComboCounter = 0;
-		ComboUpdateDelegate.ExecuteIfBound(ComboCounter);
+		DOnComboUpdate.ExecuteIfBound(ComboCounter);
 	}
 
 	UFUNCTION()
