@@ -5,7 +5,10 @@ class UStatusComponent : UActorComponent
 
 	int InitTimes = 0;
 
-	AZombie Host;
+	FNiagaraDelegate OnInit;
+	FVoidDelegate OnEnd;
+
+	AActor Host;
 
 	UFUNCTION()
 	bool IsApplicable()
@@ -14,23 +17,16 @@ class UStatusComponent : UActorComponent
 	}
 
 	UFUNCTION()
-	void Init(FStatusDT Row)
+	UStatusComponent Init(FStatusDT Row)
 	{
-		Host = Cast<AZombie>(GetOwner());
-		if (Host != nullptr && IsApplicable())
-		{
-			Host.StatusEffect.Asset = Row.StatusVFX;
-			Host.StatusEffect.Activate(true);
-			Activate();
-			Duration = Row.Duration;
-			CurrentDuration = Duration;
-			InitTimes++;
-			DoInitChildren(Row.Param1, Row.Param2);
-		}
-		else
-		{
-			Deactivate();
-		}
+		Host = GetOwner();
+		OnInit.ExecuteIfBound(Row.StatusVFX);
+		Activate();
+		Duration = Row.Duration;
+		CurrentDuration = Duration;
+		InitTimes++;
+		DoInitChildren(Row.Param1, Row.Param2);
+		return this;
 	}
 
 	UFUNCTION()
@@ -59,7 +55,7 @@ class UStatusComponent : UActorComponent
 	{
 		CurrentDuration = -1;
 		InitTimes = 0;
-		Host.StatusEffect.Deactivate();
+		OnEnd.ExecuteIfBound();
 		Deactivate();
 		// ForceDestroyComponent(); //Warning: This could have unintended consequences.
 	}

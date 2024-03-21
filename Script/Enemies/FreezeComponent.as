@@ -1,13 +1,15 @@
 class UFreezeComponent : UStatusComponent
 {
+	FFloatDelegate DOnChangeSpeedModifier;
+
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
-		Host.speedModifier = 0;
+		DOnChangeSpeedModifier.ExecuteIfBound(0);
 	}
 
 	void EndStatusEffect() override
 	{
-		Host.speedModifier = 1;
+		DOnChangeSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}
 }

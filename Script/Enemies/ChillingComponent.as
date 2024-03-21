@@ -1,5 +1,8 @@
 class UChillingComponent : UStatusComponent
 {
+	FFloatDelegate DOnChangeSpeedModifier;
+	FStatusDelegate DOnFullChillStack;
+
 	bool IsApplicable() override
 	{
 		UActorComponent Target = UFreezeComponent::Get(Host, n"FreezeComponent");
@@ -8,17 +11,17 @@ class UChillingComponent : UStatusComponent
 
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
-		Host.speedModifier = 1 - (iParam1 * InitTimes);
+		DOnChangeSpeedModifier.ExecuteIfBound(1 - (iParam1 * InitTimes));
 		if (InitTimes >= iParam2)
 		{
 			EndStatusEffect();
-			Host.CheckForStatusEffects(EStatus::Freeze);
+			DOnFullChillStack.ExecuteIfBound(EStatus::Freeze);
 		}
 	}
 
 	void EndStatusEffect() override
 	{
-		Host.speedModifier = 1;
+		DOnChangeSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}
 }

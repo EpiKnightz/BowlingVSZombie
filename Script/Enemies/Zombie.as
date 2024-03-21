@@ -248,6 +248,7 @@ class AZombie : AActor
 		}
 	}
 
+	UFUNCTION()
 	void CheckForStatusEffects(EStatus status)
 	{
 		if (status != EStatus::None)
@@ -256,22 +257,30 @@ class AZombie : AActor
 			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
 			if (Row.Duration != 0)
 			{
+				UStatusComponent statusComp;
 				switch (status)
 				{
 					case EStatus::Fire:
-						UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						statusComp = UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
+						Cast<UDoTComponent>(statusComp).DOnDoTDamage.BindUFunction(this, n"UpdateHP");
 						break;
 					case EStatus::Chill:
-						UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						statusComp = UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
+						Cast<UChillingComponent>(statusComp).DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
+						Cast<UChillingComponent>(statusComp).DOnFullChillStack.BindUFunction(this, n"CheckForStatusEffects");
 						break;
 					case EStatus::Freeze:
-						UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status)).Init(Row);
+						statusComp = UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
+						Cast<UFreezeComponent>(statusComp).DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
 						break;
 					case EStatus::Poison:
 						break;
 					default:
 						break;
 				}
+				statusComp.OnInit.BindUFunction(this, n"OnStatusInit");
+				statusComp.OnEnd.BindUFunction(this, n"OnStatusEnd");
+				statusComp.Init(Row);
 			}
 		}
 	}
@@ -292,6 +301,7 @@ class AZombie : AActor
 		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed * speedModifier);
 	}
 
+	UFUNCTION()
 	int UpdateHP(int Changes)
 	{
 		HP += Changes;
@@ -345,5 +355,24 @@ class AZombie : AActor
 	void SetMovingLimit(float iLimit)
 	{
 		MovingLimit = iLimit - (GetActorScale3D().Y - 1) * 75.f;
+	}
+
+	UFUNCTION()
+	void OnStatusInit(UNiagaraSystem VFX)
+	{
+		StatusEffect.Asset = VFX;
+		StatusEffect.Activate(true);
+	}
+
+	UFUNCTION()
+	void OnStatusEnd()
+	{
+		StatusEffect.Deactivate();
+	}
+
+	UFUNCTION()
+	void UpdateSpeedModifier(float iSpeed)
+	{
+		speedModifier = iSpeed;
 	}
 }

@@ -4,6 +4,8 @@ class UDoTComponent : UStatusComponent
 	float CurrentInterval = -1;
 	float ParameterPerInterval;
 
+	FInt2IntDelegate DOnDoTDamage;
+
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
 		Interval = iParam1;
@@ -13,7 +15,7 @@ class UDoTComponent : UStatusComponent
 
 	bool ActionPerInterval()
 	{
-		return Host.UpdateHP(int(-ParameterPerInterval)) > 0;
+		return DOnDoTDamage.ExecuteIfBound(int(-ParameterPerInterval)) > 0;
 	}
 
 	UFUNCTION(BlueprintOverride)
