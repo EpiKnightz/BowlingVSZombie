@@ -1,5 +1,7 @@
 class UDoTComponent : UStatusComponent
 {
+	default TargetType = EStatusTargetType::Zombie;
+
 	float Interval;
 	float CurrentInterval = -1;
 	float ParameterPerInterval;

@@ -1,5 +1,7 @@
 class UChillingComponent : UStatusComponent
 {
+	default TargetType = EStatusTargetType::Zombie;
+
 	FFloatDelegate DOnChangeSpeedModifier;
 	FStatusDelegate DOnFullChillStack;
 

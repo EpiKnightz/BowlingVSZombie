@@ -8,6 +8,8 @@ class UStatusComponent : UActorComponent
 	FNiagaraDelegate OnInit;
 	FVoidDelegate OnEnd;
 
+	EStatusTargetType TargetType;
+
 	AActor Host;
 
 	UFUNCTION()

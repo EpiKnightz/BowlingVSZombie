@@ -1,5 +1,7 @@
 class UFreezeComponent : UStatusComponent
 {
+	default TargetType = EStatusTargetType::Zombie;
+
 	FFloatDelegate DOnChangeSpeedModifier;
 
 	void DoInitChildren(float iParam1, float iParam2) override
