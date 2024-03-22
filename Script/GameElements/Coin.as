@@ -66,12 +66,12 @@ class ACoin : ACollectible
 		}
 	}
 
-	void OnCollectibleOverlap() override
+	void OnCollectibleOverlap(AActor OtherActor) override
 	{
 		DOnCoinCombo.ExecuteIfBound(CoinData.CoinValue);
 	}
 
-	void OnCollectibleCollected() override
+	void OnCollectibleCollected(AActor OtherActor) override
 	{
 		DOnCoinGet.ExecuteIfBound(CoinData.CoinValue);
 	}

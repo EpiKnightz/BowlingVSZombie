@@ -9,7 +9,7 @@ struct FStatusDT
 {
 	/// The status effect currently applied to the zombie.
 	UPROPERTY()
-	EStatus StatusEffect;
+	EDamageType DamageType;
 
 	UPROPERTY()
 	EStatusTargetType TargetType = EStatusTargetType::Zombie;

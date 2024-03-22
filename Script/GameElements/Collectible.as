@@ -50,20 +50,20 @@ class ACollectible : AActor
 		if (OtherActor.IsA(ABowling) && HomingMovement.GetHomingTargetComponent() == nullptr)
 		{
 			SetTarget(OtherActor.GetOwner().RootComponent);
-			OnCollectibleOverlap();
+			OnCollectibleOverlap(OtherActor);
 		}
 		if (OtherActor.IsA(ABowlingPawn))
 		{
-			OnCollectibleCollected();
+			OnCollectibleCollected(OtherActor);
 			DestroyActor();
 		}
 	}
 
-	void OnCollectibleOverlap()
+	void OnCollectibleOverlap(AActor OtherActor)
 	{
 	}
 
-	void OnCollectibleCollected()
+	void OnCollectibleCollected(AActor OtherActor)
 	{
 	}
 };

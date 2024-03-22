@@ -15,7 +15,18 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	bool IsApplicable()
 	{
-		return true;
+		if (TargetType == EStatusTargetType::Player)
+		{
+			return (Host.IsA(ABowlingPawn));
+		}
+		else if (TargetType == EStatusTargetType::Zombie)
+		{
+			return (Host.IsA(AZombie));
+		}
+		else
+		{
+			return true;
+		}
 	}
 
 	UFUNCTION()

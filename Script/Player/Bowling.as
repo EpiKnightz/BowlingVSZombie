@@ -36,7 +36,7 @@ class ABowling : AActor
 	float Attack = 10;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	EStatus Status = EStatus::Fire;
+	EDamageType Status = EDamageType::Fire;
 
 	FActorDelegate DOnHit;
 
@@ -79,7 +79,7 @@ class ABowling : AActor
 		MovementComp.InitialSpeed = Force;
 		MovementComp.Velocity = Direction * Force;
 		MovementComp.Activate();
-		if (Status != EStatus::None)
+		if (Status != EDamageType::None)
 		{
 			EffectSystem.Activate();
 		}

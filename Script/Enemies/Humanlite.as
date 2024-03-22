@@ -5,4 +5,10 @@ class AHumanlite : AActor
 
 	UPROPERTY(DefaultComponent, Attach = BodyMesh)
 	USkeletalMeshComponent HeadMesh;
+
+	UFUNCTION(BlueprintOverride)
+	void ConstructionScript()
+	{
+		HeadMesh.SetLeaderPoseComponent(BodyMesh);
+	}
 };

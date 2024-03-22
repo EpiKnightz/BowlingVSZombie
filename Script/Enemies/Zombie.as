@@ -32,6 +32,15 @@ class AZombie : AActor
 	default StatusEffect.Activate(false);
 	default StatusEffect.AutoActivate = false;
 
+	UPROPERTY(DefaultComponent)
+	UDamageResponseComponent DamageResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	USpeedResponeComponent SpeedResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UStatusResponseComponent StatusResponseComponent;
+
 	// UPROPERTY(BlueprintReadWrite, Category = Animation)
 	// UAnimMontage EmergeAnim;
 
@@ -112,6 +121,10 @@ class AZombie : AActor
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		// AnimateInst.Montage_Play(EmergeAnim);
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
+
+		DamageResponseComponent.DOnApplyDamage.BindUFunction(this, n"UpdateHP");
+		SpeedResponseComponent.DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
+		StatusResponseComponent.DOnApplyStatus.BindUFunction(this, n"ApplyStatusEffects");
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -232,7 +245,7 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void TakeHit(int Damage, EStatus status = EStatus::None)
+	void TakeHit(int Damage, EDamageType status = EDamageType::None)
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 		if (UpdateHP(-Damage) > 0)
@@ -243,15 +256,15 @@ class AZombie : AActor
 			{
 				AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Attacking");
 			}
-			CheckForStatusEffects(status);
+			ApplyStatusEffects(status);
 			delayMove = 1;
 		}
 	}
 
 	UFUNCTION()
-	void CheckForStatusEffects(EStatus status)
+	void ApplyStatusEffects(EDamageType status)
 	{
-		if (status != EStatus::None)
+		if (status != EDamageType::None)
 		{
 			FStatusDT Row;
 			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
@@ -260,20 +273,16 @@ class AZombie : AActor
 				UStatusComponent statusComp;
 				switch (status)
 				{
-					case EStatus::Fire:
+					case EDamageType::Fire:
 						statusComp = UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						Cast<UDoTComponent>(statusComp).DOnDoTDamage.BindUFunction(this, n"UpdateHP");
 						break;
-					case EStatus::Chill:
+					case EDamageType::Chill:
 						statusComp = UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						Cast<UChillingComponent>(statusComp).DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
-						Cast<UChillingComponent>(statusComp).DOnFullChillStack.BindUFunction(this, n"CheckForStatusEffects");
 						break;
-					case EStatus::Freeze:
+					case EDamageType::Freeze:
 						statusComp = UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						Cast<UFreezeComponent>(statusComp).DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
 						break;
-					case EStatus::Poison:
+					case EDamageType::Poison:
 						break;
 					default:
 						break;

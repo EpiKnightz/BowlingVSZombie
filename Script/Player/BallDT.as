@@ -1,11 +1,12 @@
-enum EStatus
+enum EDamageType
 {
 	None,
 	Fire,
 	Chill,
 	Freeze,
 	Poison,
-	Rupture
+	Rupture,
+	Buff
 }
 
 struct FBallDT
@@ -23,7 +24,7 @@ struct FBallDT
 	int Atk = 50;
 
 	UPROPERTY()
-	EStatus StatusEffect;
+	EDamageType StatusEffect;
 
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;

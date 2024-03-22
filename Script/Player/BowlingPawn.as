@@ -15,6 +15,9 @@ class ABowlingPawn : APawn
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
 
+	UPROPERTY(DefaultComponent)
+	USpeedResponeComponent SpeedResponeComponent;
+
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
 
@@ -27,6 +30,7 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadWrite, Category = Input)
 	float TouchCooldown = 1;
 	float currentTouchCooldown = -1;
+	float CooldownModifier = 1;
 	UPROPERTY(BlueprintReadOnly, Category = Input)
 	float CooldownPercent = 1;
 
@@ -92,6 +96,8 @@ class ABowlingPawn : APawn
 		OriginalPos = GetActorLocation();
 
 		ItemsConfigDT.GetAllRows(ItemsConfig);
+
+		SpeedResponeComponent.DOnChangeSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input
@@ -255,7 +261,7 @@ class ABowlingPawn : APawn
 			SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
 
 			FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
-			currentTouchCooldown = TouchCooldown;
+			currentTouchCooldown = GetMaxCooldown();
 		}
 		PredictLine.ClearInstances();
 		PressLoc = FVector::ZeroVector;
@@ -268,13 +274,24 @@ class ABowlingPawn : APawn
 		Gameplay::OpenLevel(n"M_MainMenu");
 	}
 
+	float GetMaxCooldown()
+	{
+		return (TouchCooldown / CooldownModifier);
+	}
+
+	UFUNCTION()
+	void UpdateCooldownModifier(float iCooldownMod)
+	{
+		CooldownModifier = iCooldownMod;
+	}
+
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
 		if (currentTouchCooldown > 0)
 		{
 			currentTouchCooldown -= DeltaSeconds;
-			CooldownPercent = Math::Clamp(1 - (currentTouchCooldown / TouchCooldown), 0, 1);
+			CooldownPercent = Math::Clamp(1 - (currentTouchCooldown / GetMaxCooldown()), 0, 1);
 		}
 	}
 
@@ -307,5 +324,14 @@ class ABowlingPawn : APawn
 	void CoinComboHandler(int value)
 	{
 		OnComboTrigger(1);
+	}
+
+	UFUNCTION()
+	void OnAddingComponet(UActorComponent Component)
+	{
+		if (Component.IsA(UCooldownComponent))
+		{
+			// Cast<UCooldownComponent>(Component).DOnChangeCooldownModifier.BindUFunction(this, n"UpdateCooldownModifier");
+		}
 	}
 }

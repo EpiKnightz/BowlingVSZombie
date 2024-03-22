@@ -2,16 +2,16 @@ class UFreezeComponent : UStatusComponent
 {
 	default TargetType = EStatusTargetType::Zombie;
 
-	FFloatDelegate DOnChangeSpeedModifier;
-
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
-		DOnChangeSpeedModifier.ExecuteIfBound(0);
+		auto SpeedResponse = USpeedResponeComponent::Get(Host);
+		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(0);
 	}
 
 	void EndStatusEffect() override
 	{
-		DOnChangeSpeedModifier.ExecuteIfBound(1);
+		auto SpeedResponse = USpeedResponeComponent::Get(Host);
+		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}
 }

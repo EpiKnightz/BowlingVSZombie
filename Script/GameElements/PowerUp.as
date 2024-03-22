@@ -1,8 +1,7 @@
 class APowerUp : ACollectible
 {
-	UFUNCTION(BlueprintOverride)
-	void BeginPlay()
+	void OnCollectibleCollected(AActor OtherActor) override
 	{
-		Super::BeginPlay();
+		UCooldownComponent::GetOrCreate(OtherActor, n"CooldownComponent").Init(FStatusDT());
 	}
 };
