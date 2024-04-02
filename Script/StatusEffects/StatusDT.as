@@ -1,4 +1,4 @@
-enum EStatusTargetType
+enum ETargetType
 {
 	Zombie,
 	Player,
@@ -9,10 +9,10 @@ struct FStatusDT
 {
 	/// The status effect currently applied to the zombie.
 	UPROPERTY()
-	EDamageType DamageType;
+	EEffectType EffectType;
 
 	UPROPERTY()
-	EStatusTargetType TargetType = EStatusTargetType::Zombie;
+	ETargetType TargetType = ETargetType::Zombie;
 
 	/// Particle system to display when this status effect is active.
 	UPROPERTY()

@@ -28,6 +28,9 @@ class ABowling : AActor
 	default MovementComp.Velocity = FVector(-1, 0, 0);
 	default MovementComp.Bounciness = 0.8;
 
+	UPROPERTY(DefaultComponent)
+	USpeedResponseComponent SpeedResponse;
+
 	UPROPERTY()
 	float BowlingDeaccel = 500;
 	float DeaccelAddend = 0;
@@ -36,7 +39,7 @@ class ABowling : AActor
 	float Attack = 10;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	EDamageType Status = EDamageType::Fire;
+	EEffectType Status = EEffectType::Fire;
 
 	FActorDelegate DOnHit;
 
@@ -79,7 +82,7 @@ class ABowling : AActor
 		MovementComp.InitialSpeed = Force;
 		MovementComp.Velocity = Direction * Force;
 		MovementComp.Activate();
-		if (Status != EDamageType::None)
+		if (Status != EEffectType::None)
 		{
 			EffectSystem.Activate();
 		}

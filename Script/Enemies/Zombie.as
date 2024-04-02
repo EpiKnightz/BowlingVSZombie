@@ -36,13 +36,10 @@ class AZombie : AActor
 	UDamageResponseComponent DamageResponseComponent;
 
 	UPROPERTY(DefaultComponent)
-	USpeedResponeComponent SpeedResponseComponent;
+	USpeedResponseComponent SpeedResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UStatusResponseComponent StatusResponseComponent;
-
-	// UPROPERTY(BlueprintReadWrite, Category = Animation)
-	// UAnimMontage EmergeAnim;
 
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem SmackVFX;
@@ -73,8 +70,8 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent DeadSFX;
 
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	float MoveSpeed = 1;
+	// UPROPERTY(BlueprintReadWrite, Category = Stats)
+	// float MoveSpeed = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	int HP = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
@@ -83,21 +80,18 @@ class AZombie : AActor
 	int Dmg = 1;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	float AtkSpeed = 1;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	EAttackType AtkType = EAttackType::Punch;
+	// UPROPERTY(BlueprintReadWrite, Category = Stats)
+	// EAttackType AtkType = EAttackType::Punch;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
 	float CoinValue;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ZombieStatusTable;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsEmergeDone = false;
-
 	UPROPERTY(Category = Drop)
 	TSubclassOf<ACoin> CoinTemplate;
 
-	UCustomAnimInst AnimateInst;
+	UZombieAnimInst AnimateInst;
 	FIntDelegate DOnAttackHit;
 	FNameDelegate DOnZombDie;
 	FIntNameDelegate DOnZombieReach;
@@ -117,7 +111,7 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		AnimateInst = Cast<UCustomAnimInst>(ZombieSkeleton.GetAnimInstance());
+		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		// AnimateInst.Montage_Play(EmergeAnim);
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
@@ -130,7 +124,7 @@ class AZombie : AActor
 	UFUNCTION(BlueprintCallable)
 	void EmergeDone()
 	{
-		bIsEmergeDone = true;
+		AnimateInst.bIsEmergeDone = true;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -139,19 +133,19 @@ class AZombie : AActor
 		delayMove -= DeltaSeconds;
 		if (delayMove <= 0)
 		{
-			if (MoveSpeed == 0)
+			if (AnimateInst.AnimMoveSpeed == 0)
 			{
-				MoveSpeed = baseMoveSpeed;
+				AnimateInst.SetMoveSpeed(baseMoveSpeed);
 			}
 
 			FVector loc = GetActorLocation();
 			if (bIsDead)
 			{
-				loc.Z -= MoveSpeed * DeltaSeconds;
+				loc.Z -= AnimateInst.AnimMoveSpeed * DeltaSeconds;
 			}
 			else if (loc.X < MovingLimit || !bIsAttacking)
 			{
-				loc.X += MoveSpeed * DeltaSeconds * speedModifier;
+				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds * speedModifier;
 				if (loc.X > MovingLimit)
 				{
 					if (DOnAttackHit.IsBound())
@@ -179,9 +173,9 @@ class AZombie : AActor
 				SetActorLocation(loc);
 			}
 		}
-		else if (MoveSpeed > 0)
+		else if (AnimateInst.AnimMoveSpeed > 0)
 		{
-			MoveSpeed = 0;
+			AnimateInst.SetMoveSpeed(0);
 		}
 	}
 
@@ -192,13 +186,13 @@ class AZombie : AActor
 
 	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield, EAttackType iAtkType)
 	{
-		AtkType = iAtkType;
+		AnimateInst.AtkType = iAtkType;
 		RightHandWp.StaticMesh = RightHand;
 		LeftHandWp.StaticMesh = LeftHand;
 		if (RightHand != nullptr || LeftHand != nullptr)
 		{
 			AttackAnim = WeaponAttackAnim;
-			AnimateInst.bIsMirror = bCanDualWield ? Math::RandBool() : (LeftHand != nullptr && AtkType != EAttackType::Shield);
+			AnimateInst.bIsMirror = bCanDualWield ? Math::RandBool() : (LeftHand != nullptr && AnimateInst.AtkType != EAttackType::Shield);
 		}
 		else
 		{
@@ -206,7 +200,7 @@ class AZombie : AActor
 			AnimateInst.bIsMirror = Math::RandBool();
 		}
 
-		if (AtkType == EAttackType::Shield)
+		if (AnimateInst.AtkType == EAttackType::Shield)
 		{
 			LeftHandWp.AttachTo(ZombieSkeleton, n"LeftShield");
 			AttackAnim = ShieldAttackAnim;
@@ -245,7 +239,7 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void TakeHit(int Damage, EDamageType status = EDamageType::None)
+	void TakeHit(int Damage, EEffectType status = EEffectType::None)
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 		if (UpdateHP(-Damage) > 0)
@@ -262,9 +256,9 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void ApplyStatusEffects(EDamageType status)
+	void ApplyStatusEffects(EEffectType status)
 	{
-		if (status != EDamageType::None)
+		if (status != EEffectType::None)
 		{
 			FStatusDT Row;
 			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
@@ -273,16 +267,16 @@ class AZombie : AActor
 				UStatusComponent statusComp;
 				switch (status)
 				{
-					case EDamageType::Fire:
+					case EEffectType::Fire:
 						statusComp = UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
 						break;
-					case EDamageType::Chill:
+					case EEffectType::Chill:
 						statusComp = UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
 						break;
-					case EDamageType::Freeze:
+					case EEffectType::Freeze:
 						statusComp = UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
 						break;
-					case EDamageType::Poison:
+					case EEffectType::Poison:
 						break;
 					default:
 						break;
@@ -353,7 +347,8 @@ class AZombie : AActor
 		HP = baseHP = iHP;
 		Atk = baseAtk = iAtk;
 		Dmg = baseDmg = iDmg;
-		MoveSpeed = baseMoveSpeed = iSpeed;
+		baseMoveSpeed = iSpeed;
+		AnimateInst.SetMoveSpeed(baseMoveSpeed);
 		AtkSpeed = baseAtkSpeed = iAtkSpd;
 		SetActorScale3D(iScale);
 		CoinValue = iCoinValue;
@@ -383,5 +378,7 @@ class AZombie : AActor
 	void UpdateSpeedModifier(float iSpeed)
 	{
 		speedModifier = iSpeed;
+		// AnimateInst.Montage_SetPlayRate(att, speedModifier);
+		AnimateInst.AnimPlayRate = speedModifier;
 	}
 }

@@ -8,18 +8,18 @@ class UStatusComponent : UActorComponent
 	FNiagaraDelegate OnInit;
 	FVoidDelegate OnEnd;
 
-	EStatusTargetType TargetType;
+	ETargetType TargetType;
 
 	AActor Host;
 
 	UFUNCTION()
 	bool IsApplicable()
 	{
-		if (TargetType == EStatusTargetType::Player)
+		if (TargetType == ETargetType::Player)
 		{
 			return (Host.IsA(ABowlingPawn));
 		}
-		else if (TargetType == EStatusTargetType::Zombie)
+		else if (TargetType == ETargetType::Zombie)
 		{
 			return (Host.IsA(AZombie));
 		}

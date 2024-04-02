@@ -11,6 +11,9 @@ const float GOLD_COIN_VALUE = 10;
 
 class ACoin : ACollectible
 {
+	default DropComponent.StartHeight = 150;
+	default DropComponent.DropDuration = 2;
+
 	ECoinType CoinType;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -68,6 +71,7 @@ class ACoin : ACollectible
 
 	void OnCollectibleOverlap(AActor OtherActor) override
 	{
+		Super::OnCollectibleOverlap(OtherActor);
 		DOnCoinCombo.ExecuteIfBound(CoinData.CoinValue);
 	}
 

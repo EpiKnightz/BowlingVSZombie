@@ -7,7 +7,7 @@ delegate void FActorDelegate(AActor OtherActor);
 delegate void FFloatDelegate(float Value);
 delegate void FFTextDelegate(FText Message);
 delegate void FNiagaraDelegate(UNiagaraSystem System);
-delegate void FStatusDelegate(EDamageType status);
+delegate void FStatusDelegate(EEffectType status);
 
 event void FVoidEvent();
 event void FIntEvent(int Value);
@@ -16,36 +16,36 @@ event void FFloatEvent(float Value);
 
 namespace Utilities
 {
-	FName StatusEnumToFName(EDamageType Status)
+	FName StatusEnumToFName(EEffectType Status)
 	{
 		switch (Status)
 		{
-			case EDamageType::Fire:
+			case EEffectType::Fire:
 				return n"Item_0";
-			case EDamageType::Chill:
+			case EEffectType::Chill:
 				return n"Item_1";
-			case EDamageType::Freeze:
+			case EEffectType::Freeze:
 				return n"Item_2";
-			case EDamageType::Poison:
+			case EEffectType::Poison:
 				return n"Poison";
-			case EDamageType::Rupture:
+			case EEffectType::Rupture:
 				return n"Rupture";
 			default:
 				return n"None";
 		}
 	}
 
-	FName StatusEnumToComponentName(EDamageType Status)
+	FName StatusEnumToComponentName(EEffectType Status)
 	{
 		switch (Status)
 		{
-			case EDamageType::Fire:
+			case EEffectType::Fire:
 				return n"BurningComponent";
-			case EDamageType::Chill:
+			case EEffectType::Chill:
 				return n"ChillingComponent";
-			case EDamageType::Poison:
+			case EEffectType::Poison:
 				return n"PoisoningComponent";
-			case EDamageType::Rupture:
+			case EEffectType::Rupture:
 				return n"RupturingComponent";
 			default:
 				return n"None";

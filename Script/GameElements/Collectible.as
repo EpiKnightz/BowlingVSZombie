@@ -26,6 +26,9 @@ class ACollectible : AActor
 	UNiagaraComponent TrailVFX;
 	default TrailVFX.bAutoActivate = false;
 
+	UPROPERTY(DefaultComponent)
+	UDropComponent DropComponent;
+
 	UPROPERTY()
 	float ReverseSpeed = 1000;
 
@@ -61,6 +64,7 @@ class ACollectible : AActor
 
 	void OnCollectibleOverlap(AActor OtherActor)
 	{
+		DropComponent.EndEarly();
 	}
 
 	void OnCollectibleCollected(AActor OtherActor)

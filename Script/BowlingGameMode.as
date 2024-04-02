@@ -34,10 +34,13 @@ class ABowlingGameMode : AGameMode
 	UPROPERTY()
 	FLevelConfigsDT LevelConfigsData;
 
-	TArray<ULevelSequence> LevelSequence;
+	// TArray<ULevelSequence> LevelSequence;
 	AZombieManager zombMangr;
 	ABowlingPawn bowlPawn;
 	UBowlingGameInstance gameInstance;
+
+	UPROPERTY()
+	TArray<ULevelSequence> SequenceAssets;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -58,16 +61,17 @@ class ABowlingGameMode : AGameMode
 		DOnUpdateScore.ExecuteIfBound(Score);
 		DOnUpdateHP.ExecuteIfBound(HP);
 
-		UserWidget.BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
-		UserWidget.ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
-
-		UserWidget.BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
-		UserWidget.ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
-		UserWidget.ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		bowlPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
+		zombMangr.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
+		zombMangr.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
 		LevelConfigsDT.FindRow(FName("Item_" + (gameInstance.CurrentLevel - 1)), LevelConfigsData);
 		zombMangr.SpawnSize = LevelConfigsData.SpawnSize;
 		zombMangr.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
+		bowlPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
+
+		// LSActor = Gameplay::GetActorOfClass(ALevelSequenceActor);
+
 		PauseGame();
 		if (LevelConfigsData.Delay > 0)
 		{
@@ -95,9 +99,11 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION()
 	void PlaySequence()
 	{
-		TArray<AActor> LSActor;
-		Gameplay::GetAllActorsOfClass(ALevelSequenceActor, LSActor);
-		Cast<ALevelSequenceActor>(LSActor[gameInstance.CurrentLevel - 1]).SequencePlayer.Play();
+		if (gameInstance.CurrentLevel <= SequenceAssets.Num())
+		{
+			ALevelSequenceActor LSActor;
+			ULevelSequencePlayer::CreateLevelSequencePlayer(SequenceAssets[gameInstance.CurrentLevel - 1], FMovieSceneSequencePlaybackSettings(), LSActor).Play();
+		}
 	}
 
 	UFUNCTION()

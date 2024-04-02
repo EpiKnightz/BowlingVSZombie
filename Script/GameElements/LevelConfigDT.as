@@ -11,4 +11,7 @@ struct FLevelConfigsDT
 
 	UPROPERTY()
 	UDataTable SpawnSequenceDT;
+
+	UPROPERTY()
+	FItemConfigsDT ItemConfigsDT;
 }

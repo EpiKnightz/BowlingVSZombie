@@ -1,6 +1,6 @@
 class UChillingComponent : UStatusComponent
 {
-	default TargetType = EStatusTargetType::Zombie;
+	default TargetType = ETargetType::Zombie;
 
 	bool IsApplicable() override
 	{
@@ -10,19 +10,19 @@ class UChillingComponent : UStatusComponent
 
 	void DoInitChildren(float iParam1, float iParam2) override
 	{
-		auto SpeedResponse = USpeedResponeComponent::Get(Host);
+		auto SpeedResponse = USpeedResponseComponent::Get(Host);
 		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1 - (iParam1 * InitTimes));
 		if (InitTimes >= iParam2)
 		{
 			EndStatusEffect();
 			auto StatusResponse = UStatusResponseComponent::Get(Host);
-			StatusResponse.DOnApplyStatus.ExecuteIfBound(EDamageType::Freeze);
+			StatusResponse.DOnApplyStatus.ExecuteIfBound(EEffectType::Freeze);
 		}
 	}
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = USpeedResponeComponent::Get(Host);
+		auto SpeedResponse = USpeedResponseComponent::Get(Host);
 		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}

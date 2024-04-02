@@ -1,12 +1,6 @@
 
 class UUIZombieGameplay : UUserWidget
 {
-	UPROPERTY(BlueprintReadWrite)
-	ABowlingPawn BowlingPawn;
-
-	UPROPERTY(BlueprintReadWrite)
-	AZombieManager ZombieManager;
-
 	UPROPERTY(BindWidget)
 	UCommonNumericTextBlock ProgressText;
 
@@ -21,6 +15,9 @@ class UUIZombieGameplay : UUserWidget
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation ComboAnim;
+
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation ComboHighAnim;
 
 	UPROPERTY(BindWidget)
 	UCommonNumericTextBlock CoinText;
@@ -53,7 +50,19 @@ class UUIZombieGameplay : UUserWidget
 		if (NewValue > 0)
 		{
 			ComboText.SetCurrentValue(NewValue);
-			PlayAnimation(ComboAnim);
+
+			if (NewValue < 10)
+			{
+				PlayAnimation(ComboAnim);
+			}
+			else
+			{
+				if (NewValue == 10)
+				{
+					StopAnimation(ComboAnim);
+				}
+				PlayAnimation(ComboHighAnim);
+			}
 		}
 	}
 

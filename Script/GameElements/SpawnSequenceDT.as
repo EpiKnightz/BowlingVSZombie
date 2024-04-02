@@ -1,3 +1,9 @@
+enum ESpawnType
+{
+	Zombie,
+	PowerUp
+}
+
 struct FSpawnSequenceDT
 {
 	UPROPERTY()
@@ -12,20 +18,23 @@ struct FSpawnSequenceDT
 	UPROPERTY()
 	bool bAllowMultipleSpawns;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "bAllowMultipleSpawns", EditConditionHides))
 	int MinSpawnPerMulti;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "bAllowMultipleSpawns", EditConditionHides))
 	int MaxSpawnPerMulti;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "bAllowMultipleSpawns", EditConditionHides))
 	float MultipleSpawnInterval;
 
 	UPROPERTY()
 	FText WaveWarning;
 
 	UPROPERTY()
-	TArray<FName> ZombieID;
+	ESpawnType SpawnType;
+
+	UPROPERTY()
+	TArray<FName> SpawnID;
 
 	int opCmp(FSpawnSequenceDT Other) const
 	{

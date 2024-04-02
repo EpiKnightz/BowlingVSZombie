@@ -1,4 +1,4 @@
-enum EDamageType
+enum EEffectType
 {
 	None,
 	Fire,
@@ -6,7 +6,7 @@ enum EDamageType
 	Freeze,
 	Poison,
 	Rupture,
-	Buff
+	SpeedBuff
 }
 
 struct FBallDT
@@ -24,7 +24,13 @@ struct FBallDT
 	int Atk = 50;
 
 	UPROPERTY()
-	EDamageType StatusEffect;
+	float Cooldown = 1.5;
+
+	UPROPERTY()
+	int BowlingSpeed = 1000;
+
+	UPROPERTY()
+	EEffectType StatusEffect;
 
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;

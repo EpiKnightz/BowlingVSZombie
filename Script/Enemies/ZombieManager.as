@@ -63,7 +63,7 @@ class AZombieManager : AActor
 		currentGameTime += DeltaSeconds;
 		if (currentGameTime >= endTimer)
 		{
-			if (ZombieSequence.Last().ZombieID.Num() == 1 && ZombieSequence.Last().ZombieID[0] == "End")
+			if (ZombieSequence.Last().SpawnID.Num() == 1 && ZombieSequence.Last().SpawnID[0] == "End")
 			{
 				GameEnd();
 				return;
@@ -75,7 +75,7 @@ class AZombieManager : AActor
 			if (currentGameTime >= ZombieSequence[nextSequenceMilestone].TimeMark)
 			{
 				// Print(ZombieSequence[0].ZombieID[0].ToString());
-				ZombiePoolID = ZombieSequence[nextSequenceMilestone].ZombieID;
+				ZombiePoolID = ZombieSequence[nextSequenceMilestone].SpawnID;
 				if (ZombiePoolID.Num() > 0)
 				{
 					currentSequenceMilestone = nextSequenceMilestone;
@@ -174,6 +174,15 @@ class AZombieManager : AActor
 		SpawnSequenceDT.GetAllRows(ZombieSequence);
 		ZombieSequence.Sort();
 		endTimer = ZombieSequence.Last().TimeMark;
+		for (int i = 0; i < ZombieSequence.Num(); i++)
+		{
+			if (ZombieSequence[i].SpawnType != ESpawnType::Zombie)
+			{
+				ZombieSequence.RemoveAt(i);
+				--i;
+				continue;
+			}
+		}
 		for (int i = 0; i < ZombieSequence.Num(); i++)
 		{
 			if (!ZombieSequence[i].WaveWarning.IsEmpty())
