@@ -1,20 +1,24 @@
 
 class UCooldownComponent : UStatusComponent
 {
-	default TargetType = ETargetType::Player;
-
 	FFloatDelegate DOnChangeCooldownModifier;
 
-	void DoInitChildren(float iParam1, float iParam2) override
+	void DoInitChildren() override
 	{
-		auto PlayerResponse = USpeedResponseComponent::Get(Host);
-		PlayerResponse.DOnChangeSpeedModifier.ExecuteIfBound(iParam1);
+		auto PlayerResponse = USpeedResponseComponent::Get(GetOwner());
+		if (IsValid(PlayerResponse))
+		{
+			PlayerResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(FindAttrValue(n"AttackAttrSet.AttackCooldown"));
+		}
 	}
 
 	void EndStatusEffect() override
 	{
-		auto CooldownModifier = USpeedResponseComponent::Get(Host);
-		CooldownModifier.DOnChangeSpeedModifier.ExecuteIfBound(1);
+		auto CooldownModifier = USpeedResponseComponent::Get(GetOwner());
+		if (IsValid(CooldownModifier))
+		{
+			CooldownModifier.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
+		}
 		Super::EndStatusEffect();
 	}
 };

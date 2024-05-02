@@ -28,3 +28,5 @@ Time move when you move
 FPS mode
 On-rail fight mode
 Use Shape (like circle, hexa, triangle, square) to convey card aspect
+
+117,649 years

@@ -10,10 +10,10 @@ class AObstacle : AActor
 	// UPROPERTY(DefaultComponent, Attach = Collider)
 	// UNiagaraComponent NiagaraComp;
 
-	UPROPERTY(BlueprintReadWrite)
-	int BaseHP = 200;
+	// UPROPERTY(BlueprintReadWrite)
+	// int BaseHP = 200;
 
-	int HP;
+	// float HP;
 
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem BrokenVFX;
@@ -28,12 +28,17 @@ class AObstacle : AActor
 	FVector OriginalLoc;
 	bool bIsDestroyed = false;
 
+	UPROPERTY(DefaultComponent)
+	UAbilitySystem AbilitySystem;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		// OriginalRot = ObstacleMesh.GetRelativeRotation();
 		OriginalLoc = GetActorLocation();
-		HP = BaseHP;
+
+		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
+		AbilitySystem.Initialize(n"MaxHp", 200);
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -49,11 +54,11 @@ class AObstacle : AActor
 	}
 
 	UFUNCTION(BlueprintEvent)
-	void AttackHit(int Damage)
+	void AttackHit(float Damage)
 	{
 		if (!bIsDestroyed)
 		{
-			if (UpdateHP(-Damage) > 0)
+			if (TakeDamage(Damage))
 			{
 				if (FloatTween != nullptr)
 				{
@@ -74,52 +79,82 @@ class AObstacle : AActor
 		ObstacleMesh.SetRelativeRotation(/*OriginalRot + */ FRotator(Change, 0, 0));
 	}
 
-	int UpdateHP(int Change)
+	UFUNCTION()
+	bool CheckIsAlive()
 	{
-		if (HP > 150 && (HP + Change) <= 150)
+		if (AbilitySystem.GetCurrentValue(n"HP") <= 0)
 		{
-			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 40));
-			ObstacleMesh.StaticMesh = BrokenMesh[0];
-			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9f));
+			DeadEffect();
+			return false;
 		}
-		else if (HP > 100 && (HP + Change) <= 100)
+		else
 		{
-			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 30));
-			ObstacleMesh.StaticMesh = BrokenMesh[1];
-			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.75f));
+			return true;
 		}
-		else if (HP > 50 && (HP + Change) <= 50)
+	}
+
+	UFUNCTION()
+	bool TakeDamage(float Damage)
+	{
+		AbilitySystem.SetCurrentValue(n"Damage", Damage);
+		AbilitySystem.Calculate(n"Damage");
+		return CheckIsAlive();
+	}
+
+	bool UpdateHP(float Change)
+	{
+		float HP = AbilitySystem.GetCurrentValue(n"HP");
+		if (HP > 150 && (HP - Change) <= 150)
 		{
-			// NiagaraComp =
-			Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 20));
-			ObstacleMesh.StaticMesh = BrokenMesh[2];
-			ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.5f));
+			VisualChange(0);
 		}
-		HP += Change;
+		else if (HP > 100 && (HP - Change) <= 100)
+		{
+			VisualChange(1);
+		}
+		else if (HP > 50 && (HP - Change) <= 50)
+		{
+			VisualChange(2);
+		}
+
+		HP -= Change;
 		if (HP <= 0 && !bIsDestroyed)
 		{
-			bIsDestroyed = true;
-			EOnObstDestr.Broadcast();
-			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if (FloatTween != nullptr)
-			{
-				FloatTween.Stop();
-				FloatTween.ApplyEasing.Clear();
-			}
-			FloatTween = UFCTweenBPActionFloat::TweenFloat(-10.f, -120.f, 2.f, EFCEase::InQuart);
-			FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
-			FloatTween.OnComplete.AddUFunction(this, n"Dead");
-			FloatTween.Start();
+
+			return false;
 		}
-		return HP;
+		return true;
+	}
+
+	UFUNCTION()
+	void DeadEffect()
+	{
+		bIsDestroyed = true;
+		EOnObstDestr.Broadcast();
+		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (FloatTween != nullptr)
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -120.f, 2.f, EFCEase::InQuart);
+		FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
+		FloatTween.OnComplete.AddUFunction(this, n"Dead");
+		FloatTween.Start();
+	}
+
+	UFUNCTION()
+	void VisualChange(int ChangeIdx)
+	{
+		ObstacleMesh.StaticMesh = BrokenMesh[ChangeIdx];
+		ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9 - ChangeIdx * 0.15));
+		Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 40 - ChangeIdx * 10));
 	}
 
 	UFUNCTION()
 	void GoingDown(float32 Change)
 	{
-		SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, Change));
+		SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, OriginalLoc.Z + Change));
 	}
 
 	UFUNCTION()

@@ -1,7 +1,5 @@
 class UDoTComponent : UStatusComponent
 {
-	default TargetType = ETargetType::Zombie;
-
 	float Interval;
 	float CurrentInterval = -1;
 	float ParameterPerInterval;
@@ -10,18 +8,27 @@ class UDoTComponent : UStatusComponent
 
 	// FInt2IntDelegate DOnDoTDamage;
 
-	void DoInitChildren(float iParam1, float iParam2) override
+	void DoInitChildren() override
 	{
-		Interval = iParam1;
-		ParameterPerInterval = iParam2;
-		CurrentInterval = Interval;
+		Interval = FindAttrValue(n"Interval");
+		// ParameterPerInterval = iParam2;
+		// CurrentInterval = Interval;
 
-		DamageResponse = UDamageResponseComponent::Get(Host);
+		// DamageResponse = UDamageResponseComponent::Get(GetOwner());
+		// if (!IsValid(DamageResponse))
+		// {
+		// 	EndStatusEffect();
+		// }
+		// UAbilitySystem abSystem = UAbilitySystem::Get(GetOwner());
+		// if (IsValid(abSystem))
+		// {
+		// 	abSystem.AddGameplayTag(FGameplayTag::RequestGameplayTag(n"StatusEffect.Negative.Burn"));
+		// }
 	}
 
 	bool ActionPerInterval()
 	{
-		return DamageResponse.DOnApplyDamage.ExecuteIfBound(int(-ParameterPerInterval)) > 0;
+		return DamageResponse.DOnApplyDamage.ExecuteIfBound(ParameterPerInterval);
 	}
 
 	UFUNCTION(BlueprintOverride)

@@ -15,13 +15,13 @@ class ABowlingGameMode : AGameMode
 	int Score;
 
 	UPROPERTY(BlueprintReadWrite)
-	int HP = 100;
+	float HP = 100;
 
 	UPROPERTY(BlueprintReadWrite)
 	int CoinTotal;
 
 	FIntDelegate DOnUpdateScore;
-	FIntDelegate DOnUpdateHP;
+	FFloatDelegate DOnUpdateHP;
 	FVoidDelegate DOnWin;
 	FVoidDelegate DOnLose;
 
@@ -70,8 +70,6 @@ class ABowlingGameMode : AGameMode
 		zombMangr.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		bowlPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
 
-		// LSActor = Gameplay::GetActorOfClass(ALevelSequenceActor);
-
 		PauseGame();
 		if (LevelConfigsData.Delay > 0)
 		{
@@ -82,24 +80,34 @@ class ABowlingGameMode : AGameMode
 			StartGame();
 		}
 
-		if (gameInstance.CurrentLevel < 3)
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+		LatentInfo.ExecutionFunction = n"PlaySequence";
+		LatentInfo.Linkage = 0;
+		LatentInfo.UUID = 1;
+
+		switch (gameInstance.CurrentLevel)
 		{
-			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
-			// bool success;
-			// ULevelStreamingDynamic::LoadLevelInstance("M_Level2", FVector::ZeroVector, FRotator::ZeroRotator, success).OnLevelLoaded.AddUFunction(this, n"PlaySequence");
-			PlaySequence();
+			case 1:
+				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
+				// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
+				break;
+			case 2:
+				PlaySequence();
+				break;
+			case 3:
+				Gameplay::LoadStreamLevel(n"M_Level3", true, true, LatentInfo);
+				break;
+			default:
 		}
-		else
-		{
-			Gameplay::UnloadStreamLevel(n"M_Level1a", FLatentActionInfo(), true);
-			Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "FullLane");
-		}
+		// bool success;
+		// ULevelStreamingDynamic::LoadLevelInstance("M_Level2", FVector::ZeroVector, FRotator::ZeroRotator, success).OnLevelLoaded.AddUFunction(this, n"PlaySequence");
 	}
 
 	UFUNCTION()
 	void PlaySequence()
 	{
-		if (gameInstance.CurrentLevel <= SequenceAssets.Num())
+		if (gameInstance.CurrentLevel <= SequenceAssets.Num() && SequenceAssets[gameInstance.CurrentLevel - 1] != nullptr)
 		{
 			ALevelSequenceActor LSActor;
 			ULevelSequencePlayer::CreateLevelSequencePlayer(SequenceAssets[gameInstance.CurrentLevel - 1], FMovieSceneSequencePlaybackSettings(), LSActor).Play();
@@ -131,7 +139,7 @@ class ABowlingGameMode : AGameMode
 	}
 
 	UFUNCTION()
-	void HPChange(int Damage, FName zombieName)
+	void HPChange(float Damage, FName zombieName)
 	{
 		HP -= Damage;
 		if (HP <= 0)

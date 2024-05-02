@@ -1,8 +1,8 @@
 class ASupporterSlasher : ACompanion
 {
-#if EDITOR
-	default RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
-#endif
+	// #if EDITOR
+	// 	default RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
+	// #endif
 
 	UPROPERTY(BlueprintReadWrite)
 	float RotateTimer = 1;
@@ -10,10 +10,10 @@ class ASupporterSlasher : ACompanion
 	float CurrentTimer = 0;
 
 	UFUNCTION(BlueprintOverride)
-	void BeginPlay()
+	void ConstructionScript()
 	{
+		// Super::ConstructionScript();
 		RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
-		Super::BeginPlay();
 	}
 
 	UFUNCTION(BlueprintOverride, Meta = (NoSuperCall))

@@ -21,13 +21,13 @@ struct FBallDT
 	UStaticMesh BowlingMesh;
 
 	UPROPERTY()
-	int Atk = 50;
+	float Atk = 50;
 
 	UPROPERTY()
 	float Cooldown = 1.5;
 
 	UPROPERTY()
-	int BowlingSpeed = 1000;
+	float BowlingSpeed = 1000;
 
 	UPROPERTY()
 	EEffectType StatusEffect;

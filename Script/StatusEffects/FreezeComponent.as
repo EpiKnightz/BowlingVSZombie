@@ -1,20 +1,18 @@
 class UFreezeComponent : UStatusComponent
 {
-	default TargetType = ETargetType::Zombie;
-
-	void DoInitChildren(float iParam1, float iParam2) override
+	void DoInitChildren() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(Host);
-		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(0);
+		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(0);
 
-		auto DamageResponse = UDamageResponseComponent::Get(Host);
-		DamageResponse.DOnApplyDamage.ExecuteIfBound(int(-iParam1));
+		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
+		DamageResponse.DOnApplyDamage.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
 	}
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(Host);
-		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1);
+		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}
 }

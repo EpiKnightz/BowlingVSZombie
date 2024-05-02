@@ -9,16 +9,16 @@ class ASupporterGun : ACompanion
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem MuzzleVFX;
 
-	APostProcessVolume PPV;
+	// APostProcessVolume PPV;
 
 	// ensureMsgf(!AttachmentRules.bWeldSimulatedBodies, TEXT("AttachToComponent when called from a constructor cannot weld simulated bodies. Consider calling SetupAttachment directly instead."));
 
 	UFUNCTION(BlueprintOverride)
-	void BeginPlay()
+	void ConstructionScript()
 	{
-		Super::BeginPlay();
+		// Super::ConstructionScript();
 		RightHandWp.AttachTo(CompanionSkeleton, n"RightGun");
-		PPV = Cast<APostProcessVolume>(Gameplay::GetActorOfClass(APostProcessVolume));
+		// PPV = Cast<APostProcessVolume>(Gameplay::GetActorOfClass(APostProcessVolume));
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -56,6 +56,6 @@ class ASupporterGun : ACompanion
 	UFUNCTION()
 	void DisableEffect()
 	{
-		PPV.bEnabled = false;
+		// PPV.bEnabled = false;
 	}
 }

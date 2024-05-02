@@ -46,6 +46,9 @@ class ABowling : AActor
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> DamageEffect;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -54,6 +57,7 @@ class ABowling : AActor
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
+		SpeedResponse.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend");
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -100,6 +104,7 @@ class ABowling : AActor
 		// Print("Real vector: " + MovementComp.Velocity, 100);
 		DOnHit.ExecuteIfBound(OtherActor);
 		// Print("" + MovementComp.Velocity.Size(), 100);
+		// AbilitySystem.ApplyGameplayEffectToTarget(DamageEffect, AbilitySystem::GetAbilitySystemComponent(OtherActor), 1, FGameplayEffectContextHandle());
 	}
 
 	UFUNCTION()

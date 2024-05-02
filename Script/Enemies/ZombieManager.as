@@ -222,7 +222,7 @@ class AZombieManager : AActor
 			SpawnedZombieList.Remove(zombieNameToRemove);
 			if (SpawnedZombieList.Num() == 0 && CurrentLevelProgress >= 1)
 			{
-				GameEnd();
+				System::SetTimer(this, n"GameEnd", 3, false);
 			}
 		}
 	}

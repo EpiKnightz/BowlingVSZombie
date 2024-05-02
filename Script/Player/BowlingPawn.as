@@ -13,23 +13,31 @@ class ABowlingPawn : APawn
 	UPROPERTY(DefaultComponent)
 	USkeletalMeshComponent BodyMesh;
 	default BodyMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
+	default BodyMesh.ReceivesDecals = false;
 
 	UPROPERTY(DefaultComponent, Attach = BodyMesh)
 	USkeletalMeshComponent HeadMesh;
 	default HeadMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
+	default HeadMesh.ReceivesDecals = false;
 
 	UPROPERTY(DefaultComponent, Attach = BodyMesh) // , AttachSocket = RightHand
 	USkeletalMeshComponent AccessoryMesh;
 	default AccessoryMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
+	default AccessoryMesh.ReceivesDecals = false;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent WorldWidget;
+	default WorldWidget.CollisionEnabled = ECollisionEnabled::NoCollision;
+	default WorldWidget.ReceivesDecals = false;
 
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
 
 	UPROPERTY(DefaultComponent)
 	USpeedResponseComponent SpeedResponeComponent;
+
+	UPROPERTY(DefaultComponent)
+	UDamageResponseComponent DamageResponeComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
@@ -85,7 +93,11 @@ class ABowlingPawn : APawn
 
 	ETouchTarget CurrentTouchTarget = ETouchTarget::Battlefield;
 
-	float PawnMoveSpeed = 500;
+	// float PawnMoveSpeed = 500;
+	float DamageBoost = 1;
+
+	UPROPERTY(DefaultComponent)
+	UAbilitySystem AbilitySystem;
 
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
@@ -99,8 +111,9 @@ class ABowlingPawn : APawn
 	{
 		// Controller is nullptr in ConstructionScript(), but is valid in BeginPlay(), so this is the proper place to init this I guess.
 		PlayerController = Cast<ABowlingPlayerController>(Controller);
-		// PlayerController.PushInputComponent(InputComponent); // Already connected to PlayerController for some reason. Don't do this or your events will fire twice.
 		SetupPlayerInputComponent(InputComponent);
+		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
+		AbilitySystem.Initialize(n"MoveSpeed", 500);
 
 		// Add Input Mapping Context
 		if (PlayerController != nullptr)
@@ -116,7 +129,8 @@ class ABowlingPawn : APawn
 
 		// ItemsConfigDT.GetAllRows(ItemsConfig);
 
-		SpeedResponeComponent.DOnChangeSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
+		SpeedResponeComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
+		DamageResponeComponent.DOnDmgBoost.BindUFunction(this, n"OnDamageBoost");
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input
@@ -225,6 +239,7 @@ class ABowlingPawn : APawn
 			if (currentTouchCooldown <= 0 && bowlingPowerMultiplier != 0)
 			{
 				ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
+				CurrentBallData.Atk = CurrentBallData.Atk * DamageBoost;
 				SpawnedActor.SetData(CurrentBallData);
 				SpawnedActor.SetOwner(this);
 				SpawnedActor.Fire(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * bowlingPowerMultiplier);
@@ -252,7 +267,7 @@ class ABowlingPawn : APawn
 	void CalculateMovement(FVector currentLocation, FVector targetLocation)
 	{
 		float moveAmount = targetLocation.Y - currentLocation.Y;
-		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, PawnMoveSpeed * Gameplay::GetWorldDeltaSeconds());
+		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetCurrentValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds());
 		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -400, 400), currentLocation.Z));
 	}
 
@@ -391,5 +406,11 @@ class ABowlingPawn : APawn
 		{
 			// Cast<UCooldownComponent>(Component).DOnChangeCooldownModifier.BindUFunction(this, n"UpdateCooldownModifier");
 		}
+	}
+
+	UFUNCTION()
+	void OnDamageBoost(float BoostPercentage)
+	{
+		DamageBoost = BoostPercentage;
 	}
 }

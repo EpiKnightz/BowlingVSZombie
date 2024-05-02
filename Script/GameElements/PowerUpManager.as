@@ -85,15 +85,18 @@ class APowerUpManager : AActor
 		PowerUpDataTable.FindRow(PowerUpID, Row);
 
 		FStatusDT EffectRow;
-		EffectDataTable.FindRow(Row.EffectID[0], EffectRow);
+		if (!Row.EffectID.IsEmpty())
+		{
+			EffectDataTable.FindRow(Row.EffectID[0], EffectRow);
+		}
 
 		FVector SpawnLocation = SpawnPosition.Location;
 		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
-		SpawnLocation.Z *= Row.Scale.Z;
+		// SpawnLocation.Z *= Row.Scale.Z;
 
 		APowerUp SpawnedActor = Cast<APowerUp>(SpawnActor(PowerUpTemplate, SpawnLocation, SpawnPosition.Rotator()));
-		SpawnedActor.Mesh.SetStaticMesh(Row.PowerUpModel);
-		SpawnedActor.Init(EffectRow);
+		// SpawnedActor.Mesh.SetStaticMesh(Row.PowerUpModel);
+		SpawnedActor.InitData(Row, EffectRow);
 		// SpawnedActor.SetData(Row.HP, Row.Atk, Row.Dmg, Row.Speed, Row.AtkSpeed, Row.Scale, Row.CoinDropAmount);
 
 		if (multipleSpawnCount > 0)

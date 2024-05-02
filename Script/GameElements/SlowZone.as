@@ -1,29 +1,25 @@
-class ASlowZone : AActor
+class ASlowZone : AZone
 {
-	UPROPERTY(DefaultComponent, RootComponent)
-	UBoxComponent Collider;
-	default Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 	UPROPERTY()
 	float DeaccelAddend = 2500;
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		ABowling bowl = Cast<ABowling>(OtherActor);
-		if (bowl != nullptr)
+		auto SpeedResponseComponent = USpeedResponseComponent::Get(OtherActor);
+		if (IsValid(SpeedResponseComponent))
 		{
-			bowl.SetDeaccelAddend(DeaccelAddend);
+			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(DeaccelAddend);
 		}
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorEndOverlap(AActor OtherActor)
 	{
-		ABowling bowl = Cast<ABowling>(OtherActor);
-		if (bowl != nullptr)
+		auto SpeedResponseComponent = USpeedResponseComponent::Get(OtherActor);
+		if (IsValid(SpeedResponseComponent))
 		{
-			bowl.SetDeaccelAddend(0);
+			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(0);
 		}
 	}
 }

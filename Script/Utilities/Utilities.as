@@ -1,18 +1,23 @@
 delegate void FIntDelegate(int Value);
 delegate int FInt2IntDelegate(int Value);
+delegate float FFloat2FloatDelegate(float Value);
+delegate bool FFloat2BoolDelegate(float Value);
 delegate void FVoidDelegate();
 delegate void FNameDelegate(FName Name);
 delegate void FIntNameDelegate(int Value, FName Name);
+delegate void FFloatNameDelegate(float Value, FName Name);
 delegate void FActorDelegate(AActor OtherActor);
 delegate void FFloatDelegate(float Value);
 delegate void FFTextDelegate(FText Message);
 delegate void FNiagaraDelegate(UNiagaraSystem System);
 delegate void FStatusDelegate(EEffectType status);
+delegate bool FBoolReturnDelegate();
 
 event void FVoidEvent();
 event void FIntEvent(int Value);
 event void FNameEvent(FName Name);
 event void FFloatEvent(float Value);
+event void FNameFloatEvent(FName Name, float Value);
 
 namespace Utilities
 {

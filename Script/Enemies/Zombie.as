@@ -61,25 +61,12 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	TArray<UAnimMontage> DeadAnims;
 
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimSequenceBase> DeadLoopAnims;
-
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent HitSFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent DeadSFX;
 
-	// UPROPERTY(BlueprintReadWrite, Category = Stats)
-	// float MoveSpeed = 1;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	int HP = 1;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	int Atk = 1;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	int Dmg = 1;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	float AtkSpeed = 1;
 	// UPROPERTY(BlueprintReadWrite, Category = Stats)
 	// EAttackType AtkType = EAttackType::Punch;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
@@ -92,15 +79,10 @@ class AZombie : AActor
 	TSubclassOf<ACoin> CoinTemplate;
 
 	UZombieAnimInst AnimateInst;
-	FIntDelegate DOnAttackHit;
+	FFloatDelegate DOnAttackHit;
 	FNameDelegate DOnZombDie;
-	FIntNameDelegate DOnZombieReach;
+	FFloatNameDelegate DOnZombieReach;
 
-	int baseHP;
-	float baseMoveSpeed;
-	int baseAtk;
-	int baseDmg;
-	float baseAtkSpeed;
 	float speedModifier = 1;
 	float delayMove = 2.f;
 	int currentDeadAnim = 0;
@@ -108,17 +90,23 @@ class AZombie : AActor
 	bool bIsAttacking = false;
 	float MovingLimit;
 
+	UPROPERTY(DefaultComponent)
+	UAbilitySystem AbilitySystem;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		// AnimateInst.Montage_Play(EmergeAnim);
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
 
-		DamageResponseComponent.DOnApplyDamage.BindUFunction(this, n"UpdateHP");
-		SpeedResponseComponent.DOnChangeSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
+		DamageResponseComponent.DOnApplyDamage.BindUFunction(this, n"TakeDamage");
+		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
 		StatusResponseComponent.DOnApplyStatus.BindUFunction(this, n"ApplyStatusEffects");
+
+		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
+		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
+		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -135,13 +123,14 @@ class AZombie : AActor
 		{
 			if (AnimateInst.AnimMoveSpeed == 0)
 			{
-				AnimateInst.SetMoveSpeed(baseMoveSpeed);
+				AnimateInst.SetMoveSpeed(AbilitySystem.GetCurrentValue(n"MoveSpeed") * speedModifier);
 			}
 
 			FVector loc = GetActorLocation();
 			if (bIsDead)
 			{
-				loc.Z -= AnimateInst.AnimMoveSpeed * DeltaSeconds;
+				// Fall down animation should run at constant speed
+				loc.Z -= 80 * DeltaSeconds;
 			}
 			else if (loc.X < MovingLimit || !bIsAttacking)
 			{
@@ -164,7 +153,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					DOnZombieReach.ExecuteIfBound(Dmg, GetName());
+					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetCurrentValue(n"Attack"), GetName());
 				}
 				DestroyActor();
 			}
@@ -214,12 +203,12 @@ class AZombie : AActor
 	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		if (HP > 0)
+		if (AbilitySystem.GetCurrentValue(n"HP") > 0)
 		{
 			ABowling pawn = Cast<ABowling>(OtherActor);
 			if (pawn != nullptr)
 			{
-				TakeHit(int(pawn.Attack), pawn.Status);
+				TakeHit(pawn.Attack, pawn.Status);
 				// Print("Hit:" + HP);
 			}
 		}
@@ -228,7 +217,7 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		if (HP > 0)
+		if (AbilitySystem.GetCurrentValue(n"HP") > 0)
 		{
 			ABullet pawn2 = Cast<ABullet>(OtherActor);
 			if (pawn2 != nullptr)
@@ -239,26 +228,33 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void TakeHit(int Damage, EEffectType status = EEffectType::None)
+	void TakeHit(float Damage, EEffectType status = EEffectType::None)
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-		if (UpdateHP(-Damage) > 0)
+		SetStencilValue(5);
+		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
+		if (Damage > 0)
 		{
-			AnimateInst.Montage_Play(DamageAnim);
-			FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-			if (bIsAttacking)
-			{
-				AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Attacking");
-			}
+			DamageResponseComponent.DOnApplyDamage.ExecuteIfBound(Damage);
 			ApplyStatusEffects(status);
-			delayMove = 1;
 		}
+	}
+
+	void SetStencilValue(int value)
+	{
+		ZombieSkeleton.SetCustomDepthStencilValue(value);
+	}
+
+	UFUNCTION()
+	void ResetStencilValue()
+	{
+		SetStencilValue(1);
 	}
 
 	UFUNCTION()
 	void ApplyStatusEffects(EEffectType status)
 	{
-		if (status != EEffectType::None)
+		if (status != EEffectType::None && AbilitySystem.GetCurrentValue(n"HP") > 0)
 		{
 			FStatusDT Row;
 			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
@@ -289,47 +285,71 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void Dead(UAnimMontage Montage, bool bInterrupted)
-	{
-		// ZombieSkeleton.PlayAnimation(DeadLoopAnims[currentDeadAnim], false);
-		AnimateInst.StopSlotAnimation();
-		AnimateInst.PlaySlotAnimationAsDynamicMontage(DeadLoopAnims[currentDeadAnim], n"DefaultSlot", 0, 0);
-		DOnZombDie.ExecuteIfBound(GetName());
-	}
-
-	UFUNCTION()
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
-		AnimateInst.OnMontageBlendingOut.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AtkSpeed * speedModifier);
+		AnimateInst.OnMontageEnded.Clear();
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetCurrentValue(n"AttackCooldown") * speedModifier);
 	}
 
 	UFUNCTION()
-	int UpdateHP(int Changes)
+	bool CheckIsAlive()
 	{
-		HP += Changes;
-		if (HP <= 0 && !bIsDead)
+		if (AbilitySystem.GetCurrentValue(n"HP") <= 0)
+		{
+			DeadEffect();
+			return false;
+		}
+		else
+		{
+			TakeDamageEffect();
+			return true;
+		}
+	}
+
+	UFUNCTION()
+	bool TakeDamage(float Damage)
+	{
+		AbilitySystem.SetCurrentValue(n"Damage", Damage);
+		AbilitySystem.Calculate(n"Damage");
+		return CheckIsAlive();
+	}
+
+	UFUNCTION()
+	void DeadEffect()
+	{
+		if (!bIsDead)
 		{
 			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			AnimateInst.StopSlotAnimation();
 			currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
 			AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
-			AnimateInst.OnMontageBlendingOut.Clear();
-			AnimateInst.OnMontageBlendingOut.AddUFunction(this, n"Dead");
-			delayMove = 1.5f;
+			delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
 			bIsDead = true;
+			DOnZombDie.ExecuteIfBound(GetName());
+
 			FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
 
 			ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
 			SpawnedActor.ExpectValueToCoinType(CoinValue);
 		}
-		return HP;
+	}
+
+	UFUNCTION()
+	void TakeDamageEffect()
+	{
+		AnimateInst.Montage_Play(DamageAnim);
+		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
+		if (bIsAttacking)
+		{
+			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
+		}
+		delayMove = 1;
 	}
 
 	UFUNCTION()
 	void AttackHit()
 	{
-		DOnAttackHit.ExecuteIfBound(Atk);
+		DOnAttackHit.ExecuteIfBound(AbilitySystem.GetCurrentValue(n"Attack"));
 	}
 
 	UFUNCTION()
@@ -344,12 +364,16 @@ class AZombie : AActor
 	UFUNCTION()
 	void SetData(int iHP, int iAtk, int iDmg, int iSpeed, float iAtkSpd, FVector iScale, float iCoinValue)
 	{
-		HP = baseHP = iHP;
-		Atk = baseAtk = iAtk;
-		Dmg = baseDmg = iDmg;
-		baseMoveSpeed = iSpeed;
-		AnimateInst.SetMoveSpeed(baseMoveSpeed);
-		AtkSpeed = baseAtkSpeed = iAtkSpd;
+		TMap<FName, float32> Data;
+		Data.Add(n"HP", iHP);
+		Data.Add(n"Attack", iAtk);
+		Data.Add(n"Damage", iDmg);
+		Data.Add(n"MoveSpeed", iSpeed);
+		Data.Add(n"AttackCooldown", float32(iAtkSpd));
+
+		AbilitySystem.ImportData(Data);
+
+		AnimateInst.SetMoveSpeed(iSpeed);
 		SetActorScale3D(iScale);
 		CoinValue = iCoinValue;
 		// Print("" + bMovingLimit);

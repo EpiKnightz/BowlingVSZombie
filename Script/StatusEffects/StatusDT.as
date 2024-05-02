@@ -8,11 +8,17 @@ enum ETargetType
 struct FStatusDT
 {
 	/// The status effect currently applied to the zombie.
+	// UPROPERTY()
+	// EEffectType EffectType;
+
 	UPROPERTY()
-	EEffectType EffectType;
+	FGameplayTag EffectTag;
 
 	UPROPERTY()
 	ETargetType TargetType = ETargetType::Zombie;
+
+	UPROPERTY()
+	EStackingRule StackingRule = EStackingRule::None;
 
 	/// Particle system to display when this status effect is active.
 	UPROPERTY()
@@ -22,11 +28,6 @@ struct FStatusDT
 	UPROPERTY()
 	float Duration;
 
-	/// 1st parameter for the status effect. Usually the damage amount.
 	UPROPERTY()
-	float Param1; // Slow amount
-
-	/// 2nd parameter for the status effect. Usually the percentage of effectiveness.
-	UPROPERTY()
-	float Param2; // Times to freeze
+	TMap<FGameplayTag, float> AffectedAttributes;
 }

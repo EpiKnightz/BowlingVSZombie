@@ -25,10 +25,14 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation CoinAnim;
 
+	UPROPERTY(BindWidget)
+	USlider LevelProgress;
+
 	UFUNCTION(BlueprintEvent)
 	void UpdateLevelProgress(float NewProgress)
 	{
 		ProgressText.SetCurrentValue(NewProgress);
+		LevelProgress.SetValue(NewProgress);
 	}
 
 	UFUNCTION(BlueprintEvent)
@@ -38,7 +42,7 @@ class UUIZombieGameplay : UUserWidget
 	}
 
 	UFUNCTION(BlueprintEvent)
-	void UpdateHP(int NewHP)
+	void UpdateHP(float NewHP)
 	{
 		// To be implemented in Blueprint
 	}

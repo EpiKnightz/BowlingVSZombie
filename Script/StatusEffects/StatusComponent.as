@@ -1,6 +1,14 @@
+enum EStackingRule
+{
+	None,
+	Stackable,
+	Refreshable,
+	StackAndRefreshable
+}
+
 class UStatusComponent : UActorComponent
 {
-	float Duration;
+	FStatusDT StatusData;
 	float CurrentDuration = -1;
 
 	int InitTimes = 0;
@@ -8,43 +16,75 @@ class UStatusComponent : UActorComponent
 	FNiagaraDelegate OnInit;
 	FVoidDelegate OnEnd;
 
-	ETargetType TargetType;
-
-	AActor Host;
-
 	UFUNCTION()
 	bool IsApplicable()
 	{
-		if (TargetType == ETargetType::Player)
+		bool bResult = true;
+
+		switch (StatusData.TargetType)
 		{
-			return (Host.IsA(ABowlingPawn));
+			case ETargetType::Player:
+				bResult = bResult && (GetOwner().IsA(ABowlingPawn));
+				break;
+			case ETargetType::Zombie:
+				bResult = bResult && (GetOwner().IsA(AZombie));
+				break;
+			default:
 		}
-		else if (TargetType == ETargetType::Zombie)
+
+		if (StatusData.StackingRule == EStackingRule::None && InitTimes > 0)
 		{
-			return (Host.IsA(AZombie));
+			bResult = false;
 		}
-		else
-		{
-			return true;
-		}
+
+		return bResult;
 	}
 
 	UFUNCTION()
 	UStatusComponent Init(FStatusDT Row)
 	{
-		Host = GetOwner();
-		OnInit.ExecuteIfBound(Row.StatusVFX);
-		Activate();
-		Duration = Row.Duration;
-		CurrentDuration = Duration;
-		InitTimes++;
-		DoInitChildren(Row.Param1, Row.Param2);
+		StatusData = Row;
+		if (IsApplicable())
+		{
+			OnInit.ExecuteIfBound(Row.StatusVFX);
+			Activate();
+			if (InitTimes == 0)
+			{
+				CurrentDuration = StatusData.Duration;
+			}
+			Stacking();
+			DoInitChildren();
+		}
 		return this;
 	}
 
 	UFUNCTION()
-	void DoInitChildren(float iParam1, float iParam2)
+	void DoInitChildren()
 	{
+	}
+
+	UFUNCTION()
+	void Stacking()
+	{
+		switch (StatusData.StackingRule)
+		{
+			case EStackingRule::None:
+				if (InitTimes == 0)
+				{
+					InitTimes = 1;
+				}
+				break;
+			case EStackingRule::Stackable:
+				InitTimes++;
+				break;
+			case EStackingRule::Refreshable:
+				CurrentDuration = StatusData.Duration;
+				break;
+			case EStackingRule::StackAndRefreshable:
+				CurrentDuration = StatusData.Duration;
+				InitTimes++;
+				break;
+		}
 	}
 
 	/// Tick function called every frame. Handles decrementing the burning
@@ -69,7 +109,30 @@ class UStatusComponent : UActorComponent
 		CurrentDuration = -1;
 		InitTimes = 0;
 		OnEnd.ExecuteIfBound();
+		StatusData = FStatusDT();
 		Deactivate();
 		// ForceDestroyComponent(); //Warning: This could have unintended consequences.
+	}
+
+	UFUNCTION()
+	float FindAttrValue(FName AttrName)
+	{
+		float outValue = -1000;
+		if (!StatusData.AffectedAttributes.Find(FGameplayTag::RequestGameplayTag(AttrName), outValue))
+		{
+			PrintError("Attribute not found: " + AttrName.ToString());
+		}
+		return outValue;
+	}
+
+	UFUNCTION()
+	float GetAttrValue(FGameplayTag Tag)
+	{
+		float outValue = -1000;
+		if (!StatusData.AffectedAttributes.Find(Tag, outValue))
+		{
+			PrintError("Attribute not found: " + Tag.GetTagName());
+		}
+		return outValue;
 	}
 }

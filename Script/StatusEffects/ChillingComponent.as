@@ -1,29 +1,33 @@
 class UChillingComponent : UStatusComponent
 {
-	default TargetType = ETargetType::Zombie;
-
 	bool IsApplicable() override
 	{
-		UActorComponent Target = UFreezeComponent::Get(Host);
+		UFreezeComponent Target = UFreezeComponent::Get(GetOwner());
 		return Super::IsApplicable() && (Target == nullptr || !Target.IsActive());
 	}
 
-	void DoInitChildren(float iParam1, float iParam2) override
+	void DoInitChildren() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(Host);
-		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1 - (iParam1 * InitTimes));
-		if (InitTimes >= iParam2)
+		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		if (IsValid(SpeedResponse))
 		{
-			EndStatusEffect();
-			auto StatusResponse = UStatusResponseComponent::Get(Host);
-			StatusResponse.DOnApplyStatus.ExecuteIfBound(EEffectType::Freeze);
+			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1 - (FindAttrValue(n"MoveableAttrSet.MoveSpeed") * InitTimes));
+			if (InitTimes >= GetAttrValue(GameplayTags::StatusParam_StackLimit))
+			{
+				EndStatusEffect();
+				auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
+				StatusResponse.DOnApplyStatus.ExecuteIfBound(EEffectType::Freeze);
+			}
 		}
 	}
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(Host);
-		SpeedResponse.DOnChangeSpeedModifier.ExecuteIfBound(1);
+		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		if (IsValid(SpeedResponse))
+		{
+			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
+		}
 		Super::EndStatusEffect();
 	}
 }
