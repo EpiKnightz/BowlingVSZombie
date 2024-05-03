@@ -5,6 +5,13 @@ enum ETargetType
 	Both
 }
 
+enum EDurationType
+{
+	Instant,
+	Duration,
+	Infinite
+}
+
 struct FStatusDT
 {
 	/// The status effect currently applied to the zombie.
@@ -18,15 +25,18 @@ struct FStatusDT
 	ETargetType TargetType = ETargetType::Zombie;
 
 	UPROPERTY()
+	EDurationType DurationType = EDurationType::Duration;
+
+	/// Duration of the status effect in seconds.
+	UPROPERTY(meta = (EditCondition = "DurationType == EDurationType::Duration", EditConditionHides))
+	float Duration;
+
+	UPROPERTY()
 	EStackingRule StackingRule = EStackingRule::None;
 
 	/// Particle system to display when this status effect is active.
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;
-
-	/// Duration of the status effect in seconds.
-	UPROPERTY()
-	float Duration;
 
 	UPROPERTY()
 	TMap<FGameplayTag, float> AffectedAttributes;

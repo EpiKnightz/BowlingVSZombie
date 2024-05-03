@@ -1,4 +1,4 @@
-class UWoundedComponent : UStatusComponent
+class URuptureComponent : UStatusComponent
 {
 	FFloat2BoolDelegate DOnOldApplyDamage;
 	float extraDamage;
@@ -8,9 +8,9 @@ class UWoundedComponent : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
-			DOnOldApplyDamage.BindUFunction(DamageResponse.DOnApplyDamage.UObject, DamageResponse.DOnApplyDamage.FunctionName);
-			DamageResponse.DOnApplyDamage.Clear();
-			DamageResponse.DOnApplyDamage.BindUFunction(this, n"CustomApplyDamage");
+			DOnOldApplyDamage.BindUFunction(DamageResponse.DOnTakeDamage.UObject, DamageResponse.DOnTakeDamage.FunctionName);
+			DamageResponse.DOnTakeDamage.Clear();
+			DamageResponse.DOnTakeDamage.BindUFunction(this, n"CustomApplyDamage");
 			extraDamage = FindAttrValue(n"PrimaryAttrSet.Damage");
 		}
 	}
@@ -23,7 +23,7 @@ class UWoundedComponent : UStatusComponent
 	UFUNCTION()
 	bool CustomApplyDamage(float iDamage)
 	{
-		return DOnOldApplyDamage.ExecuteIfBound(iDamage - extraDamage);
+		return DOnOldApplyDamage.ExecuteIfBound(iDamage + extraDamage);
 	}
 
 	void
@@ -32,8 +32,8 @@ class UWoundedComponent : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
-			DamageResponse.DOnApplyDamage.Clear();
-			DamageResponse.DOnApplyDamage.BindUFunction(DOnOldApplyDamage.UObject, DOnOldApplyDamage.FunctionName);
+			DamageResponse.DOnTakeDamage.Clear();
+			DamageResponse.DOnTakeDamage.BindUFunction(DOnOldApplyDamage.UObject, DOnOldApplyDamage.FunctionName);
 			DOnOldApplyDamage.Clear();
 		}
 		Super::EndStatusEffect();

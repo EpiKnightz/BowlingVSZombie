@@ -28,7 +28,7 @@ class UDoTComponent : UStatusComponent
 
 	bool ActionPerInterval()
 	{
-		return DamageResponse.DOnApplyDamage.ExecuteIfBound(ParameterPerInterval);
+		return DamageResponse.DOnTakeDamage.ExecuteIfBound(ParameterPerInterval);
 	}
 
 	UFUNCTION(BlueprintOverride)

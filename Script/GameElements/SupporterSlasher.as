@@ -35,10 +35,10 @@ class ASupporterSlasher : ACompanion
 
 				for (AActor overlappedActor : outActors)
 				{
-					AZombie zomb = Cast<AZombie>(overlappedActor);
-					if (zomb != nullptr)
+					UDamageResponseComponent damageRespones = UDamageResponseComponent::Get(overlappedActor);
+					if (IsValid(damageRespones))
 					{
-						zomb.TakeHit(50);
+						damageRespones.DOnTakeHit.ExecuteIfBound(100);
 					}
 				}
 			}

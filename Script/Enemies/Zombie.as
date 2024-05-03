@@ -27,11 +27,6 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UStaticMesh> WeaponList;
 
-	UPROPERTY(DefaultComponent, Attach = ZombieSkeleton, AttachSocket = SpineSocket)
-	UNiagaraComponent StatusEffect;
-	default StatusEffect.Activate(false);
-	default StatusEffect.AutoActivate = false;
-
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
 
@@ -97,16 +92,21 @@ class AZombie : AActor
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
-		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
 
-		DamageResponseComponent.DOnApplyDamage.BindUFunction(this, n"TakeDamage");
-		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateSpeedModifier");
-		StatusResponseComponent.DOnApplyStatus.BindUFunction(this, n"ApplyStatusEffects");
+		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
+
+		DamageResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.DOnHitCue.AddUFunction(this, n"TakeHitCue");
+		DamageResponseComponent.DOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
+
+		StatusResponseComponent.Initialize();
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -200,43 +200,28 @@ class AZombie : AActor
 	 * Handles damage taken by the zombie actor. Checks the source of damage, applies damage, plays animations and sound effects,
 	 * applies status effects if hit by a fire attack, and prints debug message.
 	 */
-	UFUNCTION()
-	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
-	{
-		if (AbilitySystem.GetCurrentValue(n"HP") > 0)
-		{
-			ABowling pawn = Cast<ABowling>(OtherActor);
-			if (pawn != nullptr)
-			{
-				TakeHit(pawn.Attack, pawn.Status);
-				// Print("Hit:" + HP);
-			}
-		}
-	}
+	// UFUNCTION()
+	// void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
+	// {
+	// 	if (AbilitySystem.GetCurrentValue(n"HP") > 0)
+	// 	{
+	// 		ABowling pawn = Cast<ABowling>(OtherActor);
+	// 		if (pawn != nullptr)
+	// 		{
+	// 			DamageResponseComponent.TakeHit(pawn.Attack);
+	// 			StatusResponseComponent.DOnApplyStatus.ExecuteIfBound(pawn.Status);
+	// 			// Print("Hit:" + HP);
+	// 		}
+	// 	}
+	// }
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		if (AbilitySystem.GetCurrentValue(n"HP") > 0)
+		ABullet pawn2 = Cast<ABullet>(OtherActor);
+		if (pawn2 != nullptr)
 		{
-			ABullet pawn2 = Cast<ABullet>(OtherActor);
-			if (pawn2 != nullptr)
-			{
-				TakeHit(10);
-			}
-		}
-	}
-
-	UFUNCTION()
-	void TakeHit(float Damage, EEffectType status = EEffectType::None)
-	{
-		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-		SetStencilValue(5);
-		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
-		if (Damage > 0)
-		{
-			DamageResponseComponent.DOnApplyDamage.ExecuteIfBound(Damage);
-			ApplyStatusEffects(status);
+			DamageResponseComponent.DOnTakeHit.ExecuteIfBound(10);
 		}
 	}
 
@@ -252,39 +237,6 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void ApplyStatusEffects(EEffectType status)
-	{
-		if (status != EEffectType::None && AbilitySystem.GetCurrentValue(n"HP") > 0)
-		{
-			FStatusDT Row;
-			ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
-			if (Row.Duration != 0)
-			{
-				UStatusComponent statusComp;
-				switch (status)
-				{
-					case EEffectType::Fire:
-						statusComp = UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						break;
-					case EEffectType::Chill:
-						statusComp = UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						break;
-					case EEffectType::Freeze:
-						statusComp = UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-						break;
-					case EEffectType::Poison:
-						break;
-					default:
-						break;
-				}
-				statusComp.OnInit.BindUFunction(this, n"OnStatusInit");
-				statusComp.OnEnd.BindUFunction(this, n"OnStatusEnd");
-				statusComp.Init(Row);
-			}
-		}
-	}
-
-	UFUNCTION()
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageEnded.Clear();
@@ -292,30 +244,27 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	bool CheckIsAlive()
+	void TakeHitCue()
 	{
-		if (AbilitySystem.GetCurrentValue(n"HP") <= 0)
-		{
-			DeadEffect();
-			return false;
-		}
-		else
-		{
-			TakeDamageEffect();
-			return true;
-		}
+		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
+		SetStencilValue(5);
+		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
 	}
 
 	UFUNCTION()
-	bool TakeDamage(float Damage)
+	void TakeDamageCue()
 	{
-		AbilitySystem.SetCurrentValue(n"Damage", Damage);
-		AbilitySystem.Calculate(n"Damage");
-		return CheckIsAlive();
+		AnimateInst.Montage_Play(DamageAnim);
+		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
+		if (bIsAttacking)
+		{
+			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
+		}
+		delayMove = 1;
 	}
 
 	UFUNCTION()
-	void DeadEffect()
+	void DeadCue()
 	{
 		if (!bIsDead)
 		{
@@ -332,18 +281,6 @@ class AZombie : AActor
 			ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
 			SpawnedActor.ExpectValueToCoinType(CoinValue);
 		}
-	}
-
-	UFUNCTION()
-	void TakeDamageEffect()
-	{
-		AnimateInst.Montage_Play(DamageAnim);
-		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-		if (bIsAttacking)
-		{
-			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
-		}
-		delayMove = 1;
 	}
 
 	UFUNCTION()
@@ -386,20 +323,7 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void OnStatusInit(UNiagaraSystem VFX)
-	{
-		StatusEffect.Asset = VFX;
-		StatusEffect.Activate(true);
-	}
-
-	UFUNCTION()
-	void OnStatusEnd()
-	{
-		StatusEffect.Deactivate();
-	}
-
-	UFUNCTION()
-	void UpdateSpeedModifier(float iSpeed)
+	void UpdateMoveSpeedModifier(float iSpeed)
 	{
 		speedModifier = iSpeed;
 		// AnimateInst.Montage_SetPlayRate(att, speedModifier);

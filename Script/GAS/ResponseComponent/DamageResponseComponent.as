@@ -1,52 +1,82 @@
 class UDamageResponseComponent : UActorComponent
 {
-	FFloat2BoolDelegate DOnApplyDamage;
-	FFloatDelegate DOnHPRemoval;
+	FFloat2BoolDelegate DOnTakeHit;
+	FFloat2BoolDelegate DOnTakeDamage;
+	FFloat2BoolDelegate DOnHPRemoval;
 	FFloatDelegate DOnDmgBoost;
+	FBoolReturnDelegate DOnIsAlive;
 
-	FVoidDelegate DOnHitCue;
-	FVoidDelegate DOnDamageCue;
-	FVoidDelegate DOnDeadCue;
+	FVoidEvent DOnHitCue;
+	FVoidEvent DOnDamageCue;
+	FVoidEvent DOnDeadCue;
 
 	private UAbilitySystem AbilitySystem;
 
 	UFUNCTION()
 	void Initialize(UAbilitySystem iAbilitySystem)
 	{
-		if (IsValid(AbilitySystem))
+		if (IsValid(iAbilitySystem))
 		{
 			AbilitySystem = iAbilitySystem;
+			DOnTakeHit.BindUFunction(this, n"TakeHit");
+			DOnTakeDamage.BindUFunction(this, n"TakeDamage");
+			DOnHPRemoval.BindUFunction(this, n"RemoveHP");
+			DOnIsAlive.BindUFunction(this, n"CheckIsAlive");
 		}
 		else
 		{
+			PrintError("DamageResponseComponent: AbilitySystem is invalid.");
 			ForceDestroyComponent();
 		}
 	}
 
 	// Take Hit -> Take Damage -> Check is Alive -> DamageCue/Dead Cue
 	UFUNCTION()
-	void TakeHit(float Damage, FGameplayTagContainer StatusEffect)
+	bool TakeHit(float Damage)
 	{
-		DOnHitCue.ExecuteIfBound();
+		DOnHitCue.Broadcast();
 
 		if (Damage > 0)
 		{
 			TakeDamage(Damage);
+			// should not apply status here. Only return true value if the damage is taken.
+			// AbilitySystem.ApplyStatusEffects(StatusEffect);
+			return true;
 		}
+		return false;
 	}
 
 	UFUNCTION()
-	void TakeDamage(float Damage)
+	bool TakeDamage(float Damage)
 	{
 		AbilitySystem.SetCurrentValue(n"Damage", Damage);
 		AbilitySystem.Calculate(n"Damage");
 		if (CheckIsAlive())
 		{
-			DOnDamageCue.ExecuteIfBound();
+			DOnDamageCue.Broadcast();
+			return true;
 		}
 		else
 		{
-			DOnDeadCue.ExecuteIfBound();
+			DOnDeadCue.Broadcast();
+			return false;
+		}
+	}
+
+	UFUNCTION()
+	bool RemoveHP(float Amount)
+	{
+		float NewHP = AbilitySystem.GetCurrentValue(n"HP") - Amount;
+		AbilitySystem.SetCurrentValue(n"HP", NewHP);
+		AbilitySystem.Calculate(n"HP");
+		if (CheckIsAlive())
+		{
+			return true;
+		}
+		else
+		{
+			DOnDeadCue.Broadcast();
+			return false;
 		}
 	}
 
@@ -60,51 +90,6 @@ class UDamageResponseComponent : UActorComponent
 		else
 		{
 			return true;
-		}
-	}
-
-	UFUNCTION()
-	void CheckForStatusEffects(FGameplayTagContainer StatusEffect)
-	{
-		if (!StatusEffect.IsEmpty())
-		{
-			UStatusComponent statusComp;
-			if (StatusEffect.HasTag(GameplayTags::Status_Negative))
-			{
-				if (StatusEffect.HasTagExact(GameplayTags::Status_Negative_Burn))
-				{
-					statusComp = UDoTComponent::GetOrCreate(this.GetOwner(), GameplayTags::Status_Negative_Burn.TagName);
-				}
-				if (StatusEffect.HasTagExact(GameplayTags::Status_Negative_Chill))
-				{
-					statusComp = UChillingComponent::GetOrCreate(this.GetOwner(), GameplayTags::Status_Negative_Chill.TagName);
-				}
-			}
-			// FStatusDT Row;
-			// ZombieStatusTable.FindRow(Utilities::StatusEnumToFName(status), Row);
-			// if (Row.Duration != 0)
-			// {
-			//
-			// 	switch (status)
-			// 	{
-			// 		case EEffectType::Fire:
-			// 			statusComp = UDoTComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-			// 			break;
-			// 		case EEffectType::Chill:
-			// 			statusComp = UChillingComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-			// 			break;
-			// 		case EEffectType::Freeze:
-			// 			statusComp = UFreezeComponent::GetOrCreate(this, Utilities::StatusEnumToComponentName(status));
-			// 			break;
-			// 		case EEffectType::Poison:
-			// 			break;
-			// 		default:
-			// 			break;
-			// 	}
-			// 	statusComp.OnInit.BindUFunction(this, n"OnStatusInit");
-			// 	statusComp.OnEnd.BindUFunction(this, n"OnStatusEnd");
-			// 	statusComp.Init(Row);
-			// }
 		}
 	}
 };

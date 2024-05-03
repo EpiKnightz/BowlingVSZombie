@@ -39,7 +39,7 @@ class ABowling : AActor
 	float Attack = 10;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	EEffectType Status = EEffectType::Fire;
+	FGameplayTagContainer Status;
 
 	FActorDelegate DOnHit;
 
@@ -86,7 +86,7 @@ class ABowling : AActor
 		MovementComp.InitialSpeed = Force;
 		MovementComp.Velocity = Direction * Force;
 		MovementComp.Activate();
-		if (Status != EEffectType::None)
+		if (!Status.IsEmpty())
 		{
 			EffectSystem.Activate();
 		}
@@ -104,7 +104,16 @@ class ABowling : AActor
 		// Print("Real vector: " + MovementComp.Velocity, 100);
 		DOnHit.ExecuteIfBound(OtherActor);
 		// Print("" + MovementComp.Velocity.Size(), 100);
-		// AbilitySystem.ApplyGameplayEffectToTarget(DamageEffect, AbilitySystem::GetAbilitySystemComponent(OtherActor), 1, FGameplayEffectContextHandle());
+		auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
+		if (IsValid(DamageResponse))
+		{
+			DamageResponse.TakeHit(Attack);
+			auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+			if (IsValid(StatusResponse))
+			{
+				StatusResponse.DOnApplyStatus.ExecuteIfBound(Status);
+			}
+		}
 	}
 
 	UFUNCTION()
@@ -112,7 +121,10 @@ class ABowling : AActor
 	{
 		BowlingMesh.StaticMesh = Data.BowlingMesh;
 		Attack = Data.Atk;
-		Status = Data.StatusEffect;
+		if (Data.EffectTag.IsValid())
+		{
+			Status.AddTag(Data.EffectTag);
+		}
 		EffectSystem.Asset = Data.StatusVFX;
 	}
 

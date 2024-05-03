@@ -1,14 +1,3 @@
-enum EEffectType
-{
-	None,
-	Fire,
-	Chill,
-	Freeze,
-	Poison,
-	Rupture,
-	SpeedBuff
-}
-
 struct FBallDT
 {
 	UPROPERTY()
@@ -30,7 +19,7 @@ struct FBallDT
 	float BowlingSpeed = 1000;
 
 	UPROPERTY()
-	EEffectType StatusEffect;
+	FGameplayTag EffectTag;
 
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;

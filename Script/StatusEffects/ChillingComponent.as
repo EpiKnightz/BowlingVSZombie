@@ -16,7 +16,10 @@ class UChillingComponent : UStatusComponent
 			{
 				EndStatusEffect();
 				auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
-				StatusResponse.DOnApplyStatus.ExecuteIfBound(EEffectType::Freeze);
+				if (IsValid(StatusResponse))
+				{
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Negative_Freeze));
+				}
 			}
 		}
 	}

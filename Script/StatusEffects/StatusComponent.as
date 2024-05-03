@@ -13,8 +13,10 @@ class UStatusComponent : UActorComponent
 
 	int InitTimes = 0;
 
-	FNiagaraDelegate OnInit;
-	FVoidDelegate OnEnd;
+	private UNiagaraComponent StatusEffectComp;
+
+	// FVoidDelegate OnInit;
+	// FVoidDelegate OnEnd;
 
 	UFUNCTION()
 	bool IsApplicable()
@@ -46,7 +48,7 @@ class UStatusComponent : UActorComponent
 		StatusData = Row;
 		if (IsApplicable())
 		{
-			OnInit.ExecuteIfBound(Row.StatusVFX);
+			StatusInitCue();
 			Activate();
 			if (InitTimes == 0)
 			{
@@ -54,6 +56,11 @@ class UStatusComponent : UActorComponent
 			}
 			Stacking();
 			DoInitChildren();
+			// auto DamageResponseComponent = UDamageResponseComponent::Get(GetOwner());
+			// if (IsValid(DamageResponseComponent))
+			// {
+			// 	DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"StatusEndCue");
+			// }
 		}
 		return this;
 	}
@@ -108,7 +115,8 @@ class UStatusComponent : UActorComponent
 	{
 		CurrentDuration = -1;
 		InitTimes = 0;
-		OnEnd.ExecuteIfBound();
+		// OnEnd.ExecuteIfBound();
+		StatusEndCue();
 		StatusData = FStatusDT();
 		Deactivate();
 		// ForceDestroyComponent(); //Warning: This could have unintended consequences.
@@ -134,5 +142,31 @@ class UStatusComponent : UActorComponent
 			PrintError("Attribute not found: " + Tag.GetTagName());
 		}
 		return outValue;
+	}
+
+	UFUNCTION()
+	void StatusInitCue()
+	{
+		if (!IsValid(StatusEffectComp))
+		{
+			if (StatusData.DurationType == EDurationType::Instant)
+			{
+				Niagara::SpawnSystemAtLocation(StatusData.StatusVFX, GetOwner().GetActorLocation(), GetOwner().GetActorRotation(), GetOwner().GetActorScale3D());
+			}
+			else
+			{
+				StatusEffectComp = Niagara::SpawnSystemAttached(StatusData.StatusVFX, GetOwner().RootComponent, NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::SnapToTargetIncludingScale, true);
+			}
+		}
+		StatusEffectComp.SetActive(true);
+	}
+
+	UFUNCTION()
+	void StatusEndCue()
+	{
+		if (IsValid(StatusEffectComp))
+		{
+			StatusEffectComp.Deactivate();
+		}
 	}
 }
