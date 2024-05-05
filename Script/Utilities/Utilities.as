@@ -18,6 +18,7 @@ event void FIntEvent(int Value);
 event void FNameEvent(FName Name);
 event void FFloatEvent(float Value);
 event void FNameFloatEvent(FName Name, float Value);
+event void FNameFloat32Event(FName Name, float32 Value);
 event void FGameplayTagEvent(FGameplayTagContainer TagContainer);
 
 namespace Utilities

@@ -123,7 +123,7 @@ class AZombie : AActor
 		{
 			if (AnimateInst.AnimMoveSpeed == 0)
 			{
-				AnimateInst.SetMoveSpeed(AbilitySystem.GetCurrentValue(n"MoveSpeed") * speedModifier);
+				AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed") * speedModifier);
 			}
 
 			FVector loc = GetActorLocation();
@@ -153,7 +153,7 @@ class AZombie : AActor
 			{
 				if (!bIsDead)
 				{
-					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetCurrentValue(n"Attack"), GetName());
+					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"), GetName());
 				}
 				DestroyActor();
 			}
@@ -240,7 +240,7 @@ class AZombie : AActor
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageEnded.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetCurrentValue(n"AttackCooldown") * speedModifier);
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetValue(n"AttackCooldown") * speedModifier);
 	}
 
 	UFUNCTION()
@@ -286,7 +286,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void AttackHit()
 	{
-		DOnAttackHit.ExecuteIfBound(AbilitySystem.GetCurrentValue(n"Attack"));
+		DOnAttackHit.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"));
 	}
 
 	UFUNCTION()

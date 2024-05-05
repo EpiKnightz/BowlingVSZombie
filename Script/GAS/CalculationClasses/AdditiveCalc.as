@@ -1,18 +1,17 @@
 class UAdditiveCalc : UCalculation
 {
-
-	float DoCalculateChildren(float SourceValue, TArray<float> iParam) override
+	float DoCalculateChildren(float SourceValue) override
 	{
 		float Result = SourceValue;
-		for (int i = 0; i < iParam.Num(); i++)
+		for (int i = 0; i < Params.Num(); i++)
 		{
-			Result += iParam[i];
+			Result += Params[i];
 		}
 		return Result;
 	}
 
-	bool IsValidInput(float SourceValue, TArray<float> iParam) override
+	bool IsValidInput(float SourceValue) override
 	{
-		return iParam.Num() > 0;
+		return Params.Num() > 0;
 	}
 };

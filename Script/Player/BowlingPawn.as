@@ -267,7 +267,7 @@ class ABowlingPawn : APawn
 	void CalculateMovement(FVector currentLocation, FVector targetLocation)
 	{
 		float moveAmount = targetLocation.Y - currentLocation.Y;
-		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetCurrentValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds());
+		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds());
 		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -400, 400), currentLocation.Z));
 	}
 

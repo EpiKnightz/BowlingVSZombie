@@ -1,3 +1,32 @@
+struct FCalculationContainer
+{
+	TArray<UCalculation> Calculations;
+
+	void Sort()
+	{
+		Calculations.Sort(true);
+	}
+
+	void AddCalculation(UCalculation Calculation)
+	{
+		if (!Calculations.Contains(Calculation))
+		{
+			Calculations.Add(Calculation);
+		}
+		else
+		{
+		}
+	}
+
+	void CalculateData(FAngelscriptGameplayAttributeData Data)
+	{
+		for (int i = 0; i < Calculations.Num(); i++)
+		{
+			Calculations[i].Calculate(Data.GetCurrentValue());
+		}
+	}
+}
+
 class UAbilitySystem : ULiteAbilitySystemComponent
 {
 	private FGameplayTagContainer ActorTags;
@@ -7,7 +36,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	FNameFloatEvent EOnPostSetCurrentValue;
 	FNameFloatEvent EOnPostSetBaseValue;
 
-	// private TArray<TSubclassOf<ULiteAttrSet>> AttributeSetContainer;
+	private TMap<FName, FCalculationContainer> CalculationMap;
 
 	UFUNCTION()
 	void AddGameplayTag(FGameplayTag Tag)
@@ -37,6 +66,11 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	void AddCalculation(FName AttrName, UCalculation Calculation)
+	{
+	}
+
+	UFUNCTION()
 	void Initialize(FName AttrName, float Value)
 	{
 		float32 NewValue = float32(Value);
@@ -48,35 +82,43 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	void SetCurrentValue(FName AttrName, float Value)
+	private void SetValue(FName AttrName, float Value)
 	{
 		float32 NewValue = float32(Value);
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			AttrSetContainer[i].PreAttrChange(AttrName, NewValue);
+			AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue);
 			AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
-			AttrSetContainer[i].PostAttrChange(AttrName);
+			AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
 			EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
 		}
 	}
 
 	UFUNCTION()
-	void SetBaseValue(FName AttrName, float Value)
+	void SetBaseValue(FName AttrName, float Value, bool bSetAsCurrent = false)
 	{
 		float32 NewValue = float32(Value);
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			AttrSetContainer[i].PreBaseAttrChange(AttrName, NewValue);
+			AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewValue);
 			AttrSetContainer[i].SetBaseValue(AttrName, NewValue);
-			AttrSetContainer[i].PostAttrChange(AttrName);
+			AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
 			EOnPostSetBaseValue.Broadcast(AttrName, NewValue);
+
+			if (bSetAsCurrent)
+			{
+				AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue);
+				AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
+				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
+				EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+			}
 		}
 	}
 
 	UFUNCTION()
-	float GetCurrentValue(FName AttrName)
+	float GetValue(FName AttrName)
 	{
 		FAngelscriptGameplayAttributeData Data;
 		if (FindDataFromAllSets(AttrName, Data))
@@ -87,7 +129,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	float GetBaseValue(FName AttrName)
+	private float GetBaseValue(FName AttrName)
 	{
 		FAngelscriptGameplayAttributeData Data;
 		if (FindDataFromAllSets(AttrName, Data))
@@ -105,9 +147,10 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		if (i >= 0)
 		{
 			Data = AttrSetContainer[i].GetLiteAttr(AttrName);
-			AttrSetContainer[i].PreCalculation(Data);
+			AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(Data);
 			// Do Calculation
-			AttrSetContainer[i].PostCalculation(Data);
+			FCalculationContainer Calculations = CalculationMap.FindOrAdd(AttrName);
+			AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(Data);
 		}
 	}
 

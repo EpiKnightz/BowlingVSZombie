@@ -49,7 +49,7 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	bool TakeDamage(float Damage)
 	{
-		AbilitySystem.SetCurrentValue(n"Damage", Damage);
+		AbilitySystem.SetBaseValue(n"Damage", Damage, true);
 		AbilitySystem.Calculate(n"Damage");
 		if (CheckIsAlive())
 		{
@@ -66,8 +66,8 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	bool RemoveHP(float Amount)
 	{
-		float NewHP = AbilitySystem.GetCurrentValue(n"HP") - Amount;
-		AbilitySystem.SetCurrentValue(n"HP", NewHP);
+		float NewHP = AbilitySystem.GetValue(n"HP") - Amount;
+		AbilitySystem.SetBaseValue(n"HP", NewHP, true);
 		AbilitySystem.Calculate(n"HP");
 		if (CheckIsAlive())
 		{
@@ -83,7 +83,7 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	bool CheckIsAlive()
 	{
-		if (AbilitySystem.GetCurrentValue(n"HP") <= 0)
+		if (AbilitySystem.GetValue(n"HP") <= 0)
 		{
 			return false;
 		}

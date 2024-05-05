@@ -2,21 +2,21 @@ class UOverride : UCalculation
 {
 	FBoolReturnDelegate DIsValid;
 
-	float DoCalculateChildren(float SourceValue, TArray<float> iParam) override
+	float DoCalculateChildren(float SourceValue) override
 	{
-		return iParam[0];
+		return Params[0];
 	}
 
 	// Might want to override this function for different intention when override value
-	bool IsValidInput(float SourceValue, TArray<float> iParam) override
+	bool IsValidInput(float SourceValue) override
 	{
 		if (DIsValid.IsBound())
 		{
-			return DIsValid.Execute() && (iParam.Num() == 1);
+			return DIsValid.Execute() && (Params.Num() == 1);
 		}
 		else
 		{
-			return iParam.Num() == 1;
+			return Params.Num() == 1;
 		}
 	}
 };

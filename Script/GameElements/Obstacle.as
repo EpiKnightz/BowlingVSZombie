@@ -82,7 +82,7 @@ class AObstacle : AActor
 	UFUNCTION()
 	bool CheckIsAlive()
 	{
-		if (AbilitySystem.GetCurrentValue(n"HP") <= 0)
+		if (AbilitySystem.GetValue(n"HP") <= 0)
 		{
 			DeadEffect();
 			return false;
@@ -96,14 +96,14 @@ class AObstacle : AActor
 	UFUNCTION()
 	bool TakeDamage(float Damage)
 	{
-		AbilitySystem.SetCurrentValue(n"Damage", Damage);
+		AbilitySystem.SetBaseValue(n"Damage", Damage, true);
 		AbilitySystem.Calculate(n"Damage");
 		return CheckIsAlive();
 	}
 
 	bool UpdateHP(float Change)
 	{
-		float HP = AbilitySystem.GetCurrentValue(n"HP");
+		float HP = AbilitySystem.GetValue(n"HP");
 		if (HP > 150 && (HP - Change) <= 150)
 		{
 			VisualChange(0);

@@ -14,6 +14,14 @@ class UPrimaryAttrSet : ULiteAttrSet
 		MaxHP.Initialize(100);
 		HP.Initialize(MaxHP.GetCurrentValue());
 		Damage.Initialize(0);
+		InitDelegates();
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void InitDelegates()
+	{
+		DOnPreAttrChange.BindUFunction(this, n"PreAttrChange");
+		DOnPostCalculation.BindUFunction(this, n"PostCalculation");
 	}
 
 	UFUNCTION(BlueprintOverride)
