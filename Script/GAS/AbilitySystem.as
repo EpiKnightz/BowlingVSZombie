@@ -88,10 +88,12 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue);
-			AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
-			AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-			EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+			if (!AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue))
+			{
+				AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
+				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
+				EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+			}
 		}
 	}
 
@@ -102,17 +104,21 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewValue);
-			AttrSetContainer[i].SetBaseValue(AttrName, NewValue);
-			AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-			EOnPostSetBaseValue.Broadcast(AttrName, NewValue);
-
-			if (bSetAsCurrent)
+			if (!AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewValue))
 			{
-				AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue);
-				AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
+				AttrSetContainer[i].SetBaseValue(AttrName, NewValue);
 				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-				EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+				EOnPostSetBaseValue.Broadcast(AttrName, NewValue);
+
+				if (bSetAsCurrent)
+				{
+					if (!AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue))
+					{
+						AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
+						AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
+						EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+					}
+				}
 			}
 		}
 	}
@@ -147,10 +153,12 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		if (i >= 0)
 		{
 			Data = AttrSetContainer[i].GetLiteAttr(AttrName);
-			AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(Data);
-			// Do Calculation
-			FCalculationContainer Calculations = CalculationMap.FindOrAdd(AttrName);
-			AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(Data);
+			if (!AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(Data))
+			{
+				// Do Calculation
+				FCalculationContainer Calculations = CalculationMap.FindOrAdd(AttrName);
+				AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(Data);
+			}
 		}
 	}
 

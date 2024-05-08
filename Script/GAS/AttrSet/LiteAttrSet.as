@@ -11,8 +11,10 @@ class ULiteAttrSet : ULiteAttrSetBase
 	 *	NewValue is a mutable reference so you are able to clamp the newly applied value as well.
 	 */
 	UFUNCTION(BlueprintOverride)
-	void PreAttrChange(FName AttrName, float32& NewValue)
-	{}
+	bool PreAttrChange(FName AttrName, float32& NewValue)
+	{
+		return false;
+	}
 
 	/** Called just after any modification happens to an attribute. */
 	UFUNCTION(BlueprintOverride)
@@ -26,8 +28,10 @@ class ULiteAttrSet : ULiteAttrSetBase
 	 *	final value of the attribute actually changing.
 	 */
 	UFUNCTION(BlueprintOverride)
-	void PreBaseAttrChange(FName AttrName, float32& NewValue)
-	{}
+	bool PreBaseAttrChange(FName AttrName, float32& NewValue)
+	{
+		return false;
+	}
 
 	/** Called just after any modification happens to an attribute's base value when an attribute aggregator exists. */
 	UFUNCTION(BlueprintOverride)
@@ -40,8 +44,10 @@ class ULiteAttrSet : ULiteAttrSetBase
 	 *	Note this is only called during an 'execute'. E.g., a modification to the 'base value' of an attribute. It is not called during an application of a GameplayEffect, such as a 5 ssecond +10 movement speed buff.
 	 */
 	UFUNCTION(BlueprintOverride)
-	void PreCalculation(FAngelscriptGameplayAttributeData& Data)
-	{}
+	bool PreCalculation(FAngelscriptGameplayAttributeData& Data)
+	{
+		return false;
+	}
 
 	// Will be called in ability system only
 	/**

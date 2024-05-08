@@ -7,29 +7,27 @@ class AObstacle : AActor
 	UStaticMeshComponent ObstacleMesh;
 	default ObstacleMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// UPROPERTY(DefaultComponent, Attach = Collider)
-	// UNiagaraComponent NiagaraComp;
-
-	// UPROPERTY(BlueprintReadWrite)
-	// int BaseHP = 200;
-
-	// float HP;
-
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem BrokenVFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = Mesh)
 	TArray<UStaticMesh> BrokenMesh;
 
-	FVoidEvent EOnObstDestr;
-
 	UFCTweenBPActionFloat FloatTween;
 	// FRotator OriginalRot;
 	FVector OriginalLoc;
-	bool bIsDestroyed = false;
 
 	UPROPERTY(DefaultComponent)
 	UAbilitySystem AbilitySystem;
+
+	UPROPERTY(DefaultComponent)
+	UDamageResponseComponent DamageResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Player;
+
+	float OldHP;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -39,38 +37,29 @@ class AObstacle : AActor
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.Initialize(n"MaxHp", 200);
+		OldHP = AbilitySystem.GetValue(n"HP");
+
+		DamageResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.DOnHitCue.AddUFunction(this, n"TakeHitCue");
+		DamageResponseComponent.DOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
 	}
 
-	UFUNCTION(BlueprintOverride)
-	void ActorBeginOverlap(AActor OtherActor)
-	{
-		AZombie zomb = Cast<AZombie>(OtherActor);
-		if (zomb != nullptr && !zomb.DOnAttackHit.IsBound())
-		{
-			zomb.DOnAttackHit.BindUFunction(this, n"AttackHit");
-			EOnObstDestr.AddUFunction(zomb, n"StopAttacking");
-			zomb.SetMovingLimit(GetActorLocation().X - 100);
-		}
-	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Visual Cues:
 
 	UFUNCTION(BlueprintEvent)
-	void AttackHit(float Damage)
+	void TakeHitCue()
 	{
-		if (!bIsDestroyed)
+		if (FloatTween != nullptr)
 		{
-			if (TakeDamage(Damage))
-			{
-				if (FloatTween != nullptr)
-				{
-					FloatTween.Stop();
-					FloatTween.ApplyEasing.Clear();
-				}
-				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -4.f, 0.125f, EFCEase::OutElastic);
-				FloatTween.bUYoyo = true;
-				FloatTween.ApplyEasing.AddUFunction(this, n"Shake");
-				FloatTween.Start();
-			}
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
 		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -4.f, 0.125f, EFCEase::OutElastic);
+		FloatTween.bUYoyo = true;
+		FloatTween.ApplyEasing.AddUFunction(this, n"Shake");
+		FloatTween.Start();
 	}
 
 	UFUNCTION()
@@ -80,67 +69,22 @@ class AObstacle : AActor
 	}
 
 	UFUNCTION()
-	bool CheckIsAlive()
+	void TakeDamageCue()
 	{
-		if (AbilitySystem.GetValue(n"HP") <= 0)
-		{
-			DeadEffect();
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-
-	UFUNCTION()
-	bool TakeDamage(float Damage)
-	{
-		AbilitySystem.SetBaseValue(n"Damage", Damage, true);
-		AbilitySystem.Calculate(n"Damage");
-		return CheckIsAlive();
-	}
-
-	bool UpdateHP(float Change)
-	{
-		float HP = AbilitySystem.GetValue(n"HP");
-		if (HP > 150 && (HP - Change) <= 150)
+		float NewHP = AbilitySystem.GetValue(n"HP");
+		if (OldHP > 150 && NewHP <= 150)
 		{
 			VisualChange(0);
 		}
-		else if (HP > 100 && (HP - Change) <= 100)
+		else if (OldHP > 100 && NewHP <= 100)
 		{
 			VisualChange(1);
 		}
-		else if (HP > 50 && (HP - Change) <= 50)
+		else if (OldHP > 50 && NewHP <= 50)
 		{
 			VisualChange(2);
 		}
-
-		HP -= Change;
-		if (HP <= 0 && !bIsDestroyed)
-		{
-
-			return false;
-		}
-		return true;
-	}
-
-	UFUNCTION()
-	void DeadEffect()
-	{
-		bIsDestroyed = true;
-		EOnObstDestr.Broadcast();
-		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if (FloatTween != nullptr)
-		{
-			FloatTween.Stop();
-			FloatTween.ApplyEasing.Clear();
-		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -120.f, 2.f, EFCEase::InQuart);
-		FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
-		FloatTween.OnComplete.AddUFunction(this, n"Dead");
-		FloatTween.Start();
+		OldHP = NewHP;
 	}
 
 	UFUNCTION()
@@ -149,6 +93,22 @@ class AObstacle : AActor
 		ObstacleMesh.StaticMesh = BrokenMesh[ChangeIdx];
 		ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9 - ChangeIdx * 0.15));
 		Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 40 - ChangeIdx * 10));
+	}
+
+	UFUNCTION()
+	void DeadCue()
+	{
+		TargetResponseComponent.TargetType = ETargetType::Untargetable;
+		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (FloatTween != nullptr)
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -120.f, 1.5f, EFCEase::InQuart);
+		FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
+		FloatTween.OnComplete.AddUFunction(this, n"Dead");
+		FloatTween.Start();
 	}
 
 	UFUNCTION()

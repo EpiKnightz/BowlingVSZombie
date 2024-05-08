@@ -10,6 +10,8 @@ class UDamageResponseComponent : UActorComponent
 	FVoidEvent DOnDamageCue;
 	FVoidEvent DOnDeadCue;
 
+	bool bIsDead = false;
+
 	private UAbilitySystem AbilitySystem;
 
 	UFUNCTION()
@@ -34,20 +36,23 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	bool TakeHit(float Damage)
 	{
-		DOnHitCue.Broadcast();
-
-		if (Damage > 0)
+		if (!bIsDead)
 		{
-			TakeDamage(Damage);
-			// should not apply status here. Only return true value if the damage is taken.
-			// AbilitySystem.ApplyStatusEffects(StatusEffect);
-			return true;
+			DOnHitCue.Broadcast();
+
+			if (Damage > 0)
+			{
+				TakeDamage(Damage);
+				// should not apply status here. Only return true value if the damage is taken.
+				// AbilitySystem.ApplyStatusEffects(StatusEffect);
+				return true;
+			}
 		}
 		return false;
 	}
 
 	UFUNCTION()
-	bool TakeDamage(float Damage)
+	private bool TakeDamage(float Damage)
 	{
 		AbilitySystem.SetBaseValue(n"Damage", Damage, true);
 		AbilitySystem.Calculate(n"Damage");
@@ -58,6 +63,7 @@ class UDamageResponseComponent : UActorComponent
 		}
 		else
 		{
+			bIsDead = true;
 			DOnDeadCue.Broadcast();
 			return false;
 		}
@@ -66,18 +72,23 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	bool RemoveHP(float Amount)
 	{
-		float NewHP = AbilitySystem.GetValue(n"HP") - Amount;
-		AbilitySystem.SetBaseValue(n"HP", NewHP, true);
-		AbilitySystem.Calculate(n"HP");
-		if (CheckIsAlive())
+		if (!bIsDead)
 		{
-			return true;
+			float NewHP = AbilitySystem.GetValue(n"HP") - Amount;
+			AbilitySystem.SetBaseValue(n"HP", NewHP, true);
+			AbilitySystem.Calculate(n"HP");
+			if (CheckIsAlive())
+			{
+				return true;
+			}
+			else
+			{
+				bIsDead = true;
+				DOnDeadCue.Broadcast();
+				return false;
+			}
 		}
-		else
-		{
-			DOnDeadCue.Broadcast();
-			return false;
-		}
+		return false;
 	}
 
 	UFUNCTION()

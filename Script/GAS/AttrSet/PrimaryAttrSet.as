@@ -21,6 +21,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 	void InitDelegates()
 	{
 		DOnPreAttrChange.BindUFunction(this, n"PreAttrChange");
+		DOnPreBaseAttrChange.BindUFunction(this, n"PreAttrChange");
 		DOnPostCalculation.BindUFunction(this, n"PostCalculation");
 	}
 
@@ -34,15 +35,20 @@ class UPrimaryAttrSet : ULiteAttrSet
 	}
 
 	UFUNCTION(BlueprintOverride)
-	void PreAttrChange(FName AttrName, float32& NewValue)
+	bool PreAttrChange(FName AttrName, float32& NewValue)
 	{
 		if (AttrName == HP.AttributeName)
 		{
+			if (NewValue == HP.GetCurrentValue())
+			{
+				return true;
+			}
 			if (NewValue > MaxHP.GetCurrentValue() || NewValue < 0)
 			{
 				NewValue = Math::Clamp(NewValue, 0.0f, MaxHP.GetCurrentValue());
 			}
 		}
+		return false;
 	}
 
 	UFUNCTION(BlueprintOverride)

@@ -2,7 +2,8 @@ enum ETargetType
 {
 	Zombie,
 	Player,
-	Both
+	Both,
+	Untargetable,
 }
 
 enum EDurationType

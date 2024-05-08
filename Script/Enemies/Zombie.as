@@ -36,6 +36,10 @@ class AZombie : AActor
 	UPROPERTY(DefaultComponent)
 	UStatusResponseComponent StatusResponseComponent;
 
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Zombie;
+
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem SmackVFX;
 
@@ -74,19 +78,20 @@ class AZombie : AActor
 	TSubclassOf<ACoin> CoinTemplate;
 
 	UZombieAnimInst AnimateInst;
-	FFloatDelegate DOnAttackHit;
+	// FFloatDelegate DOnAttackHit;
 	FNameDelegate DOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
 	float speedModifier = 1;
 	float delayMove = 2.f;
 	int currentDeadAnim = 0;
-	bool bIsDead = false;
 	bool bIsAttacking = false;
 	float MovingLimit;
 
 	UPROPERTY(DefaultComponent)
 	UAbilitySystem AbilitySystem;
+
+	private UDamageResponseComponent Target;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -127,7 +132,7 @@ class AZombie : AActor
 			}
 
 			FVector loc = GetActorLocation();
-			if (bIsDead)
+			if (DamageResponseComponent.bIsDead)
 			{
 				// Fall down animation should run at constant speed
 				loc.Z -= 80 * DeltaSeconds;
@@ -137,7 +142,7 @@ class AZombie : AActor
 				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds * speedModifier;
 				if (loc.X > MovingLimit)
 				{
-					if (DOnAttackHit.IsBound())
+					if (IsValid(Target))
 					{
 						loc.X = MovingLimit;
 						bIsAttacking = true;
@@ -151,7 +156,7 @@ class AZombie : AActor
 			}
 			if (loc.Z <= -10 || loc.X > 1600)
 			{
-				if (!bIsDead)
+				if (!DamageResponseComponent.bIsDead)
 				{
 					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"), GetName());
 				}
@@ -196,32 +201,23 @@ class AZombie : AActor
 		}
 	}
 
-	/**
-	 * Handles damage taken by the zombie actor. Checks the source of damage, applies damage, plays animations and sound effects,
-	 * applies status effects if hit by a fire attack, and prints debug message.
-	 */
-	// UFUNCTION()
-	// void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
-	// {
-	// 	if (AbilitySystem.GetCurrentValue(n"HP") > 0)
-	// 	{
-	// 		ABowling pawn = Cast<ABowling>(OtherActor);
-	// 		if (pawn != nullptr)
-	// 		{
-	// 			DamageResponseComponent.TakeHit(pawn.Attack);
-	// 			StatusResponseComponent.DOnApplyStatus.ExecuteIfBound(pawn.Status);
-	// 			// Print("Hit:" + HP);
-	// 		}
-	// 	}
-	// }
-
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		ABullet pawn2 = Cast<ABullet>(OtherActor);
-		if (pawn2 != nullptr)
+		// ABullet pawn2 = Cast<ABullet>(OtherActor);
+		// if (pawn2 != nullptr)
+		// {
+		// 	DamageResponseComponent.DOnTakeHit.ExecuteIfBound(10);
+		// }
+		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(TargetRC) && TargetRC.TargetType == ETargetType::Player)
 		{
-			DamageResponseComponent.DOnTakeHit.ExecuteIfBound(10);
+			Target = UDamageResponseComponent::Get(OtherActor);
+			if (IsValid(Target))
+			{
+				Target.DOnDeadCue.AddUFunction(this, n"StopAttacking");
+				SetMovingLimit(OtherActor.GetActorLocation().X - 100);
+			}
 		}
 	}
 
@@ -266,27 +262,26 @@ class AZombie : AActor
 	UFUNCTION()
 	void DeadCue()
 	{
-		if (!bIsDead)
-		{
-			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			AnimateInst.StopSlotAnimation();
-			currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
-			AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
-			delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
-			bIsDead = true;
-			DOnZombDie.ExecuteIfBound(GetName());
+		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AnimateInst.StopSlotAnimation();
+		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
+		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
+		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
+		DOnZombDie.ExecuteIfBound(GetName());
 
-			FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
+		FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
 
-			ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
-			SpawnedActor.ExpectValueToCoinType(CoinValue);
-		}
+		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
+		SpawnedActor.ExpectValueToCoinType(CoinValue);
 	}
 
 	UFUNCTION()
 	void AttackHit()
 	{
-		DOnAttackHit.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"));
+		if (IsValid(Target))
+		{
+			Target.TakeHit(AbilitySystem.GetValue(n"Attack"));
+		}
 	}
 
 	UFUNCTION()
@@ -296,6 +291,8 @@ class AZombie : AActor
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
 		MovingLimit = ENDSCREEN_MOVING_LIMIT;
+		Target.DOnDeadCue.UnbindObject(this);
+		Target = nullptr;
 	}
 
 	UFUNCTION()

@@ -30,3 +30,5 @@ On-rail fight mode
 Use Shape (like circle, hexa, triangle, square) to convey card aspect
 
 117,649 years
+
+papyrus vietnamese translator rakuen
