@@ -6,20 +6,25 @@ class AAttackBuffZone : AZone
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		UDamageResponseComponent DamageResponseComponent = UDamageResponseComponent::Get(OtherActor);
-		if (IsValid(DamageResponseComponent))
+		UAttackResponseComponent AttackResponseComponent = UAttackResponseComponent::Get(OtherActor);
+		if (IsValid(AttackResponseComponent))
 		{
-			DamageResponseComponent.DOnDmgBoost.ExecuteIfBound(15);
+			UMultiplierMod AttackBoost = NewObject(this, UMultiplierMod);
+			AttackBoost.ID = 1;
+			TArray<float32> Params;
+			Params.Add(15);
+			AttackBoost.AddParams(Params);
+			AttackResponseComponent.DOnChangeAttackModifier.ExecuteIfBound(AttackBoost);
 		}
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorEndOverlap(AActor OtherActor)
 	{
-		UDamageResponseComponent DamageResponseComponent = UDamageResponseComponent::Get(OtherActor);
-		if (IsValid(DamageResponseComponent))
+		UAttackResponseComponent AttackResponseComponent = UAttackResponseComponent::Get(OtherActor);
+		if (IsValid(AttackResponseComponent))
 		{
-			DamageResponseComponent.DOnDmgBoost.ExecuteIfBound(1);
+			AttackResponseComponent.DOnRemoveAttackModifier.ExecuteIfBound(this, 1);
 		}
 	}
 };

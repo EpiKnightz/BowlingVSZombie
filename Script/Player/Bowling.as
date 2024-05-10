@@ -31,6 +31,10 @@ class ABowling : AActor
 	UPROPERTY(DefaultComponent)
 	USpeedResponseComponent SpeedResponse;
 
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Player;
+
 	UPROPERTY()
 	float BowlingDeaccel = 500;
 	float DeaccelAddend = 0;
@@ -104,14 +108,17 @@ class ABowling : AActor
 		// Print("Real vector: " + MovementComp.Velocity, 100);
 		DOnHit.ExecuteIfBound(OtherActor);
 		// Print("" + MovementComp.Velocity.Size(), 100);
-		auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
-		if (IsValid(DamageResponse))
+		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
-			DamageResponse.TakeHit(Attack);
-			auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
-			if (IsValid(StatusResponse))
+			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
+			if (IsValid(DamageResponse))
 			{
-				StatusResponse.DOnApplyStatus.ExecuteIfBound(Status);
+				DamageResponse.TakeHit(Attack);
+				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+				if (IsValid(StatusResponse))
+				{
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(Status);
+				}
 			}
 		}
 	}

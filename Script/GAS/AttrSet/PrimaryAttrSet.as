@@ -52,9 +52,9 @@ class UPrimaryAttrSet : ULiteAttrSet
 	}
 
 	UFUNCTION(BlueprintOverride)
-	void PostCalculation(FAngelscriptGameplayAttributeData& Data)
+	void PostCalculation(FName AttrName)
 	{
-		if (Data.AttributeName == Damage.AttributeName)
+		if (AttrName == Damage.AttributeName)
 		{
 			HP.SetCurrentValue(Math::Clamp(HP.GetCurrentValue() - Damage.GetCurrentValue(), 0.0f, MaxHP.GetCurrentValue()));
 			Damage.Initialize(0);

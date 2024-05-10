@@ -1,10 +1,10 @@
-class UOverride : UCalculation
+class UOverrideMod : UModifier
 {
 	FBoolReturnDelegate DIsValid;
 
-	float DoCalculateChildren(float SourceValue) override
+	void DoCalculateChildren(const UAbilitySystem& AbilitySystem, float32& SourceValue) override
 	{
-		return Params[0];
+		SourceValue = Params[0];
 	}
 
 	// Might want to override this function for different intention when override value

@@ -114,12 +114,6 @@ class AZombie : AActor
 		StatusResponseComponent.Initialize();
 	}
 
-	UFUNCTION(BlueprintCallable)
-	void EmergeDone()
-	{
-		AnimateInst.bIsEmergeDone = true;
-	}
-
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
@@ -209,8 +203,7 @@ class AZombie : AActor
 		// {
 		// 	DamageResponseComponent.DOnTakeHit.ExecuteIfBound(10);
 		// }
-		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
-		if (IsValid(TargetRC) && TargetRC.TargetType == ETargetType::Player)
+		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			Target = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(Target))
@@ -221,17 +214,6 @@ class AZombie : AActor
 		}
 	}
 
-	void SetStencilValue(int value)
-	{
-		ZombieSkeleton.SetCustomDepthStencilValue(value);
-	}
-
-	UFUNCTION()
-	void ResetStencilValue()
-	{
-		SetStencilValue(1);
-	}
-
 	UFUNCTION()
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
@@ -239,42 +221,7 @@ class AZombie : AActor
 		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetValue(n"AttackCooldown") * speedModifier);
 	}
 
-	UFUNCTION()
-	void TakeHitCue()
-	{
-		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-		SetStencilValue(5);
-		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
-	}
-
-	UFUNCTION()
-	void TakeDamageCue()
-	{
-		AnimateInst.Montage_Play(DamageAnim);
-		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-		if (bIsAttacking)
-		{
-			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
-		}
-		delayMove = 1;
-	}
-
-	UFUNCTION()
-	void DeadCue()
-	{
-		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		AnimateInst.StopSlotAnimation();
-		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
-		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
-		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
-		DOnZombDie.ExecuteIfBound(GetName());
-
-		FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
-
-		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
-		SpawnedActor.ExpectValueToCoinType(CoinValue);
-	}
-
+	// Called when the animation trigger an event
 	UFUNCTION()
 	void AttackHit()
 	{
@@ -325,5 +272,61 @@ class AZombie : AActor
 		speedModifier = iSpeed;
 		// AnimateInst.Montage_SetPlayRate(att, speedModifier);
 		AnimateInst.AnimPlayRate = speedModifier;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Visual Cues:
+
+	UFUNCTION()
+	void TakeHitCue()
+	{
+		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
+		SetStencilValue(5);
+		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
+	}
+
+	UFUNCTION()
+	void TakeDamageCue()
+	{
+		AnimateInst.Montage_Play(DamageAnim);
+		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
+		if (bIsAttacking)
+		{
+			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
+		}
+		delayMove = 1;
+	}
+
+	UFUNCTION()
+	void DeadCue()
+	{
+		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AnimateInst.StopSlotAnimation();
+		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
+		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
+		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
+		DOnZombDie.ExecuteIfBound(GetName());
+
+		FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
+
+		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
+		SpawnedActor.ExpectValueToCoinType(CoinValue);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void EmergeDone()
+	{
+		AnimateInst.bIsEmergeDone = true;
+	}
+
+	void SetStencilValue(int value)
+	{
+		ZombieSkeleton.SetCustomDepthStencilValue(value);
+	}
+
+	UFUNCTION()
+	void ResetStencilValue()
+	{
+		SetStencilValue(1);
 	}
 }

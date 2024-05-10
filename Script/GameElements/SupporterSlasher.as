@@ -35,10 +35,10 @@ class ASupporterSlasher : ACompanion
 
 				for (AActor overlappedActor : outActors)
 				{
-					UDamageResponseComponent damageRespones = UDamageResponseComponent::Get(overlappedActor);
-					if (IsValid(damageRespones))
+					UDamageResponseComponent damageResponse = UDamageResponseComponent::Get(overlappedActor);
+					if (IsValid(damageResponse))
 					{
-						damageRespones.DOnTakeHit.ExecuteIfBound(100);
+						damageResponse.DOnTakeHit.ExecuteIfBound(100);
 					}
 				}
 			}

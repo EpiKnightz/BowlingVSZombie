@@ -34,10 +34,13 @@ class ABowlingPawn : APawn
 	UEnhancedInputComponent InputComponent;
 
 	UPROPERTY(DefaultComponent)
-	USpeedResponseComponent SpeedResponeComponent;
+	USpeedResponseComponent SpeedResponseComponent;
 
 	UPROPERTY(DefaultComponent)
-	UDamageResponseComponent DamageResponeComponent;
+	UDamageResponseComponent DamageResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UAttackResponseComponent AttackResponseComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
@@ -112,6 +115,7 @@ class ABowlingPawn : APawn
 		// Controller is nullptr in ConstructionScript(), but is valid in BeginPlay(), so this is the proper place to init this I guess.
 		PlayerController = Cast<ABowlingPlayerController>(Controller);
 		SetupPlayerInputComponent(InputComponent);
+		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
 		AbilitySystem.Initialize(n"MoveSpeed", 500);
 
@@ -129,8 +133,10 @@ class ABowlingPawn : APawn
 
 		// ItemsConfigDT.GetAllRows(ItemsConfig);
 
-		SpeedResponeComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
-		DamageResponeComponent.DOnDmgBoost.BindUFunction(this, n"OnDamageBoost");
+		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
+
+		DamageResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.Initialize(AbilitySystem);
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input

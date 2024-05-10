@@ -3,7 +3,7 @@ class UDamageResponseComponent : UActorComponent
 	FFloat2BoolDelegate DOnTakeHit;
 	FFloat2BoolDelegate DOnTakeDamage;
 	FFloat2BoolDelegate DOnHPRemoval;
-	FFloatDelegate DOnDmgBoost;
+	FFloatDelegate DOnDmgReceivedBoost;
 	FBoolReturnDelegate DOnIsAlive;
 
 	FVoidEvent DOnHitCue;
@@ -54,8 +54,8 @@ class UDamageResponseComponent : UActorComponent
 	UFUNCTION()
 	private bool TakeDamage(float Damage)
 	{
-		AbilitySystem.SetBaseValue(n"Damage", Damage, true);
-		AbilitySystem.Calculate(n"Damage");
+		AbilitySystem.SetBaseValue(n"Damage", Damage);
+		// AbilitySystem.Calculate(n"Damage");
 		if (CheckIsAlive())
 		{
 			DOnDamageCue.Broadcast();
@@ -75,8 +75,8 @@ class UDamageResponseComponent : UActorComponent
 		if (!bIsDead)
 		{
 			float NewHP = AbilitySystem.GetValue(n"HP") - Amount;
-			AbilitySystem.SetBaseValue(n"HP", NewHP, true);
-			AbilitySystem.Calculate(n"HP");
+			AbilitySystem.SetBaseValue(n"HP", NewHP);
+			// AbilitySystem.Calculate(n"HP");
 			if (CheckIsAlive())
 			{
 				return true;

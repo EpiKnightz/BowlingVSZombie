@@ -92,7 +92,7 @@ class AObstacle : AActor
 	{
 		ObstacleMesh.StaticMesh = BrokenMesh[ChangeIdx];
 		ObstacleMesh.SetRelativeScale3D(FVector(1, 1, 0.9 - ChangeIdx * 0.15));
-		Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation() + FVector(0, 0, 40 - ChangeIdx * 10));
+		Niagara::SpawnSystemAtLocation(BrokenVFX, GetActorLocation());
 	}
 
 	UFUNCTION()

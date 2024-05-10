@@ -1,28 +1,34 @@
-struct FCalculationContainer
+struct FModifierContainer
 {
-	TArray<UCalculation> Calculations;
+	TArray<UModifier> ModifiersArray;
 
 	void Sort()
 	{
-		Calculations.Sort(true);
+		ModifiersArray.Sort(true);
 	}
 
-	void AddCalculation(UCalculation Calculation)
+	void AddModifier(UModifier Modifier)
 	{
-		if (!Calculations.Contains(Calculation))
+		ModifiersArray.Add(Modifier);
+		ModifiersArray.Sort();
+	}
+
+	void RemoveModifier(const UObject Object, int ID)
+	{
+		for (int i = 0; i < ModifiersArray.Num(); i++)
 		{
-			Calculations.Add(Calculation);
-		}
-		else
-		{
+			if (ModifiersArray[i].GetOuter() == Object && ModifiersArray[i].ID == ID)
+			{
+				ModifiersArray.RemoveAt(i);
+			}
 		}
 	}
 
-	void CalculateData(FAngelscriptGameplayAttributeData Data)
+	void CalculateData(const UAbilitySystem AbilitySystem, FName AttrName, float32& Result)
 	{
-		for (int i = 0; i < Calculations.Num(); i++)
+		for (int i = 0; i < ModifiersArray.Num(); i++)
 		{
-			Calculations[i].Calculate(Data.GetCurrentValue());
+			ModifiersArray[i].Calculate(AbilitySystem, Result);
 		}
 	}
 }
@@ -36,7 +42,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	FNameFloatEvent EOnPostSetCurrentValue;
 	FNameFloatEvent EOnPostSetBaseValue;
 
-	private TMap<FName, FCalculationContainer> CalculationMap;
+	private TMap<FName, FModifierContainer> ModifiersMap;
 
 	UFUNCTION()
 	void AddGameplayTag(FGameplayTag Tag)
@@ -66,8 +72,34 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	void AddCalculation(FName AttrName, UCalculation Calculation)
+	void AddModifier(FName AttrName, UModifier Modifier)
 	{
+		int i = GetSetIdx(AttrName);
+		if (i >= 0)
+		{
+			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
+			float32 NewValue;
+			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
+			Calculate(AttrName, NewValue, i);
+			SetValue(AttrName, NewValue, i);
+		}
+	}
+
+	UFUNCTION()
+	void RemoveModifier(FName AttrName, const UObject Object, int ID)
+	{
+		int i = GetSetIdx(AttrName);
+		if (i >= 0)
+		{
+			if (ModifiersMap.Contains(AttrName))
+			{
+				ModifiersMap.FindOrAdd(AttrName).RemoveModifier(Object, ID);
+				float32 NewValue;
+				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
+				Calculate(AttrName, NewValue, i);
+				SetValue(AttrName, NewValue, i);
+			}
+		}
 	}
 
 	UFUNCTION()
@@ -82,83 +114,84 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	private void SetValue(FName AttrName, float Value)
+	private void SetValue(const FName AttrName, float32& NewValue, int i)
 	{
-		float32 NewValue = float32(Value);
-		int i = GetSetIdx(AttrName);
-		if (i >= 0)
+		if (!AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue))
 		{
-			if (!AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue))
-			{
-				AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
-				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-				EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
-			}
+			AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
+			AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
+			EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
 		}
 	}
 
 	UFUNCTION()
-	void SetBaseValue(FName AttrName, float Value, bool bSetAsCurrent = false)
+	void SetBaseValue(FName AttrName, float Value, bool bCalculateCurrent = true, bool bForceSaveAsCurrent = false)
 	{
-		float32 NewValue = float32(Value);
+		float32 NewBaseValue = float32(Value);
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			if (!AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewValue))
+			if (!AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewBaseValue))
 			{
-				AttrSetContainer[i].SetBaseValue(AttrName, NewValue);
+				AttrSetContainer[i].SetBaseValue(AttrName, NewBaseValue);
 				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-				EOnPostSetBaseValue.Broadcast(AttrName, NewValue);
+				EOnPostSetBaseValue.Broadcast(AttrName, NewBaseValue);
 
-				if (bSetAsCurrent)
+				if (bCalculateCurrent)
 				{
-					if (!AttrSetContainer[i].DOnPreAttrChange.ExecuteIfBound(AttrName, NewValue))
+					float32 NewValue = NewBaseValue;
+					if (!bForceSaveAsCurrent)
 					{
-						AttrSetContainer[i].SetCurrentValue(AttrName, NewValue);
-						AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
-						EOnPostSetCurrentValue.Broadcast(AttrName, NewValue);
+						Calculate(AttrName, NewValue, i);
 					}
+					SetValue(AttrName, NewValue, i);
 				}
 			}
 		}
 	}
 
 	UFUNCTION()
-	float GetValue(FName AttrName)
+	float GetValue(FName AttrName, bool bForceRecalculation = false)
 	{
-		FAngelscriptGameplayAttributeData Data;
-		if (FindDataFromAllSets(AttrName, Data))
+		float32 Result = -1000;
+		int i = GetSetIdx(AttrName);
+		if (i >= 0)
 		{
-			return Data.GetCurrentValue();
+			if (bForceRecalculation)
+			{
+				AttrSetContainer[i].GetBaseValue(AttrName, Result);
+				Calculate(AttrName, Result, i);
+				SetValue(AttrName, Result, i);
+			}
+			else
+			{
+				AttrSetContainer[i].GetCurrentValue(AttrName, Result);
+			}
 		}
-		return -1000;
+		return Result;
 	}
 
 	UFUNCTION()
 	private float GetBaseValue(FName AttrName)
 	{
-		FAngelscriptGameplayAttributeData Data;
-		if (FindDataFromAllSets(AttrName, Data))
-		{
-			return Data.GetBaseValue();
-		}
-		return -1000;
-	}
-
-	UFUNCTION()
-	void Calculate(FName AttrName)
-	{
-		FAngelscriptGameplayAttributeData Data;
+		float32 Result = -1000;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
-			Data = AttrSetContainer[i].GetLiteAttr(AttrName);
-			if (!AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(Data))
-			{
-				// Do Calculation
-				FCalculationContainer Calculations = CalculationMap.FindOrAdd(AttrName);
-				AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(Data);
-			}
+			AttrSetContainer[i].GetBaseValue(AttrName, Result);
+		}
+		return Result;
+	}
+
+	UFUNCTION()
+	void Calculate(FName AttrName, float32& FinalValue, int i)
+	{
+		if (!AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(AttrName))
+		{
+			// Do Calculation
+			FModifierContainer Modifiers = ModifiersMap.FindOrAdd(AttrName);
+			Modifiers.CalculateData(this, AttrName, FinalValue);
+			AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(AttrName);
 		}
 	}
 

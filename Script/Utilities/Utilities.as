@@ -12,6 +12,8 @@ delegate void FFTextDelegate(FText Message);
 delegate void FNiagaraDelegate(UNiagaraSystem System);
 delegate void FGameplayTagDelegate(FGameplayTagContainer TagContainer);
 delegate bool FBoolReturnDelegate();
+delegate void FObjectIntDelegate(const UObject Object, int ID);
+delegate void FModDelegate(UModifier Calculation);
 
 event void FVoidEvent();
 event void FIntEvent(int Value);
