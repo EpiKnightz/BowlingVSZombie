@@ -31,7 +31,7 @@ class AZombie : AActor
 	UDamageResponseComponent DamageResponseComponent;
 
 	UPROPERTY(DefaultComponent)
-	USpeedResponseComponent SpeedResponseComponent;
+	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UStatusResponseComponent StatusResponseComponent;
@@ -100,7 +100,7 @@ class AZombie : AActor
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
 
-		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
+		MovementResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
@@ -111,7 +111,7 @@ class AZombie : AActor
 		DamageResponseComponent.DOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		StatusResponseComponent.Initialize();
+		StatusResponseComponent.Initialize(AbilitySystem);
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -198,11 +198,6 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		// ABullet pawn2 = Cast<ABullet>(OtherActor);
-		// if (pawn2 != nullptr)
-		// {
-		// 	DamageResponseComponent.DOnTakeHit.ExecuteIfBound(10);
-		// }
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			Target = UDamageResponseComponent::Get(OtherActor);

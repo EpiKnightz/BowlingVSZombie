@@ -8,7 +8,7 @@ class UChillingComponent : UStatusComponent
 
 	void DoInitChildren() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		if (IsValid(SpeedResponse))
 		{
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1 - (FindAttrValue(n"MoveableAttrSet.MoveSpeed") * InitTimes));
@@ -26,7 +26,7 @@ class UChillingComponent : UStatusComponent
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		if (IsValid(SpeedResponse))
 		{
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);

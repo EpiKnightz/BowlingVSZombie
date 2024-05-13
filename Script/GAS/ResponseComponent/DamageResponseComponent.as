@@ -1,4 +1,4 @@
-class UDamageResponseComponent : UActorComponent
+class UDamageResponseComponent : UResponseComponent
 {
 	FFloat2BoolDelegate DOnTakeHit;
 	FFloat2BoolDelegate DOnTakeDamage;
@@ -12,24 +12,13 @@ class UDamageResponseComponent : UActorComponent
 
 	bool bIsDead = false;
 
-	private UAbilitySystem AbilitySystem;
-
-	UFUNCTION()
-	void Initialize(UAbilitySystem iAbilitySystem)
+	bool InitChild() override
 	{
-		if (IsValid(iAbilitySystem))
-		{
-			AbilitySystem = iAbilitySystem;
-			DOnTakeHit.BindUFunction(this, n"TakeHit");
-			DOnTakeDamage.BindUFunction(this, n"TakeDamage");
-			DOnHPRemoval.BindUFunction(this, n"RemoveHP");
-			DOnIsAlive.BindUFunction(this, n"CheckIsAlive");
-		}
-		else
-		{
-			PrintError("DamageResponseComponent: AbilitySystem is invalid.");
-			ForceDestroyComponent();
-		}
+		DOnTakeHit.BindUFunction(this, n"TakeHit");
+		DOnTakeDamage.BindUFunction(this, n"TakeDamage");
+		DOnHPRemoval.BindUFunction(this, n"RemoveHP");
+		DOnIsAlive.BindUFunction(this, n"CheckIsAlive");
+		return true;
 	}
 
 	// Take Hit -> Take Damage -> Check is Alive -> DamageCue/Dead Cue

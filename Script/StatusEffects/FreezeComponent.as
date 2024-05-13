@@ -2,7 +2,7 @@ class UFreezeComponent : UStatusComponent
 {
 	void DoInitChildren() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		if (IsValid(SpeedResponse))
 		{
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(0);
@@ -17,7 +17,7 @@ class UFreezeComponent : UStatusComponent
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = USpeedResponseComponent::Get(GetOwner());
+		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
 		Super::EndStatusEffect();
 	}

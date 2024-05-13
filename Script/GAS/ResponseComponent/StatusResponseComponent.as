@@ -1,22 +1,20 @@
-class UStatusResponseComponent : UActorComponent
+class UStatusResponseComponent : UResponseComponent
 {
 	FGameplayTagDelegate DOnApplyStatus;
 
 	private AStatusManager StatusManager;
 
-	UFUNCTION()
-	void Initialize()
+	bool InitChild() override
 	{
-
 		StatusManager = Gameplay::GetActorOfClass(AStatusManager);
 		if (IsValid(StatusManager))
 		{
 			DOnApplyStatus.BindUFunction(this, n"ApplyStatusEffect");
+			return true;
 		}
 		else
 		{
-			PrintError("Can't find StatusManager");
-			ForceDestroyComponent();
+			return false;
 		}
 	}
 

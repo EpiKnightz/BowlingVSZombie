@@ -1,6 +1,5 @@
-class USpeedResponseComponent : UActorComponent
+class UMovementResponseComponent : UResponseComponent
 {
 	FFloatDelegate DOnChangeMoveSpeedModifier;
 	FFloatDelegate DOnChangeAccelModifier;
-	// FFloatDelegate DOnChangeAttackCooldownModifier;
 };

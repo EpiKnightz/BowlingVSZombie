@@ -4,6 +4,7 @@ enum ETargetType
 	Player,
 	Both,
 	Untargetable,
+	Neutral
 }
 
 enum EDurationType

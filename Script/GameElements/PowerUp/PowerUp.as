@@ -46,6 +46,11 @@ class APowerUp : ACollectible
 
 	void OnCollectibleCollected(AActor OtherActor) override
 	{
-		UCooldownComponent::GetOrCreate(OtherActor, n"CooldownComponent").Init(StatusData);
+		// Need to use the data here.
+		auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+		if (IsValid(StatusResponse))
+		{
+			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Positive_CooldownBoost));
+		}
 	}
 };

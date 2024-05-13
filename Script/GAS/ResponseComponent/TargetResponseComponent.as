@@ -1,4 +1,4 @@
-class UTargetResponseComponent : UActorComponent
+class UTargetResponseComponent : UResponseComponent
 {
 	ETargetType TargetType;
 

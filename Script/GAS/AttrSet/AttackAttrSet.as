@@ -16,9 +16,7 @@ class UAttackAttrSet : ULiteAttrSet
 	UFUNCTION(BlueprintOverride)
 	void PostAttrChange(FName AttrName)
 	{
-		if (AttrName == Attack.AttributeName)
-		{
-			Print("Attack: " + Attack.GetCurrentValue());
-		}
+		Print("Attack: " + Attack.GetCurrentValue());
+		Print("AttackCooldown: " + AttackCooldown.GetCurrentValue());
 	}
 };

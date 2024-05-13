@@ -1,25 +1,22 @@
-class UAttackResponseComponent : UActorComponent
+class UAttackResponseComponent : UResponseComponent
 {
 	FModDelegate DOnChangeAttackModifier;
 	FObjectIntDelegate DOnRemoveAttackModifier;
 	FFloatDelegate DOnChangeAttackCooldownModifier;
 
-	private UAbilitySystem AbilitySystem;
+	bool InitChild() override
+	{
+
+		DOnChangeAttackModifier.BindUFunction(this, n"OnChangeAttackModifier");
+		DOnRemoveAttackModifier.BindUFunction(this, n"OnRemoveAttackModifier");
+		DOnChangeAttackCooldownModifier.BindUFunction(this, n"OnChangeAttackCooldownModifier");
+		return true;
+	}
 
 	UFUNCTION()
-	void Initialize(UAbilitySystem iAbilitySystem)
+	private void OnChangeAttackCooldownModifier(float Value)
 	{
-		if (IsValid(iAbilitySystem))
-		{
-			AbilitySystem = iAbilitySystem;
-			DOnChangeAttackModifier.BindUFunction(this, n"OnChangeAttackModifier");
-			DOnRemoveAttackModifier.BindUFunction(this, n"OnRemoveAttackModifier");
-		}
-		else
-		{
-			PrintError("DamageResponseComponent: AbilitySystem is invalid.");
-			ForceDestroyComponent();
-		}
+		// AbilitySystem.AddModifier(n"AttackCooldown", Value);
 	}
 
 	UFUNCTION()

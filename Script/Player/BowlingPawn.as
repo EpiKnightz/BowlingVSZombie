@@ -34,13 +34,16 @@ class ABowlingPawn : APawn
 	UEnhancedInputComponent InputComponent;
 
 	UPROPERTY(DefaultComponent)
-	USpeedResponseComponent SpeedResponseComponent;
+	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UAttackResponseComponent AttackResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UStatusResponseComponent StatusResponseComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
@@ -133,10 +136,10 @@ class ABowlingPawn : APawn
 
 		// ItemsConfigDT.GetAllRows(ItemsConfig);
 
-		SpeedResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateCooldownModifier");
-
 		DamageResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.DOnChangeAttackCooldownModifier.BindUFunction(this, n"UpdateCooldownModifier");
+		StatusResponseComponent.Initialize(AbilitySystem);
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input
@@ -392,8 +395,8 @@ class ABowlingPawn : APawn
 	UFUNCTION()
 	void OnHit(AActor OtherActor)
 	{
-		AZombie zomb = Cast<AZombie>(OtherActor);
-		if (zomb != nullptr)
+		auto targetRC = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(targetRC) && targetRC.TargetType == ETargetType::Zombie)
 		{
 			OnComboTrigger(1);
 		}
@@ -403,15 +406,6 @@ class ABowlingPawn : APawn
 	void CoinComboHandler(int value)
 	{
 		OnComboTrigger(1);
-	}
-
-	UFUNCTION()
-	void OnAddingComponent(UActorComponent Component)
-	{
-		if (Component.IsA(UCooldownComponent))
-		{
-			// Cast<UCooldownComponent>(Component).DOnChangeCooldownModifier.BindUFunction(this, n"UpdateCooldownModifier");
-		}
 	}
 
 	UFUNCTION()

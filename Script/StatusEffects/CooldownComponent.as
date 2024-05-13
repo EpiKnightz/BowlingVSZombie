@@ -5,19 +5,19 @@ class UCooldownComponent : UStatusComponent
 
 	void DoInitChildren() override
 	{
-		auto PlayerResponse = USpeedResponseComponent::Get(GetOwner());
+		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			PlayerResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(FindAttrValue(n"AttackAttrSet.AttackCooldown"));
+			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(FindAttrValue(n"AttackAttrSet.AttackCooldown") * 0.1);
 		}
 	}
 
 	void EndStatusEffect() override
 	{
-		auto CooldownModifier = USpeedResponseComponent::Get(GetOwner());
-		if (IsValid(CooldownModifier))
+		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
+		if (IsValid(PlayerResponse))
 		{
-			CooldownModifier.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
+			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(1);
 		}
 		Super::EndStatusEffect();
 	}

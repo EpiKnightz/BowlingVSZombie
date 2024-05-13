@@ -24,7 +24,7 @@ class AStatusManager : AActor
 		}
 
 		TArray<FStatusDT> PositiveEffectArray;
-		NegativeEffectDT.GetAllRows(PositiveEffectArray);
+		PositiveEffectDT.GetAllRows(PositiveEffectArray);
 		for (FStatusDT Status : PositiveEffectArray)
 		{
 			PositiveEffectMap.Add(Status.EffectTag, Status);
@@ -65,40 +65,45 @@ class AStatusManager : AActor
 			{
 				if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Burn))
 				{
-					statusComp = UDoTComponent::GetOrCreate(Target, GameplayTags::Status_Negative_Burn.TagName);
+					statusComp = UDoTComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Chill))
 				{
-					statusComp = UChillingComponent::GetOrCreate(Target, GameplayTags::Status_Negative_Chill.TagName);
+					statusComp = UChillingComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Freeze))
 				{
-					statusComp = UFreezeComponent::GetOrCreate(Target, GameplayTags::Status_Negative_Freeze.TagName);
+					statusComp = UFreezeComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Rupture))
 				{
-					statusComp = URuptureComponent::GetOrCreate(Target, GameplayTags::Status_Negative_Freeze.TagName);
+					statusComp = URuptureComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else
 				{
 					return false;
 				}
-				auto StatusResponse = UStatusResponseComponent::Get(Target);
-				if (IsValid(StatusResponse))
-				{
-					// statusComp.OnInit.BindUFunction(StatusResponse, n"OnStatusInit");
-					// statusComp.OnEnd.BindUFunction(StatusResponse, n"OnStatusEnd");
-					statusComp.Init(EffectData);
-					return true;
-				}
+				return true;
 			}
 		}
 		else if (EffectTag.MatchesTag(GameplayTags::Status_Positive))
 		{
 			if (PositiveEffectMap.Find(EffectTag, EffectData))
 			{
-				return false;
+				if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_CooldownBoost))
+				{
+					statusComp = UCooldownComponent::GetOrCreate(Target, EffectTag.TagName);
+				}
+				else
+				{
+					return false;
+				}
 			}
+		}
+		if (IsValid(statusComp))
+		{
+			statusComp.Init(EffectData);
+			return true;
 		}
 		return false;
 	}

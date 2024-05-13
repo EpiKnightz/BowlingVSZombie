@@ -29,7 +29,7 @@ class ABowling : AActor
 	default MovementComp.Bounciness = 0.8;
 
 	UPROPERTY(DefaultComponent)
-	USpeedResponseComponent SpeedResponse;
+	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
@@ -61,7 +61,7 @@ class ABowling : AActor
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
-		SpeedResponse.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend");
+		MovementResponseComponent.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend");
 	}
 
 	UFUNCTION(BlueprintOverride)
