@@ -119,7 +119,7 @@ class ABowlingPawn : APawn
 		PlayerController = Cast<ABowlingPlayerController>(Controller);
 		SetupPlayerInputComponent(InputComponent);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
+		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.Initialize(n"MoveSpeed", 500);
 
 		// Add Input Mapping Context

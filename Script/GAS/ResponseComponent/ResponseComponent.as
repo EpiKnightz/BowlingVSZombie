@@ -20,7 +20,7 @@ class UResponseComponent : UActorComponent
 	}
 
 	UFUNCTION()
-	bool InitChild()
+	protected bool InitChild()
 	{
 		return true;
 	}

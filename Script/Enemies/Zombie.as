@@ -82,7 +82,7 @@ class AZombie : AActor
 	FNameDelegate DOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
-	float speedModifier = 1;
+	// float speedModifier = 1;
 	float delayMove = 2.f;
 	int currentDeadAnim = 0;
 	bool bIsAttacking = false;
@@ -100,11 +100,10 @@ class AZombie : AActor
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
 
-		MovementResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
-
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMoveableAttrSet);
+		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
+		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DamageResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.DOnHitCue.AddUFunction(this, n"TakeHitCue");
@@ -112,6 +111,18 @@ class AZombie : AActor
 		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
 
 		StatusResponseComponent.Initialize(AbilitySystem);
+
+		MovementResponseComponent.Initialize(AbilitySystem);
+		// MovementResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
+	}
+
+	UFUNCTION()
+	private void OnPostSetCurrentValue(FName AttrName, float Value)
+	{
+		if (AttrName == n"MoveSpeed")
+		{
+			AnimateInst.SetMoveSpeed(Value);
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -122,7 +133,7 @@ class AZombie : AActor
 		{
 			if (AnimateInst.AnimMoveSpeed == 0)
 			{
-				AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed") * speedModifier);
+				AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
 			}
 
 			FVector loc = GetActorLocation();
@@ -133,7 +144,7 @@ class AZombie : AActor
 			}
 			else if (loc.X < MovingLimit || !bIsAttacking)
 			{
-				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds * speedModifier;
+				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds /* speedModifier*/;
 				if (loc.X > MovingLimit)
 				{
 					if (IsValid(Target))
@@ -213,7 +224,7 @@ class AZombie : AActor
 	void Attacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageEnded.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetValue(n"AttackCooldown") * speedModifier);
+		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetValue(n"AttackCooldown") /* speedModifier*/);
 	}
 
 	// Called when the animation trigger an event
@@ -252,7 +263,6 @@ class AZombie : AActor
 		AnimateInst.SetMoveSpeed(iSpeed);
 		SetActorScale3D(iScale);
 		CoinValue = iCoinValue;
-		// Print("" + bMovingLimit);
 	}
 
 	UFUNCTION()
@@ -264,9 +274,9 @@ class AZombie : AActor
 	UFUNCTION()
 	void UpdateMoveSpeedModifier(float iSpeed)
 	{
-		speedModifier = iSpeed;
-		// AnimateInst.Montage_SetPlayRate(att, speedModifier);
-		AnimateInst.AnimPlayRate = speedModifier;
+		// speedModifier = iSpeed;
+		//  AnimateInst.Montage_SetPlayRate(att, speedModifier);
+		AnimateInst.AnimPlayRate = iSpeed;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

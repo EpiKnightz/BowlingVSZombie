@@ -1,5 +1,7 @@
 class UChillingComponent : UStatusComponent
 {
+	private int ModID = 1;
+
 	bool IsApplicable() override
 	{
 		UFreezeComponent Target = UFreezeComponent::Get(GetOwner());
@@ -11,7 +13,9 @@ class UChillingComponent : UStatusComponent
 		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		if (IsValid(SpeedResponse))
 		{
-			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1 - (FindAttrValue(n"MoveableAttrSet.MoveSpeed") * InitTimes));
+			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
+			SpeedMod.Setup(ModID, float32(1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed") * InitTimes)));
+			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
 			if (InitTimes >= GetAttrValue(GameplayTags::StatusParam_StackLimit))
 			{
 				EndStatusEffect();
@@ -29,7 +33,7 @@ class UChillingComponent : UStatusComponent
 		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
 		if (IsValid(SpeedResponse))
 		{
-			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(1);
+			SpeedResponse.DOnRemoveMoveSpeedModifier.ExecuteIfBound(this, ModID);
 		}
 		Super::EndStatusEffect();
 	}

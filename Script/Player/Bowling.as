@@ -61,7 +61,7 @@ class ABowling : AActor
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
-		MovementResponseComponent.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend");
+		// MovementResponseComponent.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend"); //To-Do
 	}
 
 	UFUNCTION(BlueprintOverride)

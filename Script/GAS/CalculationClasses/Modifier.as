@@ -29,6 +29,12 @@ class UModifier
 		Params = iParams;
 	}
 
+	void Setup(int iID, float32 Param)
+	{
+		ID = iID;
+		Params.Add(Param);
+	}
+
 	bool IsValidInput(float SourceValue)
 	{
 		return true;

@@ -3,6 +3,11 @@ class AAttackBuffZone : AZone
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent VFXComponent;
 
+	UPROPERTY()
+	float32 AttackBoostAmount = 15;
+
+	private int ModID = 1;
+
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
@@ -10,10 +15,7 @@ class AAttackBuffZone : AZone
 		if (IsValid(AttackResponseComponent))
 		{
 			UMultiplierMod AttackBoost = NewObject(this, UMultiplierMod);
-			AttackBoost.ID = 1;
-			TArray<float32> Params;
-			Params.Add(15);
-			AttackBoost.AddParams(Params);
+			AttackBoost.Setup(ModID, AttackBoostAmount);
 			AttackResponseComponent.DOnChangeAttackModifier.ExecuteIfBound(AttackBoost);
 		}
 	}
@@ -24,7 +26,7 @@ class AAttackBuffZone : AZone
 		UAttackResponseComponent AttackResponseComponent = UAttackResponseComponent::Get(OtherActor);
 		if (IsValid(AttackResponseComponent))
 		{
-			AttackResponseComponent.DOnRemoveAttackModifier.ExecuteIfBound(this, 1);
+			AttackResponseComponent.DOnRemoveAttackModifier.ExecuteIfBound(this, ModID);
 		}
 	}
 };

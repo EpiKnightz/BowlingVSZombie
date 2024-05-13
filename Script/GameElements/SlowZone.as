@@ -1,7 +1,9 @@
 class ASlowZone : AZone
 {
 	UPROPERTY()
-	float DeaccelAddend = 2500;
+	float32 DeaccelAddend = 2500;
+
+	private int ModID = 1;
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
@@ -9,7 +11,9 @@ class ASlowZone : AZone
 		auto SpeedResponseComponent = UMovementResponseComponent::Get(OtherActor);
 		if (IsValid(SpeedResponseComponent))
 		{
-			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(DeaccelAddend);
+			UAdditiveMod DeaccelMod = NewObject(this, UAdditiveMod);
+			DeaccelMod.Setup(ModID, -DeaccelAddend);
+			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(DeaccelMod);
 		}
 	}
 
@@ -19,7 +23,7 @@ class ASlowZone : AZone
 		auto SpeedResponseComponent = UMovementResponseComponent::Get(OtherActor);
 		if (IsValid(SpeedResponseComponent))
 		{
-			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(0);
+			SpeedResponseComponent.DOnRemoveAccelModifier.ExecuteIfBound(this, ModID);
 		}
 	}
 }

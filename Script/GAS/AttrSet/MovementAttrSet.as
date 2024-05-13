@@ -1,15 +1,15 @@
-class UMoveableAttrSet : ULiteAttrSet
+class UMovementAttrSet : ULiteAttrSet
 {
-	UPROPERTY(BlueprintReadWrite, Category = "Moveable Attribute")
+	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData MoveSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Moveable Attribute")
+	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData MaxSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Moveable Attribute")
+	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData Acceleration;
 
-	UMoveableAttrSet()
+	UMovementAttrSet()
 	{
 		MoveSpeed.Initialize(50);
 		MaxSpeed.Initialize(100);
