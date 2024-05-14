@@ -34,12 +34,15 @@ class AStatusManager : AActor
 	UFUNCTION()
 	bool ApplyStatusEffects(FGameplayTagContainer EffectTags, AActor Target)
 	{
-		if (!EffectTags.IsEmpty())
+
+		auto DamageResponseComponent = UDamageResponseComponent::Get(Target);
+
+		if (IsValid(DamageResponseComponent) && !DamageResponseComponent.bIsDead && !EffectTags.IsEmpty())
 		{
 			int errorCount = 0;
 			for (FGameplayTag SingleEffect : EffectTags.GameplayTags)
 			{
-				if (!ApplySingleEffect(SingleEffect, Target))
+				if (!ApplySingleEffect(SingleEffect, Target, DamageResponseComponent))
 				{
 					PrintError("Can't find effect with tag: " + SingleEffect.ToString());
 					errorCount++;
@@ -54,7 +57,7 @@ class AStatusManager : AActor
 	}
 
 	UFUNCTION()
-	bool ApplySingleEffect(FGameplayTag EffectTag, AActor Target)
+	bool ApplySingleEffect(FGameplayTag EffectTag, AActor Target, UDamageResponseComponent DRC)
 	{
 		UStatusComponent statusComp;
 		FStatusDT EffectData;
@@ -83,7 +86,6 @@ class AStatusManager : AActor
 				{
 					return false;
 				}
-				return true;
 			}
 		}
 		else if (EffectTag.MatchesTag(GameplayTags::Status_Positive))
@@ -103,6 +105,7 @@ class AStatusManager : AActor
 		if (IsValid(statusComp))
 		{
 			statusComp.Init(EffectData);
+			DRC.DOnDeadCue.AddUFunction(statusComp, n"EndStatusEffect");
 			return true;
 		}
 		return false;

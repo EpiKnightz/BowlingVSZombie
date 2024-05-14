@@ -14,7 +14,7 @@ class UChillingComponent : UStatusComponent
 		if (IsValid(SpeedResponse))
 		{
 			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
-			SpeedMod.Setup(ModID, float32(1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed") * InitTimes)));
+			SpeedMod.Setup(ModID, float32(1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed"))));
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
 			if (InitTimes >= GetAttrValue(GameplayTags::StatusParam_StackLimit))
 			{

@@ -121,7 +121,10 @@ class AZombie : AActor
 	{
 		if (AttrName == n"MoveSpeed")
 		{
+			// Print("" + Value);
 			AnimateInst.SetMoveSpeed(Value);
+			AnimateInst.AnimPlayRate = AbilitySystem.GetPercentageDiff(AttrName);
+			//  AnimateInst.Montage_SetPlayRate(att, speedModifier);
 		}
 	}
 
@@ -255,7 +258,7 @@ class AZombie : AActor
 		Data.Add(n"HP", iHP);
 		Data.Add(n"Attack", iAtk);
 		Data.Add(n"Damage", iDmg);
-		Data.Add(n"MoveSpeed", iSpeed);
+		Data.Add(n"MaxSpeed", iSpeed);
 		Data.Add(n"AttackCooldown", float32(iAtkSpd));
 
 		AbilitySystem.ImportData(Data);
@@ -269,14 +272,6 @@ class AZombie : AActor
 	void SetMovingLimit(float iLimit)
 	{
 		MovingLimit = iLimit - (GetActorScale3D().Y - 1) * 75.f;
-	}
-
-	UFUNCTION()
-	void UpdateMoveSpeedModifier(float iSpeed)
-	{
-		// speedModifier = iSpeed;
-		//  AnimateInst.Montage_SetPlayRate(att, speedModifier);
-		AnimateInst.AnimPlayRate = iSpeed;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,6 +14,7 @@ class UMovementAttrSet : ULiteAttrSet
 		MoveSpeed.Initialize(50);
 		MaxSpeed.Initialize(100);
 		Acceleration.Initialize(10);
+		InitDelegates();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -21,6 +22,15 @@ class UMovementAttrSet : ULiteAttrSet
 	{
 		DOnPreAttrChange.BindUFunction(this, n"PreAttrChange");
 		DOnPreBaseAttrChange.BindUFunction(this, n"PreAttrChange");
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void PostInitialize(FName AttrName, float NewValue)
+	{
+		if (AttrName == MaxSpeed.AttributeName)
+		{
+			MoveSpeed.Initialize(NewValue);
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)

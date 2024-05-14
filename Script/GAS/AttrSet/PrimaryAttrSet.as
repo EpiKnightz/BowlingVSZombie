@@ -30,7 +30,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 	{
 		if (AttrName == MaxHP.AttributeName)
 		{
-			HP.Initialize(MaxHP.GetCurrentValue());
+			HP.Initialize(NewValue);
 		}
 	}
 

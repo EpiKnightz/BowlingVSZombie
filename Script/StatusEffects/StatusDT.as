@@ -40,6 +40,10 @@ struct FStatusDT
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;
 
+	/// Particle system to display when this status effect is active.
+	UPROPERTY()
+	UNiagaraSystem StatusEndVFX;
+
 	UPROPERTY()
 	TMap<FGameplayTag, float> AffectedAttributes;
 }

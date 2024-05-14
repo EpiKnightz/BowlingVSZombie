@@ -15,6 +15,8 @@ class UStatusComponent : UActorComponent
 
 	private UNiagaraComponent StatusEffectComp;
 
+	default SetComponentTickEnabled(false);
+
 	// FVoidDelegate OnInit;
 	// FVoidDelegate OnEnd;
 
@@ -151,22 +153,31 @@ class UStatusComponent : UActorComponent
 		{
 			if (StatusData.DurationType == EDurationType::Instant)
 			{
-				Niagara::SpawnSystemAtLocation(StatusData.StatusVFX, GetOwner().GetActorLocation(), GetOwner().GetActorRotation(), GetOwner().GetActorScale3D());
+				Niagara::SpawnSystemAtLocation(StatusData.StatusVFX, GetOwner().GetActorLocation(), GetOwner().GetActorRotation(), GetOwner().GetActorScale3D()).SetCastShadow(true);
 			}
 			else
 			{
 				StatusEffectComp = Niagara::SpawnSystemAttached(StatusData.StatusVFX, GetOwner().RootComponent, NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::SnapToTargetIncludingScale, true);
 			}
 		}
+		StatusEffectComp.SetCastShadow(true);
 		StatusEffectComp.SetActive(true);
 	}
 
 	UFUNCTION()
 	void StatusEndCue()
 	{
-		if (IsValid(StatusEffectComp))
+		if (IsActive())
 		{
-			StatusEffectComp.Deactivate();
+			if (IsValid(StatusEffectComp))
+			{
+				StatusEffectComp.Deactivate();
+			}
+
+			if (IsValid(StatusData.StatusEndVFX))
+			{
+				Niagara::SpawnSystemAtLocation(StatusData.StatusEndVFX, GetOwner().GetActorLocation(), GetOwner().GetActorRotation(), GetOwner().GetActorScale3D()).SetCastShadow(true);
+			}
 		}
 	}
 }

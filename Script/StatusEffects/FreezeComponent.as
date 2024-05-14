@@ -8,14 +8,8 @@ class UFreezeComponent : UStatusComponent
 		if (IsValid(SpeedResponse))
 		{
 			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
-			SpeedMod.Setup(ModID, float32(1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed") * InitTimes)));
+			SpeedMod.Setup(ModID, 0);
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
-		}
-
-		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
-		if (IsValid(DamageResponse))
-		{
-			DamageResponse.DOnTakeDamage.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
 		}
 	}
 
@@ -25,6 +19,12 @@ class UFreezeComponent : UStatusComponent
 		if (IsValid(SpeedResponse))
 		{
 			SpeedResponse.DOnRemoveMoveSpeedModifier.ExecuteIfBound(this, ModID);
+		}
+
+		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
+		if (IsValid(DamageResponse))
+		{
+			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
 		}
 		Super::EndStatusEffect();
 	}
