@@ -20,6 +20,7 @@ struct FModifierContainer
 			if (ModifiersArray[i].GetOuter() == Object && ModifiersArray[i].ID == ID)
 			{
 				ModifiersArray.RemoveAt(i);
+				i--;
 			}
 		}
 	}
@@ -41,6 +42,8 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	FVoidEvent EOnActorTagRemoved;
 	FNameFloatEvent EOnPostSetCurrentValue;
 	FNameFloatEvent EOnPostSetBaseValue;
+	FNameFloatEvent EOnPostAddModifier;
+	FNameFloatEvent EOnPostRemoveModifier;
 
 	private TMap<FName, FModifierContainer> ModifiersMap;
 
@@ -82,6 +85,8 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 			Calculate(AttrName, NewValue, i);
 			SetValue(AttrName, NewValue, i);
+			EOnPostAddModifier.Broadcast(AttrName, NewValue);
+			// TODO: I'll need to add a calculation between base and current value: 1 for percentage, 1 for flat
 		}
 	}
 
@@ -98,6 +103,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 				Calculate(AttrName, NewValue, i);
 				SetValue(AttrName, NewValue, i);
+				EOnPostRemoveModifier.Broadcast(AttrName, NewValue);
 			}
 		}
 	}
@@ -172,6 +178,34 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	float GetPercentageDiff(FName AttrName)
+	{
+		float32 Result1 = -2000;
+		float32 Result2 = -1000;
+		int i = GetSetIdx(AttrName);
+		if (i >= 0)
+		{
+			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
+			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
+		}
+		return Result1 / Result2;
+	}
+
+	UFUNCTION()
+	float GetFlatDiff(FName AttrName)
+	{
+		float32 Result1 = -2000;
+		float32 Result2 = -1000;
+		int i = GetSetIdx(AttrName);
+		if (i >= 0)
+		{
+			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
+			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
+		}
+		return Result1 - Result2;
+	}
+
+	UFUNCTION()
 	private float GetBaseValue(FName AttrName)
 	{
 		float32 Result = -1000;
@@ -201,7 +235,6 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		int ImportCount = 0;
 		for (int i = 0; i < AttrSetContainer.Num(); i++)
 		{
-
 			ImportCount += AttrSetContainer[i].ImportData(Data);
 		}
 		if (ImportCount != Data.Num())
