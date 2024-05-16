@@ -62,6 +62,7 @@ class ABowlingGameMode : AGameMode
 		DOnUpdateHP.ExecuteIfBound(HP);
 
 		bowlPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
+		bowlPawn.DOnCooldownUpdate.BindUFunction(UserWidget, n"UpdateCooldownPercent");
 		zombMangr.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		zombMangr.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
@@ -118,13 +119,13 @@ class ABowlingGameMode : AGameMode
 	void StartGame()
 	{
 		zombMangr.GameStart();
-		bowlPawn.currentTouchCooldown = 0;
+		bowlPawn.SetCooldownPercent(1);
 	}
 
 	void PauseGame()
 	{
 		zombMangr.GamePause();
-		bowlPawn.currentTouchCooldown = 999999;
+		bowlPawn.SetCooldownPercent(-1);
 	}
 
 	UFUNCTION()

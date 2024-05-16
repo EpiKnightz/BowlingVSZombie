@@ -14,7 +14,6 @@ class AObstacle : AActor
 	TArray<UStaticMesh> BrokenMesh;
 
 	UFCTweenBPActionFloat FloatTween;
-	// FRotator OriginalRot;
 	FVector OriginalLoc;
 
 	UPROPERTY(DefaultComponent)
@@ -32,7 +31,6 @@ class AObstacle : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		// OriginalRot = ObstacleMesh.GetRelativeRotation();
 		OriginalLoc = GetActorLocation();
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);

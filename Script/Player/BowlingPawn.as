@@ -54,12 +54,8 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction BackAction;
 
-	// UPROPERTY(BlueprintReadWrite, Category = Input)
-	float TouchCooldown = 1;
-	float currentTouchCooldown = -1;
-	float CooldownModifier = 1;
 	UPROPERTY(BlueprintReadOnly, Category = Input)
-	float CooldownPercent = 1;
+	float CooldownPercent;
 
 	UPROPERTY(DefaultComponent)
 	UInstancedStaticMeshComponent PredictLine;
@@ -74,15 +70,12 @@ class ABowlingPawn : APawn
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable BowlingDataTable;
 
-	// UDataTable ItemsConfigDT;
 	FItemConfigsDT ItemsConfig;
 
-	// UPROPERTY()
-	// float BowlingSpeed = 1500;
 	UPROPERTY()
 	float BowlingPowerMark = 800;
 	UPROPERTY()
-	float bowlingPowerMultiplier = 0;
+	float BowlingPowerMultiplier = 0;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent ThrowSFX;
@@ -99,11 +92,15 @@ class ABowlingPawn : APawn
 
 	ETouchTarget CurrentTouchTarget = ETouchTarget::Battlefield;
 
-	// float PawnMoveSpeed = 500;
 	float DamageBoost = 1;
+
+	FVector PressLoc;
 
 	UPROPERTY(DefaultComponent)
 	UAbilitySystem AbilitySystem;
+
+	UFCTweenBPActionFloat FloatTween;
+	FFloatDelegate DOnCooldownUpdate;
 
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
@@ -134,12 +131,31 @@ class ABowlingPawn : APawn
 		}
 		OriginalPos = GetActorLocation();
 
-		// ItemsConfigDT.GetAllRows(ItemsConfig);
-
 		DamageResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.Initialize(AbilitySystem);
-		AttackResponseComponent.DOnChangeAttackCooldownModifier.BindUFunction(this, n"UpdateCooldownModifier");
 		StatusResponseComponent.Initialize(AbilitySystem);
+		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
+	}
+
+	UFUNCTION()
+	private void OnPostSetCurrentValue(FName AttrName, float Value)
+	{
+		if (AttrName == n"AttackCooldown")
+		{
+			if (FloatTween != nullptr)
+			{
+				if (FloatTween.GetTimeElapsed() >= Value)
+				{
+					FloatTween.Stop();
+					FloatTween.ApplyEasing.Clear();
+					SetCooldownPercent(1);
+				}
+				else
+				{
+					FloatTween.SetTimeMultiplier(FloatTween.GetTimeRemaining() / (Value - FloatTween.GetTimeElapsed()));
+				}
+			}
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////// Input
@@ -167,8 +183,6 @@ class ABowlingPawn : APawn
 		EnhancedInputComponent.BindAction(BackAction, ETriggerEvent::Completed, BackTriggered);
 	}
 
-	FVector PressLoc;
-
 	UFUNCTION(BlueprintCallable)
 	void TouchTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
@@ -181,14 +195,14 @@ class ABowlingPawn : APawn
 		{
 			if (outResult.Actor != this)
 			{
-				if (currentTouchCooldown <= 0)
+				if (CooldownPercent >= 1)
 				{
 					BowlingDataTable.FindRow(ItemsConfig.BowlingID[Math::RandRange(0, ItemsConfig.BowlingID.Num() - 1)], CurrentBallData);
 					PredictLine.ClearInstances();
 					CurrentTouchTarget = ETouchTarget::Battlefield;
 					PressLoc = outResult.Location;
 					location.Z = 0;
-					bowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
+					BowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
 					// Print("Touch " + bowlingPowerMultiplier, 100);
 					SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).ZYaw, 0));
 					DrawPredictLine();
@@ -214,7 +228,7 @@ class ABowlingPawn : APawn
 			FVector location = GetActorLocation();
 			if (CurrentTouchTarget == ETouchTarget::Battlefield)
 			{
-				if (currentTouchCooldown <= 0)
+				if (CooldownPercent >= 1)
 				{
 
 					PressLoc = outResult.Location;
@@ -223,9 +237,9 @@ class ABowlingPawn : APawn
 					float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
 					float Yaw = FRotator::MakeFromX(location - PressLoc).ZYaw;
 
-					if (!Math::IsNearlyEqual(Yaw, GetActorRotation().ZYaw) || !Math::IsNearlyEqual(bowlingPowerMultiplier, tempModifier))
+					if (!Math::IsNearlyEqual(Yaw, GetActorRotation().ZYaw) || !Math::IsNearlyEqual(BowlingPowerMultiplier, tempModifier))
 					{
-						bowlingPowerMultiplier = tempModifier;
+						BowlingPowerMultiplier = tempModifier;
 						// Print("Hold " + bowlingPowerMultiplier, 100);
 						SetActorRotation(FRotator(0, Yaw, 0));
 						SetGuideArrowTarget(PressLoc);
@@ -245,22 +259,34 @@ class ABowlingPawn : APawn
 	{
 		if (CurrentTouchTarget == ETouchTarget::Battlefield)
 		{
-			if (currentTouchCooldown <= 0 && bowlingPowerMultiplier != 0)
+			if (CooldownPercent >= 1 && BowlingPowerMultiplier != 0)
 			{
 				ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
 				CurrentBallData.Atk = CurrentBallData.Atk * DamageBoost;
 				SpawnedActor.SetData(CurrentBallData);
 				SpawnedActor.SetOwner(this);
-				SpawnedActor.Fire(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * bowlingPowerMultiplier);
+				SpawnedActor.Fire(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * BowlingPowerMultiplier);
 
 				SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
 
 				FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
-				currentTouchCooldown = GetMaxCooldown();
+
+				AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
+				SetCooldownPercent(0);
+
+				if (FloatTween != nullptr)
+				{
+					FloatTween.Stop();
+					FloatTween.ApplyEasing.Clear();
+					FloatTween.SetTimeMultiplier(1);
+				}
+				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::Linear);
+				FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
+				FloatTween.Start();
 			}
 			PredictLine.ClearInstances();
 			PressLoc = FVector::ZeroVector;
-			bowlingPowerMultiplier = 0;
+			BowlingPowerMultiplier = 0;
 		}
 		else if (CurrentTouchTarget == ETouchTarget::Player)
 		{
@@ -294,7 +320,7 @@ class ABowlingPawn : APawn
 		PredictProjectilePathParams.StartLocation = GetActorLocation();
 		PredictProjectilePathParams.bTraceWithCollision = true;
 		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
-		FVector predictVector = -GetActorForwardVector() * CurrentBallData.BowlingSpeed * bowlingPowerMultiplier * 1.5;
+		FVector predictVector = -GetActorForwardVector() * CurrentBallData.BowlingSpeed * BowlingPowerMultiplier * 1.5;
 		PredictProjectilePathParams.LaunchVelocity = predictVector;
 		PredictProjectilePathParams.OverrideGravityZ = 0.0001f;
 		PredictProjectilePathParams.ProjectileRadius = 36;
@@ -323,22 +349,12 @@ class ABowlingPawn : APawn
 			transform.SetScale3D(FVector(0.25f));
 			PredictLine.AddInstance(transform);
 
-			// Print("Predict: " + PredictProjectilePathResult.HitResult.Location, 100);
-
 			// Draw a seconde line for the bounce
 			PredictProjectilePathParams.MaxSimTime = Math::Clamp(PredictSimTime * 0.8 - PredictProjectilePathResult.PathData[PredictProjectilePathResult.PathData.Num() - 1].Time, 0.2, PredictSimTime);
 			PredictProjectilePathParams.LaunchVelocity = Math::GetReflectionVector(predictVector, PredictProjectilePathResult.HitResult.Normal) * 0.6;
 			PredictProjectilePathParams.StartLocation = PredictProjectilePathResult.HitResult.Location + PredictProjectilePathParams.LaunchVelocity.GetSafeNormal();
-			// Print("Predict velocity: " + PredictProjectilePathParams.LaunchVelocity, 100);
 			FPredictProjectilePathResult PredictProjectilePathResult2;
-			// PredictProjectilePathParams.ActorsToIgnore.Add(PredictProjectilePathResult.HitResult.GetActor());
 			Gameplay::Blueprint_PredictProjectilePath_Advanced(PredictProjectilePathParams, PredictProjectilePathResult2);
-			// FString tmp = "Line " + PredictProjectilePathResult2.PathData.Num() + " | " + PredictProjectilePathParams.LaunchVelocity + " | " + PredictProjectilePathParams.MaxSimTime + " | " + PredictProjectilePathResult2.HitResult.GetActor().ActorNameOrLabel;
-			// if (DebugTxt != tmp)
-			// {
-			// 	DebugTxt = tmp;
-			// 	Print(DebugTxt, 100);
-			// }
 			if (PredictProjectilePathResult2.PathData.Num() > 1)
 			{
 				for (int j = 1; j < PredictProjectilePathResult2.PathData.Num() - 1; j++)
@@ -352,29 +368,11 @@ class ABowlingPawn : APawn
 		}
 	}
 
-	float GetMaxCooldown(float CooldownData = 0)
-	{
-		if (CooldownData != 0)
-		{
-			TouchCooldown = CooldownData;
-		}
-		return (TouchCooldown / CooldownModifier);
-	}
-
 	UFUNCTION()
-	void UpdateCooldownModifier(float iCooldownMod)
+	void SetCooldownPercent(float32 NewValue)
 	{
-		CooldownModifier = iCooldownMod;
-	}
-
-	UFUNCTION(BlueprintOverride)
-	void Tick(float DeltaSeconds)
-	{
-		if (currentTouchCooldown > 0)
-		{
-			currentTouchCooldown -= DeltaSeconds;
-			CooldownPercent = Math::Clamp(1 - (currentTouchCooldown / GetMaxCooldown()), 0, 1);
-		}
+		CooldownPercent = NewValue;
+		DOnCooldownUpdate.ExecuteIfBound(CooldownPercent);
 	}
 
 	UFUNCTION()

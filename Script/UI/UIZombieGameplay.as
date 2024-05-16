@@ -28,11 +28,19 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(BindWidget)
 	USlider LevelProgress;
 
+	UPROPERTY(BindWidget)
+	UProgressBar CooldownBar;
+
 	UFUNCTION(BlueprintEvent)
 	void UpdateLevelProgress(float NewProgress)
 	{
 		ProgressText.SetCurrentValue(NewProgress);
 		LevelProgress.SetValue(NewProgress);
+	}
+
+	UFUNCTION(BlueprintEvent)
+	void UpdateCooldownPercent(float NewPercent){
+		CooldownBar.SetPercent(NewPercent);
 	}
 
 	UFUNCTION(BlueprintEvent)

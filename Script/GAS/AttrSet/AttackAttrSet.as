@@ -1,3 +1,5 @@
+const float32 MIN_ATTACK_COOLDOWN = 0.1f;
+
 class UAttackAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Attack Attribute")
@@ -14,9 +16,15 @@ class UAttackAttrSet : ULiteAttrSet
 	}
 
 	UFUNCTION(BlueprintOverride)
-	void PostAttrChange(FName AttrName)
+	bool PreAttrChange(FName AttrName, float32& NewValue)
 	{
-		Print("Attack: " + Attack.GetCurrentValue());
-		Print("AttackCooldown: " + AttackCooldown.GetCurrentValue());
+		if (AttrName == n"AttackCooldown")
+		{
+			if (NewValue <= 0)
+			{
+				NewValue = MIN_ATTACK_COOLDOWN;
+			}
+		}
+		return true;
 	}
 };
