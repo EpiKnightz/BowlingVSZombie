@@ -113,7 +113,6 @@ class AZombie : AActor
 		StatusResponseComponent.Initialize(AbilitySystem);
 
 		MovementResponseComponent.Initialize(AbilitySystem);
-		// MovementResponseComponent.DOnChangeMoveSpeedModifier.BindUFunction(this, n"UpdateMoveSpeedModifier");
 	}
 
 	UFUNCTION()
@@ -121,10 +120,7 @@ class AZombie : AActor
 	{
 		if (AttrName == n"MoveSpeed")
 		{
-			// Print("" + Value);
 			AnimateInst.SetMoveSpeed(Value);
-			AnimateInst.AnimPlayRate = AbilitySystem.GetPercentageDiff(AttrName);
-			//  AnimateInst.Montage_SetPlayRate(att, speedModifier);
 		}
 	}
 
@@ -147,14 +143,14 @@ class AZombie : AActor
 			}
 			else if (loc.X < MovingLimit || !bIsAttacking)
 			{
-				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds /* speedModifier*/;
+				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds;
 				if (loc.X > MovingLimit)
 				{
 					if (IsValid(Target))
 					{
 						loc.X = MovingLimit;
 						bIsAttacking = true;
-						Attacking(nullptr, false);
+						StartAttacking(nullptr, false);
 					}
 					else
 					{
@@ -224,10 +220,11 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void Attacking(UAnimMontage Montage, bool bInterrupted)
+	void StartAttacking(UAnimMontage Montage, bool bInterrupted)
 	{
 		AnimateInst.OnMontageEnded.Clear();
-		AnimateInst.Montage_Play(AttackAnim[Math::RandRange(0, AttackAnim.Num() - 1)], AbilitySystem.GetValue(n"AttackCooldown") /* speedModifier*/);
+		int random = Math::RandRange(0, AttackAnim.Num() - 1);
+		AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
 	}
 
 	// Called when the animation trigger an event
@@ -252,20 +249,19 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void SetData(int iHP, int iAtk, int iDmg, int iSpeed, float iAtkSpd, FVector iScale, float iCoinValue)
+	void SetData(FZombieDT DataRow)
 	{
 		TMap<FName, float32> Data;
-		Data.Add(n"HP", iHP);
-		Data.Add(n"Attack", iAtk);
-		Data.Add(n"Damage", iDmg);
-		Data.Add(n"MaxSpeed", iSpeed);
-		Data.Add(n"AttackCooldown", float32(iAtkSpd));
+		Data.Add(n"MaxHP", DataRow.HP);
+		Data.Add(n"Attack", DataRow.Atk);
+		Data.Add(n"MaxSpeed", DataRow.Speed);
+		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
 
 		AbilitySystem.ImportData(Data);
 
-		AnimateInst.SetMoveSpeed(iSpeed);
-		SetActorScale3D(iScale);
-		CoinValue = iCoinValue;
+		AnimateInst.SetMoveSpeed(DataRow.Speed);
+		SetActorScale3D(DataRow.Scale);
+		CoinValue = DataRow.CoinDropAmount;
 	}
 
 	UFUNCTION()
@@ -292,7 +288,7 @@ class AZombie : AActor
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 		if (bIsAttacking)
 		{
-			AnimateInst.OnMontageEnded.AddUFunction(this, n"Attacking");
+			AnimateInst.OnMontageEnded.AddUFunction(this, n"StartAttacking");
 		}
 		delayMove = 1;
 	}

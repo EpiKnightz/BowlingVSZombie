@@ -1,3 +1,5 @@
+const float BASE_WALK_SPEED = 100.f;
+const float BASE_RUN_SPEED = 200.f;
 class UZombieAnimInst : UCustomAnimInst
 {
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
@@ -43,5 +45,16 @@ class UZombieAnimInst : UCustomAnimInst
 		bIsIdle = IsIdle();
 		bIsRunning = IsRunning();
 		bIsWalking = IsWalking();
+		if (!bIsIdle)
+		{
+			if (bIsWalking)
+			{
+				AnimPlayRate = AnimMoveSpeed / BASE_WALK_SPEED;
+			}
+			else if (bIsRunning)
+			{
+				AnimPlayRate = AnimMoveSpeed / BASE_RUN_SPEED;
+			}
+		}
 	}
 };

@@ -123,7 +123,7 @@ class AZombieManager : AActor
 		SpawnLocation.Z *= Row.Scale.Z;
 
 		AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
-		SpawnedActor.SetData(Row.HP, Row.Atk, Row.Dmg, Row.Speed, Row.AtkSpeed, Row.Scale, Row.CoinDropAmount);
+		SpawnedActor.SetData(Row);
 
 		int randomZombieIdx = Math::RandRange(0, Row.ZombieModelList.Num() - 1);
 		SpawnedActor.SetSkeletonMesh(Row.ZombieModelList[randomZombieIdx]);

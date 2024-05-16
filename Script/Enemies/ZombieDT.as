@@ -24,21 +24,14 @@ struct FZombieDT
 	UPROPERTY()
 	int Atk = 10;
 
-	// Dmg is amount of power dealing to Player's HP
-	UPROPERTY()
-	int Dmg = 10;
-
 	UPROPERTY()
 	int Speed = 100;
 
 	UPROPERTY()
-	float AtkSpeed = 1.f;
+	float32 AttackCooldown = 1.f;
 
 	UPROPERTY()
 	FVector Scale = FVector::OneVector;
-
-	UPROPERTY()
-	ECoinType CoinDropType = ECoinType::Bronze;
 
 	UPROPERTY()
 	int CoinDropAmount = 1;
