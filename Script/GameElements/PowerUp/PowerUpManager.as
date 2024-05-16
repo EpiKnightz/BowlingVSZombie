@@ -37,8 +37,7 @@ class APowerUpManager : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		// ActorTickEnabled = false;
-		GameStart();
+		ActorTickEnabled = false;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -97,7 +96,6 @@ class APowerUpManager : AActor
 		APowerUp SpawnedActor = Cast<APowerUp>(SpawnActor(PowerUpTemplate, SpawnLocation, SpawnPosition.Rotator()));
 		// SpawnedActor.Mesh.SetStaticMesh(Row.PowerUpModel);
 		SpawnedActor.InitData(Row, EffectRow);
-		// SpawnedActor.SetData(Row.HP, Row.Atk, Row.Dmg, Row.Speed, Row.AtkSpeed, Row.Scale, Row.CoinDropAmount);
 
 		if (multipleSpawnCount > 0)
 		{
@@ -125,7 +123,7 @@ class APowerUpManager : AActor
 		{
 			if (!SpawnSequence[i].WaveWarning.IsEmpty())
 			{
-				float delay = Math::Clamp(SpawnSequence[i].TimeMark - ZombieManager::WARNING_DURATION, 0, 999);
+				float delay = Math::Clamp(SpawnSequence[i].TimeMark - PowerUpManager::WARNING_DURATION, 0, 999);
 				if (delay == 0)
 				{
 					ShowWarning();

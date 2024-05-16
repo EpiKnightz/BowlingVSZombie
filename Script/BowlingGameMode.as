@@ -35,9 +35,10 @@ class ABowlingGameMode : AGameMode
 	FLevelConfigsDT LevelConfigsData;
 
 	// TArray<ULevelSequence> LevelSequence;
-	AZombieManager zombMangr;
-	ABowlingPawn bowlPawn;
-	UBowlingGameInstance gameInstance;
+	AZombieManager ZombieManager;
+	APowerUpManager PowerUpManager;
+	ABowlingPawn BowlingPawn;
+	UBowlingGameInstance GameInst;
 
 	UPROPERTY()
 	TArray<ULevelSequence> SequenceAssets;
@@ -45,9 +46,11 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		zombMangr = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
-		bowlPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
-		gameInstance = Cast<UBowlingGameInstance>(Gameplay::GetGameInstance());
+		ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
+		PowerUpManager = Cast<APowerUpManager>(Gameplay::GetActorOfClass(APowerUpManager));
+		BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
+		GameInst = Cast<UBowlingGameInstance>(GameInstance);
+
 		// gameInstance.CurrentLevel = 2;
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
@@ -56,20 +59,20 @@ class ABowlingGameMode : AGameMode
 		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
 		DOnWin.BindUFunction(UserWidget, n"WinUI");
 		DOnLose.BindUFunction(UserWidget, n"LoseUI");
-
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
 		DOnUpdateHP.ExecuteIfBound(HP);
 
-		bowlPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
-		bowlPawn.DOnCooldownUpdate.BindUFunction(UserWidget, n"UpdateCooldownPercent");
-		zombMangr.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
-		zombMangr.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
+		BowlingPawn.DOnCooldownUpdate.BindUFunction(UserWidget, n"UpdateCooldownPercent");
+		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
+		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
-		LevelConfigsDT.FindRow(FName("Item_" + (gameInstance.CurrentLevel - 1)), LevelConfigsData);
-		zombMangr.SpawnSize = LevelConfigsData.SpawnSize;
-		zombMangr.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		bowlPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
+		LevelConfigsDT.FindRow(FName("Item_" + (GameInst.CurrentLevel - 1)), LevelConfigsData);
+		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
+		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
+		PowerUpManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
+		BowlingPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
 
 		PauseGame();
 		if (LevelConfigsData.Delay > 0)
@@ -87,7 +90,7 @@ class ABowlingGameMode : AGameMode
 		LatentInfo.Linkage = 0;
 		LatentInfo.UUID = 1;
 
-		switch (gameInstance.CurrentLevel)
+		switch (GameInst.CurrentLevel)
 		{
 			case 1:
 				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
@@ -108,24 +111,26 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION()
 	void PlaySequence()
 	{
-		if (gameInstance.CurrentLevel <= SequenceAssets.Num() && SequenceAssets[gameInstance.CurrentLevel - 1] != nullptr)
+		if (GameInst.CurrentLevel <= SequenceAssets.Num() && SequenceAssets[GameInst.CurrentLevel - 1] != nullptr)
 		{
 			ALevelSequenceActor LSActor;
-			ULevelSequencePlayer::CreateLevelSequencePlayer(SequenceAssets[gameInstance.CurrentLevel - 1], FMovieSceneSequencePlaybackSettings(), LSActor).Play();
+			ULevelSequencePlayer::CreateLevelSequencePlayer(SequenceAssets[GameInst.CurrentLevel - 1], FMovieSceneSequencePlaybackSettings(), LSActor).Play();
 		}
 	}
 
 	UFUNCTION()
 	void StartGame()
 	{
-		zombMangr.GameStart();
-		bowlPawn.SetCooldownPercent(1);
+		ZombieManager.GameStart();
+		PowerUpManager.GameStart();
+		BowlingPawn.SetCooldownPercent(1);
 	}
 
 	void PauseGame()
 	{
-		zombMangr.GamePause();
-		bowlPawn.SetCooldownPercent(-1);
+		ZombieManager.GamePause();
+		PowerUpManager.GamePause();
+		BowlingPawn.SetCooldownPercent(-1);
 	}
 
 	UFUNCTION()
@@ -149,7 +154,7 @@ class ABowlingGameMode : AGameMode
 			Lose();
 		}
 		DOnUpdateHP.ExecuteIfBound(HP);
-		zombMangr.UpdateZombieList(zombieName);
+		ZombieManager.UpdateZombieList(zombieName);
 	}
 
 	UFUNCTION()
@@ -169,7 +174,7 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION(BlueprintCallable)
 	void NextLevel()
 	{
-		gameInstance.CurrentLevel++;
+		GameInst.CurrentLevel++;
 		RestartGame();
 	}
 

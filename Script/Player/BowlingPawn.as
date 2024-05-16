@@ -135,6 +135,12 @@ class ABowlingPawn : APawn
 		AttackResponseComponent.Initialize(AbilitySystem);
 		StatusResponseComponent.Initialize(AbilitySystem);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
+
+		auto AttackBuffZone = Gameplay::GetActorOfClass(AAttackBuffZone);
+		if (IsValid(AttackBuffZone))
+		{
+			SetGuideArrowTarget(AttackBuffZone.GetActorLocation());
+		}
 	}
 
 	UFUNCTION()
@@ -242,7 +248,7 @@ class ABowlingPawn : APawn
 						BowlingPowerMultiplier = tempModifier;
 						// Print("Hold " + bowlingPowerMultiplier, 100);
 						SetActorRotation(FRotator(0, Yaw, 0));
-						SetGuideArrowTarget(PressLoc);
+						// SetGuideArrowTarget(PressLoc);
 						DrawPredictLine();
 					}
 				}
