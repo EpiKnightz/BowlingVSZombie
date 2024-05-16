@@ -81,12 +81,11 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		if (i >= 0)
 		{
 			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
-			float32 NewValue;
+			float32 NewValue = -1000;
 			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 			Calculate(AttrName, NewValue, i);
 			SetValue(AttrName, NewValue, i);
 			EOnPostAddModifier.Broadcast(AttrName, NewValue);
-			// TODO: I'll need to add a calculation between base and current value: 1 for percentage, 1 for flat
 		}
 	}
 
@@ -99,7 +98,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			if (ModifiersMap.Contains(AttrName))
 			{
 				ModifiersMap.FindOrAdd(AttrName).RemoveModifier(Object, ID);
-				float32 NewValue;
+				float32 NewValue = -1000;
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 				Calculate(AttrName, NewValue, i);
 				SetValue(AttrName, NewValue, i);

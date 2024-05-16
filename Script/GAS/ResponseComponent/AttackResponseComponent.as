@@ -2,7 +2,8 @@ class UAttackResponseComponent : UResponseComponent
 {
 	FModDelegate DOnChangeAttackModifier;
 	FObjectIntDelegate DOnRemoveAttackModifier;
-	FFloatDelegate DOnChangeAttackCooldownModifier;
+	FModDelegate DOnChangeAttackCooldownModifier;
+	FObjectIntDelegate DOnRemoveAttackCooldownModifier;
 
 	bool InitChild() override
 	{
@@ -10,13 +11,20 @@ class UAttackResponseComponent : UResponseComponent
 		DOnChangeAttackModifier.BindUFunction(this, n"OnChangeAttackModifier");
 		DOnRemoveAttackModifier.BindUFunction(this, n"OnRemoveAttackModifier");
 		DOnChangeAttackCooldownModifier.BindUFunction(this, n"OnChangeAttackCooldownModifier");
+		DOnRemoveAttackCooldownModifier.BindUFunction(this, n"OnRemoveAttackCooldownModifier");
 		return true;
 	}
 
 	UFUNCTION()
-	private void OnChangeAttackCooldownModifier(float Value)
+	private void OnRemoveAttackCooldownModifier(const UObject Object, int ID)
 	{
-		// AbilitySystem.AddModifier(n"AttackCooldown", Value);
+		AbilitySystem.RemoveModifier(n"AttackCooldown", Object, ID);
+	}
+
+	UFUNCTION()
+	private void OnChangeAttackCooldownModifier(UModifier Modifier)
+	{
+		AbilitySystem.AddModifier(n"AttackCooldown", Modifier);
 	}
 
 	UFUNCTION()

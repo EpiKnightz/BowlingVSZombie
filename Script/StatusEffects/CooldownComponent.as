@@ -8,7 +8,9 @@ class UCooldownComponent : UStatusComponent
 		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(FindAttrValue(n"AttackAttrSet.AttackCooldown") * 0.1);
+			UMultiplierMod Mod = NewObject(this, UMultiplierMod);
+			Mod.Setup(ModID, FindAttrValue(n"AttackAttrSet.AttackCooldown"));
+			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(Mod);
 		}
 	}
 
@@ -17,7 +19,7 @@ class UCooldownComponent : UStatusComponent
 		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(1);
+			PlayerResponse.DOnRemoveAttackCooldownModifier.ExecuteIfBound(this, ModID);
 		}
 		Super::EndStatusEffect();
 	}

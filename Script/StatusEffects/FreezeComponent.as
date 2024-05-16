@@ -1,7 +1,5 @@
 class UFreezeComponent : UStatusComponent
 {
-	private int ModID = 1;
-
 	void DoInitChildren() override
 	{
 		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());

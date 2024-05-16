@@ -1,7 +1,5 @@
 class UChillingComponent : UStatusComponent
 {
-	private int ModID = 1;
-
 	bool IsApplicable() override
 	{
 		UFreezeComponent Target = UFreezeComponent::Get(GetOwner());
@@ -14,7 +12,7 @@ class UChillingComponent : UStatusComponent
 		if (IsValid(SpeedResponse))
 		{
 			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
-			SpeedMod.Setup(ModID, float32(1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed"))));
+			SpeedMod.Setup(ModID, 1 - (FindAttrValue(n"MovementAttrSet.MoveSpeed")));
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
 			if (InitTimes >= GetAttrValue(GameplayTags::StatusParam_StackLimit))
 			{

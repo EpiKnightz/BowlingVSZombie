@@ -8,8 +8,10 @@ enum EStackingRule
 
 class UStatusComponent : UActorComponent
 {
+	protected int ModID = 1;
+
 	FStatusDT StatusData;
-	float CurrentDuration = -1;
+	protected float CurrentDuration = -1;
 
 	int InitTimes = 0;
 
@@ -125,14 +127,14 @@ class UStatusComponent : UActorComponent
 	}
 
 	UFUNCTION()
-	float FindAttrValue(FName AttrName)
+	float32 FindAttrValue(FName AttrName)
 	{
 		float outValue = -1000;
 		if (!StatusData.AffectedAttributes.Find(FGameplayTag::RequestGameplayTag(AttrName), outValue))
 		{
 			PrintError("Attribute not found: " + AttrName.ToString());
 		}
-		return outValue;
+		return float32(outValue);
 	}
 
 	UFUNCTION()
