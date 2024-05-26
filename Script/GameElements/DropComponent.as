@@ -20,7 +20,7 @@ class UDropComponent : UActorComponent
 	{
 		OriginalLoc = Owner.GetActorLocation();
 		Owner.SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, StartHeight));
-		if (FloatTween != nullptr)
+		if (IsValid(FloatTween) && FloatTween.IsValid())
 		{
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();

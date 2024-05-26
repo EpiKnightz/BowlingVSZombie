@@ -49,7 +49,7 @@ class AObstacle : AActor
 	UFUNCTION(BlueprintEvent)
 	void TakeHitCue()
 	{
-		if (FloatTween != nullptr)
+		if (IsValid(FloatTween) && FloatTween.IsValid())
 		{
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();
@@ -98,7 +98,7 @@ class AObstacle : AActor
 	{
 		TargetResponseComponent.TargetType = ETargetType::Untargetable;
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if (FloatTween != nullptr)
+		if (IsValid(FloatTween) && FloatTween.IsValid())
 		{
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();

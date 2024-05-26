@@ -96,6 +96,10 @@ class AStatusManager : AActor
 				{
 					statusComp = UCooldownComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
+				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_AttackBoost))
+				{
+					statusComp = UAttackComponent::GetOrCreate(Target, EffectTag.TagName);
+				}
 				else
 				{
 					return false;
