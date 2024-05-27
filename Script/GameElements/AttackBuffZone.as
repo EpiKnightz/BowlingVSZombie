@@ -3,30 +3,31 @@ class AAttackBuffZone : AZone
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent VFXComponent;
 
-	UPROPERTY()
-	float32 AttackBoostAmount = 15;
-
 	private int ModID = 1;
+
+	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+		Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0)).DOnChangeGuideArrowTarget.ExecuteIfBound(GetActorLocation());
+		System::SetTimer(this, n"K2_DestroyActor", 10, false);
+	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		UAttackResponseComponent AttackResponseComponent = UAttackResponseComponent::Get(OtherActor);
-		if (IsValid(AttackResponseComponent))
+		auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+		if (IsValid(StatusResponse))
 		{
-			UMultiplierMod AttackBoost = NewObject(this, UMultiplierMod);
-			AttackBoost.Setup(ModID, AttackBoostAmount);
-			AttackResponseComponent.DOnChangeAttackModifier.ExecuteIfBound(AttackBoost);
+			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Positive_AttackBoost));
 		}
-	}
 
-	UFUNCTION(BlueprintOverride)
-	void ActorEndOverlap(AActor OtherActor)
-	{
-		UAttackResponseComponent AttackResponseComponent = UAttackResponseComponent::Get(OtherActor);
-		if (IsValid(AttackResponseComponent))
+		auto Pawn = Cast<ABowlingPawn>(OtherActor);
+		if (IsValid(Pawn))
 		{
-			AttackResponseComponent.DOnRemoveAttackModifier.ExecuteIfBound(this, ModID);
+			Pawn.DOnHideArrow.ExecuteIfBound();
+			// TODO: Move guide arrow into a component.
 		}
+		System::ClearTimer(this, "K2_DestroyActor");
+		DestroyActor();
 	}
 };
