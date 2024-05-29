@@ -278,7 +278,7 @@ class AZombie : AActor
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 		SetStencilValue(5);
-		System::SetTimer(this, n"ResetStencilValue", 0.054, false);
+		System::SetTimer(this, n"ResetStencilValue", 0.25, false);
 	}
 
 	UFUNCTION()
