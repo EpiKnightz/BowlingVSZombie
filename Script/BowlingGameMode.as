@@ -64,7 +64,7 @@ class ABowlingGameMode : AGameMode
 		DOnUpdateHP.ExecuteIfBound(HP);
 
 		BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
-		BowlingPawn.DOnCooldownUpdate.BindUFunction(UserWidget, n"UpdateCooldownPercent");
+		BowlingPawn.EOnCooldownUpdate.AddUFunction(UserWidget, n"UpdateCooldownPercent");
 		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
