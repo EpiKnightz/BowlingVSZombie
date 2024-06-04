@@ -7,11 +7,6 @@ class AOptionCard : AActor
 	UStaticMeshComponent CardMesh;
 	default CardMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	UPROPERTY(DefaultComponent, Attach = Collider)
-	UChildActorComponent CompanionActor;
-	// default CompanionActor.SetWorldScale3D(FVector(0.3, 1.5, 1.5));
-	default CompanionActor.SetRelativeRotation(FRotator(0, -90, -90));
-
 	UPROPERTY(DefaultComponent, Attach = CardMesh)
 	UWidgetComponent TextWidget;
 	default TextWidget.SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -25,6 +20,14 @@ class AOptionCard : AActor
 	private ATemplateSequenceActor TemplSequActor;
 	private int ID;
 
+	UPROPERTY()
+	FTransform CompanionTransform;
+
+	UPROPERTY()
+	TSubclassOf<ACompanion> CompanionClass;
+
+	private ACompanion SpawnedCompanion;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -32,6 +35,11 @@ class AOptionCard : AActor
 		Pawn.EOnTouchTriggered.AddUFunction(this, n"OnTouchTriggered");
 
 		TemplSequActor = NewObject(this, ATemplateSequenceActor);
+
+		SpawnedCompanion = Cast<ACompanion>(SpawnActor(CompanionClass, CompanionTransform.Location, CompanionTransform.Rotation.Rotator()));
+		// TODO move this into a component to avoid casting
+		SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
+		SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);
 	}
 
 	UFUNCTION()
@@ -49,9 +57,10 @@ class AOptionCard : AActor
 		if (OtherActor == this)
 		{
 			DOnCardClicked.ExecuteIfBound(ID);
-			ACompanion Spawned = Cast<ACompanion>(SpawnActor(CompanionActor.ChildActorClass, Location));
-			Spawned.RegisterDragEvents();
-			// TODO move this into a component to avoid casting
+			SpawnedCompanion.DetachFromActor();
+			SpawnedCompanion.ResetTransform();
+			SpawnedCompanion.RegisterDragEvents();
+			SpawnedCompanion = nullptr;
 			OnFinished();
 		}
 	}
@@ -67,6 +76,10 @@ class AOptionCard : AActor
 	UFUNCTION()
 	private void OnFinished()
 	{
+		if (IsValid(SpawnedCompanion))
+		{
+			SpawnedCompanion.DestroyActor();
+		}
 		DestroyActor();
 	}
 };

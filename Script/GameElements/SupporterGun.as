@@ -11,8 +11,6 @@ class ASupporterGun : ACompanion
 
 	// APostProcessVolume PPV;
 
-	// ensureMsgf(!AttachmentRules.bWeldSimulatedBodies, TEXT("AttachToComponent when called from a constructor cannot weld simulated bodies. Consider calling SetupAttachment directly instead."));
-
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
 	{
@@ -38,7 +36,7 @@ class ASupporterGun : ACompanion
 	{
 		// ABullet SpawnedActor = Cast<ABullet>()
 		Niagara::SpawnSystemAtLocation(MuzzleVFX, RightHandWp.GetSocketLocation(n"Muzzle"), FRotator(0, 180, 0));
-		SpawnActor(BulletTemplate, RightHandWp.GetSocketLocation(n"Muzzle"), GetActorRotation());
+		SpawnActor(BulletTemplate, RightHandWp.GetSocketLocation(n"Muzzle"), CompanionSkeleton.GetWorldRotation());
 
 		Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, true);
 		// PPV.bEnabled = true;

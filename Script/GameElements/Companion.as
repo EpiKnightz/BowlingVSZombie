@@ -29,8 +29,37 @@ class ACompanion : AActor
 		AtksLeft = NumberOfAtks;
 	}
 
-	// UFUNCTION()
-	// void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
-	// {
-	// }
+	void ResetTransform()
+	{
+		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);
+		SetActorScale3D(FVector::OneVector);
+	}
+
+	void RegisterDragEvents(bool bEnabled = true)
+	{
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		if (bEnabled)
+		{
+			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
+			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+		}
+		else
+		{
+			Pawn.EOnTouchHold.UnbindObject(this);
+			Pawn.EOnTouchReleased.UnbindObject(this);
+		}
+	}
+
+	UFUNCTION()
+	private void OnDragged(AActor OtherActor, FVector Vector)
+	{
+		SetActorLocation(FVector(Vector.X, Vector.Y, GetActorLocation().Z));
+	}
+
+	UFUNCTION()
+	private void OnDragReleased(AActor OtherActor, FVector Vector)
+	{
+		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 50));
+		RegisterDragEvents(false);
+	}
 }
