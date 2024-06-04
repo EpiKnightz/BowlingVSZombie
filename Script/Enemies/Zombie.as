@@ -92,11 +92,14 @@ class AZombie : AActor
 	UAbilitySystem AbilitySystem;
 
 	private UDamageResponseComponent Target;
+	private UMaterialInstanceDynamic DynamicMat;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
+		DynamicMat = Material::CreateDynamicMaterialInstance(ZombieSkeleton.GetMaterial(0));
+		ZombieSkeleton.SetMaterial(0, DynamicMat);
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		System::SetTimer(this, n"EmergeDone", delayMove, true);
 
@@ -277,13 +280,13 @@ class AZombie : AActor
 	void TakeHitCue()
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-		SetStencilValue(5);
-		System::SetTimer(this, n"ResetStencilValue", 0.25, false);
 	}
 
 	UFUNCTION()
 	void TakeDamageCue()
 	{
+		DynamicMat.SetScalarParameterValue(n"IsHit", 1);
+		System::SetTimer(this, n"EndHitFlash", 0.25, false);
 		AnimateInst.Montage_Play(DamageAnim);
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 		if (bIsAttacking)
@@ -321,8 +324,8 @@ class AZombie : AActor
 	}
 
 	UFUNCTION()
-	void ResetStencilValue()
+	void EndHitFlash()
 	{
-		SetStencilValue(1);
+		DynamicMat.SetScalarParameterValue(n"IsHit", 0);
 	}
 }
