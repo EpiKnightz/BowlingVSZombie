@@ -48,7 +48,7 @@ class ULiteAttrSet : ULiteAttrSetBase
 	 *	Note this is only called during an 'execute'. E.g., a modification to the 'base value' of an attribute. It is not called during an application of a GameplayEffect, such as a 5 ssecond +10 movement speed buff.
 	 */
 	UFUNCTION(BlueprintOverride)
-	bool PreCalculation(FName AttrName)
+	bool PreCalculation(FName AttrName, float32& NewValue)
 	{
 		return false;
 	}

@@ -16,7 +16,7 @@ class UModifier
 		}
 		else
 		{
-			Print("Invalid Input");
+			PrintError("Invalid Input");
 		}
 	}
 

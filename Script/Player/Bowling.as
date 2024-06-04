@@ -50,9 +50,6 @@ class ABowling : AActor
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
-	UPROPERTY()
-	TSubclassOf<UGameplayEffect> DamageEffect;
-
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{

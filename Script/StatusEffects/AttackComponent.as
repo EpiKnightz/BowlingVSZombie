@@ -1,5 +1,5 @@
 
-class UCooldownComponent : UStatusComponent
+class UAttackComponent : UStatusComponent
 {
 	void DoInitChildren() override
 	{
@@ -7,8 +7,8 @@ class UCooldownComponent : UStatusComponent
 		if (IsValid(PlayerResponse))
 		{
 			UMultiplierMod Mod = NewObject(this, UMultiplierMod);
-			Mod.Setup(ModID, FindAttrValue(n"AttackAttrSet.AttackCooldown"));
-			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(Mod);
+			Mod.Setup(ModID, FindAttrValue(n"AttackAttrSet.Attack"));
+			PlayerResponse.DOnChangeAttackModifier.ExecuteIfBound(Mod);
 		}
 	}
 
@@ -17,7 +17,7 @@ class UCooldownComponent : UStatusComponent
 		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			PlayerResponse.DOnRemoveAttackCooldownModifier.ExecuteIfBound(this, ModID);
+			PlayerResponse.DOnRemoveAttackModifier.ExecuteIfBound(this, ModID);
 		}
 		Super::EndStatusEffect();
 	}

@@ -32,6 +32,11 @@ struct FModifierContainer
 			ModifiersArray[i].Calculate(AbilitySystem, Result);
 		}
 	}
+
+	bool IsEmpty()
+	{
+		return ModifiersArray.IsEmpty();
+	}
 }
 
 class UAbilitySystem : ULiteAbilitySystemComponent
@@ -83,8 +88,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
 			float32 NewValue = -1000;
 			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
-			Calculate(AttrName, NewValue, i);
-			SetValue(AttrName, NewValue, i);
+			CalculateCurrent(AttrName, NewValue, i);
 			EOnPostAddModifier.Broadcast(AttrName, NewValue);
 		}
 	}
@@ -100,8 +104,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 				ModifiersMap.FindOrAdd(AttrName).RemoveModifier(Object, ID);
 				float32 NewValue = -1000;
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
-				Calculate(AttrName, NewValue, i);
-				SetValue(AttrName, NewValue, i);
+				CalculateCurrent(AttrName, NewValue, i);
 				EOnPostRemoveModifier.Broadcast(AttrName, NewValue);
 			}
 		}
@@ -130,7 +133,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	void SetBaseValue(FName AttrName, float Value, bool bCalculateCurrent = true, bool bForceSaveAsCurrent = false)
+	void SetBaseValue(FName AttrName, float Value, bool bCalculateCurrent = true)
 	{
 		float32 NewBaseValue = float32(Value);
 		int i = GetSetIdx(AttrName);
@@ -139,17 +142,12 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			if (!AttrSetContainer[i].DOnPreBaseAttrChange.ExecuteIfBound(AttrName, NewBaseValue))
 			{
 				AttrSetContainer[i].SetBaseValue(AttrName, NewBaseValue);
-				AttrSetContainer[i].DOnPostAttrChange.ExecuteIfBound(AttrName);
+				AttrSetContainer[i].DOnPostBaseAttrChange.ExecuteIfBound(AttrName);
 				EOnPostSetBaseValue.Broadcast(AttrName, NewBaseValue);
 
 				if (bCalculateCurrent)
 				{
-					float32 NewValue = NewBaseValue;
-					if (!bForceSaveAsCurrent)
-					{
-						Calculate(AttrName, NewValue, i);
-					}
-					SetValue(AttrName, NewValue, i);
+					CalculateCurrent(AttrName, NewBaseValue, i);
 				}
 			}
 		}
@@ -165,8 +163,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			if (bForceRecalculation)
 			{
 				AttrSetContainer[i].GetBaseValue(AttrName, Result);
-				Calculate(AttrName, Result, i);
-				SetValue(AttrName, Result, i);
+				CalculateCurrent(AttrName, Result, i);
 			}
 			else
 			{
@@ -217,13 +214,20 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	void Calculate(FName AttrName, float32& FinalValue, int i)
+	void CalculateCurrent(FName AttrName, float32& FinalValue, int i, bool bSetCurrent = true)
 	{
-		if (!AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(AttrName))
+		if (!AttrSetContainer[i].DOnPreCalculation.ExecuteIfBound(AttrName, FinalValue))
 		{
 			// Do Calculation
 			FModifierContainer Modifiers = ModifiersMap.FindOrAdd(AttrName);
-			Modifiers.CalculateData(this, AttrName, FinalValue);
+			if (!Modifiers.IsEmpty())
+			{
+				Modifiers.CalculateData(this, AttrName, FinalValue);
+			}
+			if (bSetCurrent)
+			{
+				SetValue(AttrName, FinalValue, i);
+			}
 			AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(AttrName);
 		}
 	}

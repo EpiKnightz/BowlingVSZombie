@@ -14,8 +14,11 @@ delegate void FGameplayTagDelegate(FGameplayTagContainer TagContainer);
 delegate bool FBoolReturnDelegate();
 delegate void FObjectIntDelegate(const UObject Object, int ID);
 delegate void FModDelegate(UModifier Calculation);
+delegate void FVectorDelegate(FVector Value);
 
 event void FVoidEvent();
+event void FActorEvent(AActor OtherActor);
+event void FActorVectorEvent(AActor OtherActor, FVector Vector);
 event void FIntEvent(int Value);
 event void FNameEvent(FName Name);
 event void FFloatEvent(float Value);

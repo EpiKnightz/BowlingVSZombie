@@ -1,8 +1,12 @@
 enum ETouchTarget
 {
 	Battlefield,
-	Player
+	Player,
+	None
 }
+
+const FLinearColor THROWABLE_COLOR = FLinearColor(0.002428, 0.138432, 0.57758, 1);
+const FLinearColor UNTHROWABLE_COLOR = FLinearColor(1, 0, 0, 1);
 
 class ABowlingPawn : APawn
 {
@@ -29,6 +33,7 @@ class ABowlingPawn : APawn
 	UWidgetComponent WorldWidget;
 	default WorldWidget.CollisionEnabled = ECollisionEnabled::NoCollision;
 	default WorldWidget.ReceivesDecals = false;
+	default WorldWidget.SetHiddenInGame(true);
 
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
@@ -61,6 +66,9 @@ class ABowlingPawn : APawn
 	UInstancedStaticMeshComponent PredictLine;
 	default PredictLine.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	default PredictLine.SetCastShadow(false);
+
+	UMaterialInstanceDynamic PredictLineMaterial;
+
 	UPROPERTY()
 	float PredictSimTime = 1;
 
@@ -90,9 +98,7 @@ class ABowlingPawn : APawn
 
 	FBallDT CurrentBallData;
 
-	ETouchTarget CurrentTouchTarget = ETouchTarget::Battlefield;
-
-	float DamageBoost = 1;
+	ETouchTarget CurrentTouchTarget = ETouchTarget::None;
 
 	FVector PressLoc;
 
@@ -100,7 +106,13 @@ class ABowlingPawn : APawn
 	UAbilitySystem AbilitySystem;
 
 	UFCTweenBPActionFloat FloatTween;
-	FFloatDelegate DOnCooldownUpdate;
+	FFloatEvent EOnCooldownUpdate;
+	FVectorDelegate DOnChangeGuideArrowTarget;
+	FVoidDelegate DOnHideArrow;
+
+	FActorVectorEvent EOnTouchTriggered;
+	FActorVectorEvent EOnTouchHold;
+	FActorVectorEvent EOnTouchReleased;
 
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
@@ -136,11 +148,12 @@ class ABowlingPawn : APawn
 		StatusResponseComponent.Initialize(AbilitySystem);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
-		auto AttackBuffZone = Gameplay::GetActorOfClass(AAttackBuffZone);
-		if (IsValid(AttackBuffZone))
-		{
-			SetGuideArrowTarget(AttackBuffZone.GetActorLocation());
-		}
+		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
+		DOnHideArrow.BindUFunction(this, n"HideGuideArrow");
+
+		PredictLineMaterial = Material::CreateDynamicMaterialInstance(PredictLine.GetMaterial(0));
+		PredictLine.SetMaterial(0, PredictLineMaterial);
+		EOnCooldownUpdate.AddUFunction(this, n"SetPredictLineColor");
 	}
 
 	UFUNCTION()
@@ -148,12 +161,11 @@ class ABowlingPawn : APawn
 	{
 		if (AttrName == n"AttackCooldown")
 		{
-			if (FloatTween != nullptr)
+			if (IsValid(FloatTween) && FloatTween.IsValid())
 			{
 				if (FloatTween.GetTimeElapsed() >= Value)
 				{
-					FloatTween.Stop();
-					FloatTween.ApplyEasing.Clear();
+					ClearTween(true);
 					SetCooldownPercent(1);
 				}
 				else
@@ -196,14 +208,17 @@ class ABowlingPawn : APawn
 		TArray<EObjectTypeQuery> objectTypeArray;
 		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
 		objectTypeArray.Add(EObjectTypeQuery::Pawn);
-		FVector location = GetActorLocation();
 		if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
 		{
+			FVector location = GetActorLocation();
 			if (outResult.Actor != this)
 			{
-				if (CooldownPercent >= 1)
+				if (CooldownPercent > 0)
 				{
 					BowlingDataTable.FindRow(ItemsConfig.BowlingID[Math::RandRange(0, ItemsConfig.BowlingID.Num() - 1)], CurrentBallData);
+					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
+					AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
+					// Print("Attack " + CurrentBallData.Atk);
 					PredictLine.ClearInstances();
 					CurrentTouchTarget = ETouchTarget::Battlefield;
 					PressLoc = outResult.Location;
@@ -219,6 +234,7 @@ class ABowlingPawn : APawn
 				CurrentTouchTarget = ETouchTarget::Player;
 				CalculateMovement(location, outResult.Location);
 			}
+			EOnTouchTriggered.Broadcast(outResult.Actor, outResult.Location);
 		}
 	}
 
@@ -228,15 +244,14 @@ class ABowlingPawn : APawn
 		FHitResult outResult;
 		TArray<EObjectTypeQuery> objectTypeArray;
 		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
-
+		objectTypeArray.Add(EObjectTypeQuery::Pawn);
 		if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
 		{
 			FVector location = GetActorLocation();
 			if (CurrentTouchTarget == ETouchTarget::Battlefield)
 			{
-				if (CooldownPercent >= 1)
+				if (CooldownPercent > 0)
 				{
-
 					PressLoc = outResult.Location;
 
 					// location.Z = 0;
@@ -248,7 +263,6 @@ class ABowlingPawn : APawn
 						BowlingPowerMultiplier = tempModifier;
 						// Print("Hold " + bowlingPowerMultiplier, 100);
 						SetActorRotation(FRotator(0, Yaw, 0));
-						// SetGuideArrowTarget(PressLoc);
 						DrawPredictLine();
 					}
 				}
@@ -257,6 +271,7 @@ class ABowlingPawn : APawn
 			{
 				CalculateMovement(location, outResult.Location);
 			}
+			EOnTouchHold.Broadcast(outResult.Actor, outResult.Location);
 		}
 	}
 
@@ -268,7 +283,7 @@ class ABowlingPawn : APawn
 			if (CooldownPercent >= 1 && BowlingPowerMultiplier != 0)
 			{
 				ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
-				CurrentBallData.Atk = CurrentBallData.Atk * DamageBoost;
+				CurrentBallData.Atk = AbilitySystem.GetValue(n"Attack");
 				SpawnedActor.SetData(CurrentBallData);
 				SpawnedActor.SetOwner(this);
 				SpawnedActor.Fire(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * BowlingPowerMultiplier);
@@ -277,16 +292,11 @@ class ABowlingPawn : APawn
 
 				FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 
-				AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
+				// AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
 				SetCooldownPercent(0);
 
-				if (FloatTween != nullptr)
-				{
-					FloatTween.Stop();
-					FloatTween.ApplyEasing.Clear();
-					FloatTween.SetTimeMultiplier(1);
-				}
-				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::Linear);
+				ClearTween();
+				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::InQuad);
 				FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
 				FloatTween.Start();
 			}
@@ -296,6 +306,26 @@ class ABowlingPawn : APawn
 		}
 		else if (CurrentTouchTarget == ETouchTarget::Player)
 		{
+		}
+		CurrentTouchTarget = ETouchTarget::None;
+
+		FHitResult outResult;
+		TArray<EObjectTypeQuery> objectTypeArray;
+		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
+		objectTypeArray.Add(EObjectTypeQuery::Pawn);
+		// if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
+		{
+			EOnTouchReleased.Broadcast(outResult.Actor, outResult.Location);
+		}
+	}
+
+	void ClearTween(bool bSkipCheck = false)
+	{
+		if (bSkipCheck || (IsValid(FloatTween) && FloatTween.IsValid()))
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+			FloatTween.SetTimeMultiplier(1);
 		}
 	}
 
@@ -312,10 +342,18 @@ class ABowlingPawn : APawn
 		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -400, 400), currentLocation.Z));
 	}
 
+	UFUNCTION()
 	void SetGuideArrowTarget(FVector Target)
 	{
+		WorldWidget.SetHiddenInGame(false);
 		float Yaw = FRotator::MakeFromX(GetActorLocation() - Target).ZYaw;
 		WorldWidget.SetWorldRotation(FRotator(90, 0, -Yaw));
+	}
+
+	UFUNCTION()
+	void HideGuideArrow()
+	{
+		WorldWidget.SetHiddenInGame(true);
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -378,7 +416,21 @@ class ABowlingPawn : APawn
 	void SetCooldownPercent(float32 NewValue)
 	{
 		CooldownPercent = NewValue;
-		DOnCooldownUpdate.ExecuteIfBound(CooldownPercent);
+		EOnCooldownUpdate.Broadcast(CooldownPercent);
+		// Todo: Change this to event, then move the color update code to the event
+	}
+
+	UFUNCTION()
+	void SetPredictLineColor(float iCooldownPercent)
+	{
+		if (iCooldownPercent >= 1)
+		{
+			PredictLineMaterial.SetVectorParameterValue(n"Base Color", THROWABLE_COLOR);
+		}
+		else if (iCooldownPercent > 0)
+		{
+			PredictLineMaterial.SetVectorParameterValue(n"Base Color", UNTHROWABLE_COLOR);
+		}
 	}
 
 	UFUNCTION()
@@ -410,11 +462,5 @@ class ABowlingPawn : APawn
 	void CoinComboHandler(int value)
 	{
 		OnComboTrigger(1);
-	}
-
-	UFUNCTION()
-	void OnDamageBoost(float BoostPercentage)
-	{
-		DamageBoost = BoostPercentage;
 	}
 }
