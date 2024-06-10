@@ -1,5 +1,5 @@
 
-class UAttackComponent : UStatusComponent
+class UAttackBoostComponent : UStatusComponent
 {
 	void DoInitChildren() override
 	{

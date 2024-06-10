@@ -98,7 +98,7 @@ class AStatusManager : AActor
 				}
 				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_AttackBoost))
 				{
-					statusComp = UAttackComponent::GetOrCreate(Target, EffectTag.TagName);
+					statusComp = UAttackBoostComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else
 				{
