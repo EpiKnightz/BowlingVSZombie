@@ -16,6 +16,7 @@ delegate void FObjectIntDelegate(const UObject Object, int ID);
 delegate void FModDelegate(UModifier Calculation);
 delegate void FVectorDelegate(FVector Value);
 
+event void FVectorEvent(FVector Value);
 event void FVoidEvent();
 event void FActorEvent(AActor OtherActor);
 event void FActorVectorEvent(AActor OtherActor, FVector Vector);
@@ -25,6 +26,7 @@ event void FFloatEvent(float Value);
 event void FNameFloatEvent(FName Name, float Value);
 event void FNameModifierEvent(FName Name, UModifier Modifier);
 event void FNameFloat32Event(FName Name, float32 Value);
+event void FHitResultEvent(FHitResult HitResult);
 event void FGameplayTagEvent(FGameplayTagContainer TagContainer);
 
 namespace Utilities

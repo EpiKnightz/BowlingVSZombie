@@ -94,6 +94,13 @@ class AZombie : AActor
 	private UDamageResponseComponent Target;
 	private UMaterialInstanceDynamic DynamicMat;
 
+	UPROPERTY(DefaultComponent)
+	UProjectileMovementComponent MovementComp;
+	default MovementComp.bShouldBounce = true;
+	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.AutoActivate = false;
+	// TODO: refactor movment comp so it can be bounced off also
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{

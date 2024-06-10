@@ -7,13 +7,18 @@ class UMovementAttrSet : ULiteAttrSet
 	FAngelscriptGameplayAttributeData MaxSpeed;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
-	FAngelscriptGameplayAttributeData Acceleration;
+	FAngelscriptGameplayAttributeData Accel;
+
+	// Bounciness affect the bounce speed percentage. 0.8 means 80% of the bounce speed, 0 means no bounce.
+	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
+	FAngelscriptGameplayAttributeData Bounciness;
 
 	UMovementAttrSet()
 	{
 		MoveSpeed.Initialize(50);
 		MaxSpeed.Initialize(100);
-		Acceleration.Initialize(10);
+		Accel.Initialize(0);
+		Bounciness.Initialize(0.8);
 		InitDelegates();
 	}
 

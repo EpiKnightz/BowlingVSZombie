@@ -19,7 +19,10 @@ struct FBallDT
 	float BowlingSpeed = 1000;
 
 	UPROPERTY()
-	FGameplayTag EffectTag;
+	float Bounciness = 0.8;
+
+	UPROPERTY()
+	FGameplayTagContainer EffectTags;
 
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;

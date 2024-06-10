@@ -35,20 +35,16 @@ class ABowling : AActor
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Player;
 
-	UPROPERTY()
-	float BowlingDeaccel = 500;
-	float DeaccelAddend = 0;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	float Attack = 10;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	FGameplayTagContainer Status;
+	FBallDT BallData;
 
 	FActorDelegate DOnHit;
 
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
+
+	UPROPERTY(DefaultComponent)
+	UAbilitySystem AbilitySystem;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -57,8 +53,22 @@ class ABowling : AActor
 		BowlingMesh.SetMaterial(0, MaterialInstance);
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
-		// MovementResponseComponent.DOnChangeAccelModifier.BindUFunction(this, n"SetDeaccelAddend"); //To-Do
+		MovementComp.OnProjectileBounce.AddUFunction(MovementResponseComponent, n"ActorBounce");
+
+		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
+		AbilitySystem.SetBaseValue(n"Accel", -500);
+
+		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.EOnAddForceCue.AddUFunction(this, n"OnAddForceCue");
+		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
+	}
+
+	UFUNCTION()
+	void SetData(FBallDT Data)
+	{
+		BallData = Data;
+		BowlingMesh.StaticMesh = BallData.BowlingMesh;
+		EffectSystem.Asset = Data.StatusVFX;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -66,13 +76,13 @@ class ABowling : AActor
 	{
 		if (MovementComp.Velocity.SizeSquared() > 1000)
 		{
-			MovementComp.Velocity -= MovementComp.Velocity.GetSafeNormal() * (BowlingDeaccel + DeaccelAddend) * DeltaSeconds;
+			MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * AbilitySystem.GetValue(n"Accel") * DeltaSeconds;
 		}
 		else if (MovementComp.Velocity != FVector::ZeroVector)
 		{
 			MovementComp.Velocity = FVector::ZeroVector;
 		}
-		else
+		else // This is when the ball stops.
 		{
 			StopLifeTimeCounter += DeltaSeconds;
 			if (StopLifeTimeCounter > StopLifeTime)
@@ -87,79 +97,46 @@ class ABowling : AActor
 		MovementComp.InitialSpeed = Force;
 		MovementComp.Velocity = Direction * Force;
 		MovementComp.Activate();
-		if (!Status.IsEmpty())
+		if (!BallData.EffectTags.IsEmpty())
 		{
 			EffectSystem.Activate();
 		}
 	}
 
-	void AddForce(FVector VelocityVector)
-	{
-		MovementComp.Velocity += VelocityVector;
-	}
-
 	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		// Print("Real: " + Hit.Location, 100);
-		// Print("Real vector: " + MovementComp.Velocity, 100);
 		DOnHit.ExecuteIfBound(OtherActor);
-		// Print("" + MovementComp.Velocity.Size(), 100);
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(Attack);
+				DamageResponse.TakeHit(BallData.Atk);
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(Status);
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(BallData.EffectTags);
 				}
 			}
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Visual Cues:
+
 	UFUNCTION()
-	void SetData(FBallDT Data)
+	private void OnAddForceCue(FVector Value)
 	{
-		BowlingMesh.StaticMesh = Data.BowlingMesh;
-		Attack = Data.Atk;
-		if (Data.EffectTag.IsValid())
-		{
-			Status.AddTag(Data.EffectTag);
-		}
-		EffectSystem.Asset = Data.StatusVFX;
+		StopLifeTimeCounter = 0;
 	}
 
 	UFUNCTION()
-	void SetDeaccelAddend(float Addend)
+	void OnBounceCue(const FHitResult Hit)
 	{
-		DeaccelAddend = Addend;
-	}
-
-	UFUNCTION()
-	void ActorBounce(const FHitResult&in Hit, const FVector&in ImpactVelocity)
-	{
-		MovementComp.Velocity *= 0.8;
 		if (Hit.GetComponent().ComponentHasTag(n"Boundary"))
 		{
 			Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
 		}
-		else
-		{
-			ABowling hitActor = Cast<ABowling>(Hit.GetActor());
-			if (hitActor != nullptr)
-			{
-				hitActor.AddForce(ImpactVelocity * 0.8);
-				hitActor.StopLifeTimeCounter = 0;
-			}
-		}
 	}
-
-	// UFUNCTION(BlueprintOverride)
-	// void Destroyed()
-	// {
-	// 	Print("" + MovementComp.Velocity.Size(), 100);
-	// }
 }
