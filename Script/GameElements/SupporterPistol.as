@@ -34,7 +34,7 @@ class ASupporterPistol : ASupporterGun
 		AZombie zomb = Cast<AZombie>(OtherActor);
 		if (zomb != nullptr)
 		{
-			SetActorRotation(FRotator::MakeFromX(OtherActor.GetActorLocation() - CompanionSkeleton.GetSocketLocation(n"RightPistol")) + FRotator(0, 270, 0));
+			SetActorRotation(FRotator::MakeFromX(OtherActor.GetActorLocation() - CompanionSkeleton.GetSocketLocation(n"RightPistol")) + FRotator(0, 180, 0));
 			AnimateInst.Montage_Play(AttackAnim);
 			System::SetTimer(this, n"Attack", 0.125f, true);
 		}
