@@ -6,18 +6,23 @@ class AOptionCardManager : AActor
 	int CurrentID = 0;
 	TMap<int, AOptionCard> CardMap;
 
-	UFUNCTION(BlueprintOverride)
-	void BeginPlay()
+	UPROPERTY()
+	TArray<TSubclassOf<ACompanion>> CompanionClasses;
+
+	void GameStart()
 	{
 		System::SetTimer(this, n"SpawnCard", 0.5, false);
 	}
+
+	void GamePause()
+	{}
 
 	UFUNCTION()
 	void SpawnCard()
 	{
 		AOptionCard Card = SpawnActor(CardTemplate);
 		Card.DOnCardClicked.BindUFunction(this, n"OnCardClicked");
-		Card.Init(CurrentID);
+		Card.Init(CurrentID, CompanionClasses[CurrentID]);
 		CardMap.Add(CurrentID, Card);
 		CurrentID++;
 		if (CurrentID < 3)

@@ -5,6 +5,8 @@ class UBowlingGameInstance : UGameInstance
 	UFUNCTION(BlueprintOverride)
 	void Init()
 	{
-		CurrentLevel = 2;
+#if EDITOR
+		CurrentLevel = 3;
+#endif
 	}
 };

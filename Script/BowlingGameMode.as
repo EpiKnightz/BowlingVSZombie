@@ -38,6 +38,7 @@ class ABowlingGameMode : AGameMode
 	AZombieManager ZombieManager;
 	APowerUpManager PowerUpManager;
 	ABowlingPawn BowlingPawn;
+	AOptionCardManager OptionCardManager;
 	UBowlingGameInstance GameInst;
 
 	UPROPERTY()
@@ -49,6 +50,7 @@ class ABowlingGameMode : AGameMode
 		ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
 		PowerUpManager = Cast<APowerUpManager>(Gameplay::GetActorOfClass(APowerUpManager));
 		BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
+		OptionCardManager = Cast<AOptionCardManager>(Gameplay::GetActorOfClass(AOptionCardManager));
 		GameInst = Cast<UBowlingGameInstance>(GameInstance);
 
 		// gameInstance.CurrentLevel = 2;
@@ -123,6 +125,7 @@ class ABowlingGameMode : AGameMode
 	{
 		ZombieManager.GameStart();
 		PowerUpManager.GameStart();
+		OptionCardManager.GameStart();
 		BowlingPawn.SetCooldownPercent(1);
 	}
 
@@ -130,6 +133,7 @@ class ABowlingGameMode : AGameMode
 	{
 		ZombieManager.GamePause();
 		PowerUpManager.GamePause();
+		OptionCardManager.GamePause();
 		BowlingPawn.SetCooldownPercent(-1);
 	}
 

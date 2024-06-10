@@ -35,17 +35,19 @@ class AOptionCard : AActor
 		Pawn.EOnTouchTriggered.AddUFunction(this, n"OnTouchTriggered");
 
 		TemplSequActor = NewObject(this, ATemplateSequenceActor);
+	}
+
+	UFUNCTION()
+	void Init(int iID, TSubclassOf<ACompanion> iCompanionClass)
+	{
+		CompanionClass = iCompanionClass;
+		ID = iID;
 
 		SpawnedCompanion = Cast<ACompanion>(SpawnActor(CompanionClass, CompanionTransform.Location, CompanionTransform.Rotation.Rotator()));
 		// TODO move this into a component to avoid casting
 		SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 		SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);
-	}
 
-	UFUNCTION()
-	void Init(int iID)
-	{
-		ID = iID;
 		UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[ID], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
 		TemplSequActor.SetBinding(this);
 		TemplSequActor.GetSequencePlayer().Play();
