@@ -215,6 +215,8 @@ class ABowlingPawn : APawn
 			{
 				if (CooldownPercent > 0)
 				{
+					Gameplay::SetGlobalTimeDilation(0.15);
+
 					BowlingDataTable.FindRow(ItemsConfig.BowlingID[Math::RandRange(0, ItemsConfig.BowlingID.Num() - 1)], CurrentBallData);
 					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
 					AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
@@ -307,6 +309,7 @@ class ABowlingPawn : APawn
 		else if (CurrentTouchTarget == ETouchTarget::Player)
 		{
 		}
+		Gameplay::SetGlobalTimeDilation(1);
 		CurrentTouchTarget = ETouchTarget::None;
 
 		FHitResult outResult;
