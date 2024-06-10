@@ -85,6 +85,13 @@ class ABowlingPawn : APawn
 	UPROPERTY()
 	float BowlingPowerMultiplier = 0;
 
+	UPROPERTY()
+	float MinSlowTime = 0.15;
+	UPROPERTY()
+	float MaxSlowTime = 0.75;
+	UPROPERTY()
+	float MaxSlowTimeDistance = 1000;
+
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent ThrowSFX;
 
@@ -254,6 +261,9 @@ class ABowlingPawn : APawn
 			{
 				if (CooldownPercent > 0)
 				{
+					// The further distance between each hold, the faster the game speed.
+					Gameplay::SetGlobalTimeDilation(Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, PressLoc.DistSquared(outResult.Location) / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime));
+
 					PressLoc = outResult.Location;
 
 					// location.Z = 0;
