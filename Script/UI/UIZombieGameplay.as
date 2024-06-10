@@ -19,8 +19,8 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation ComboHighAnim;
 
-	UPROPERTY(BindWidget)
-	UCommonNumericTextBlock CoinText;
+	// UPROPERTY(BindWidget)
+	// UCommonNumericTextBlock CoinText;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation CoinAnim;
@@ -83,7 +83,7 @@ class UUIZombieGameplay : UUserWidget
 	{
 		if (NewValue > 0)
 		{
-			CoinText.SetCurrentValue(NewValue);
+			// CoinText.SetCurrentValue(NewValue);
 			PlayAnimation(CoinAnim);
 		}
 	}
