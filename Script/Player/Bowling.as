@@ -1,8 +1,5 @@
 class ABowling : AActor
 {
-	float StopLifeTime = 1;
-	float StopLifeTimeCounter = 0;
-
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
 	default Collider.SimulatePhysics = false;
@@ -25,6 +22,9 @@ class ABowling : AActor
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.AutoActivate = false;
 	default MovementComp.MaxSpeed = 5000;
+	default MovementComp.bConstrainToPlane = true;
+	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
+	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
 	default MovementComp.Velocity = FVector(-1, 0, 0);
 	default MovementComp.Bounciness = 0.8;
 
@@ -53,7 +53,6 @@ class ABowling : AActor
 		BowlingMesh.SetMaterial(0, MaterialInstance);
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		MovementComp.OnProjectileBounce.AddUFunction(MovementResponseComponent, n"ActorBounce");
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", -500);
@@ -61,6 +60,7 @@ class ABowling : AActor
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnAddForceCue.AddUFunction(this, n"OnAddForceCue");
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
+		MovementResponseComponent.DOnStopTimeReached.BindUFunction(this, n"K2_DestroyActor");
 	}
 
 	UFUNCTION()
@@ -69,38 +69,6 @@ class ABowling : AActor
 		BallData = Data;
 		BowlingMesh.StaticMesh = BallData.BowlingMesh;
 		EffectSystem.Asset = Data.StatusVFX;
-	}
-
-	UFUNCTION(BlueprintOverride)
-	void Tick(float DeltaSeconds)
-	{
-		if (MovementComp.Velocity.SizeSquared() > 1000)
-		{
-			MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * AbilitySystem.GetValue(n"Accel") * DeltaSeconds;
-		}
-		else if (MovementComp.Velocity != FVector::ZeroVector)
-		{
-			MovementComp.Velocity = FVector::ZeroVector;
-		}
-		else // This is when the ball stops.
-		{
-			StopLifeTimeCounter += DeltaSeconds;
-			if (StopLifeTimeCounter > StopLifeTime)
-			{
-				DestroyActor();
-			}
-		}
-	}
-
-	void Fire(FVector Direction, float Force)
-	{
-		MovementComp.InitialSpeed = Force;
-		MovementComp.Velocity = Direction * Force;
-		MovementComp.Activate();
-		if (!BallData.EffectTags.IsEmpty())
-		{
-			EffectSystem.Activate();
-		}
 	}
 
 	UFUNCTION()
@@ -126,9 +94,18 @@ class ABowling : AActor
 	// Visual Cues:
 
 	UFUNCTION()
+	private void OnInitForceCue()
+	{
+		if (!BallData.EffectTags.IsEmpty())
+		{
+			EffectSystem.Activate();
+		}
+	}
+
+	UFUNCTION()
 	private void OnAddForceCue(FVector Value)
 	{
-		StopLifeTimeCounter = 0;
+		MovementResponseComponent.StopTimeCounter = 0;
 	}
 
 	UFUNCTION()

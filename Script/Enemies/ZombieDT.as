@@ -28,7 +28,13 @@ struct FZombieDT
 	int Speed = 100;
 
 	UPROPERTY()
+	int Accel = 200;
+
+	UPROPERTY()
 	float32 AttackCooldown = 1.f;
+
+	UPROPERTY()
+	float32 Bounciness = 0.05;
 
 	UPROPERTY()
 	FVector Scale = FVector::OneVector;

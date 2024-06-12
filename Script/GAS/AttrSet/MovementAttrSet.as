@@ -3,8 +3,8 @@ class UMovementAttrSet : ULiteAttrSet
 	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData MoveSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
-	FAngelscriptGameplayAttributeData MaxSpeed;
+	// UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
+	// FAngelscriptGameplayAttributeData MaxSpeed;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData Accel;
@@ -16,7 +16,7 @@ class UMovementAttrSet : ULiteAttrSet
 	UMovementAttrSet()
 	{
 		MoveSpeed.Initialize(50);
-		MaxSpeed.Initialize(100);
+		// MaxSpeed.Initialize(100);
 		Accel.Initialize(0);
 		Bounciness.Initialize(0.8);
 		InitDelegates();
@@ -32,10 +32,10 @@ class UMovementAttrSet : ULiteAttrSet
 	UFUNCTION(BlueprintOverride)
 	void PostInitialize(FName AttrName, float NewValue)
 	{
-		if (AttrName == MaxSpeed.AttributeName)
-		{
-			MoveSpeed.Initialize(NewValue);
-		}
+		// if (AttrName == MaxSpeed.AttributeName)
+		//{
+		//	MoveSpeed.Initialize(NewValue);
+		// }
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -47,10 +47,10 @@ class UMovementAttrSet : ULiteAttrSet
 			{
 				return true;
 			}
-			if (NewValue > MaxSpeed.GetCurrentValue() || NewValue < 0)
-			{
-				NewValue = Math::Clamp(NewValue, 0.0f, MaxSpeed.GetCurrentValue());
-			}
+			// if (NewValue > MaxSpeed.GetCurrentValue() || NewValue < 0)
+			//{
+			//	NewValue = Math::Clamp(NewValue, 0.0f, MaxSpeed.GetCurrentValue());
+			// }
 		}
 		return false;
 	}

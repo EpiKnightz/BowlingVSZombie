@@ -42,6 +42,12 @@ class ABowlingPawn : APawn
 	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
+	UProjectileMovementComponent MovementComp;
+	default MovementComp.bShouldBounce = false;
+	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.AutoActivate = false;
+
+	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
 
 	UPROPERTY(DefaultComponent)
@@ -86,7 +92,7 @@ class ABowlingPawn : APawn
 	float BowlingPowerMultiplier = 0;
 
 	UPROPERTY()
-	float MinSlowTime = 0.15;
+	float MinSlowTime = 0.35;
 	UPROPERTY()
 	float MaxSlowTime = 0.75;
 	UPROPERTY()
@@ -153,6 +159,9 @@ class ABowlingPawn : APawn
 		DamageResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.Initialize(AbilitySystem);
 		StatusResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.Initialize(AbilitySystem);
+		// Temporary
+		MovementResponseComponent.SetIsAccelable(false);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
@@ -298,7 +307,7 @@ class ABowlingPawn : APawn
 				CurrentBallData.Atk = AbilitySystem.GetValue(n"Attack");
 				SpawnedActor.SetData(CurrentBallData);
 				SpawnedActor.SetOwner(this);
-				SpawnedActor.Fire(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * BowlingPowerMultiplier);
+				SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * BowlingPowerMultiplier);
 
 				SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
 

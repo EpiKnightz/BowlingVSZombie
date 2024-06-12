@@ -5,10 +5,16 @@ class UMovementResponseComponent : UResponseComponent
 	FModDelegate DOnChangeAccelModifier;
 	FObjectIntDelegate DOnRemoveAccelModifier;
 	FVectorEvent EOnAddForceCue;
-
 	FHitResultEvent EOnBounceCue;
+	FVoidDelegate DOnStopTimeReached;
 
 	UProjectileMovementComponent MovementComp;
+
+	float StopLifeTime = 1;
+	float StopTimeCounter = 0;
+	float StopThreshold = 1000;
+	private float LocalAccel = 0;
+	FVector AddedVelocity = FVector::ZeroVector;
 
 	bool InitChild() override
 	{
@@ -16,13 +22,36 @@ class UMovementResponseComponent : UResponseComponent
 		if (MovementComp == nullptr)
 		{
 			PrintError("MovementResponseComponent requires ProjectileMovementComponent");
+			return false;
 		}
 		DOnChangeMoveSpeedModifier.BindUFunction(this, n"OnChangeMoveSpeedModifier");
 		DOnRemoveMoveSpeedModifier.BindUFunction(this, n"OnRemoveMoveSpeedModifier");
 		DOnChangeAccelModifier.BindUFunction(this, n"OnChangeAccelModifier");
 		DOnRemoveAccelModifier.BindUFunction(this, n"OnRemoveAccelModifier");
 		EOnAddForceCue.AddUFunction(this, n"AddForce");
+
+		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
+
+		ComponentTickInterval = 0.05;
 		return true;
+	}
+
+	void InitForce(FVector Direction, float Force)
+	{
+		if (Direction.IsZero() || Force == 0)
+		{
+			PrintError("MovementResponseComponent::InitForce: Direction or Force is zero");
+			return;
+		}
+		ComponentTickEnabled = true;
+		// MovementComp.InitialSpeed = Force;
+		MovementComp.Velocity = Direction * Force;
+		MovementComp.Activate();
+	}
+
+	void SetIsAccelable(bool bIsAccelable)
+	{
+		ComponentTickEnabled = bIsAccelable;
 	}
 
 	UFUNCTION()
@@ -64,5 +93,36 @@ class UMovementResponseComponent : UResponseComponent
 		}
 
 		EOnBounceCue.Broadcast(Hit);
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void Tick(float DeltaSeconds)
+	{
+		LocalAccel = AbilitySystem.GetValue(n"Accel");
+		MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * LocalAccel * DeltaSeconds;
+
+		if (LocalAccel < 0 && MovementComp.Velocity.SizeSquared() <= StopThreshold && MovementComp.Velocity != FVector::ZeroVector)
+		{
+			MovementComp.StopMovementImmediately();
+			StopTimeCounter = 0;
+		}
+
+		if (MovementComp.Velocity == FVector::ZeroVector)
+		{
+			CountStopTimer(DeltaSeconds);
+		}
+	}
+
+	void CountStopTimer(float DeltaSeconds)
+	{
+		if (StopLifeTime > 0 && StopTimeCounter >= 0)
+		{
+			StopTimeCounter += DeltaSeconds;
+			if (StopTimeCounter >= StopLifeTime)
+			{
+				StopTimeCounter = -1;
+				DOnStopTimeReached.ExecuteIfBound();
+			}
+		}
 	}
 };

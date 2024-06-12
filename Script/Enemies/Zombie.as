@@ -98,6 +98,9 @@ class AZombie : AActor
 	UProjectileMovementComponent MovementComp;
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.bConstrainToPlane = true;
+	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
+	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
 	default MovementComp.AutoActivate = false;
 	// TODO: refactor movment comp so it can be bounced off also
 
@@ -108,7 +111,7 @@ class AZombie : AActor
 		DynamicMat = Material::CreateDynamicMaterialInstance(ZombieSkeleton.GetMaterial(0));
 		ZombieSkeleton.SetMaterial(0, DynamicMat);
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		System::SetTimer(this, n"EmergeDone", delayMove, true);
+		System::SetTimer(this, n"EmergeDone", delayMove, false);
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
@@ -123,6 +126,9 @@ class AZombie : AActor
 		StatusResponseComponent.Initialize(AbilitySystem);
 
 		MovementResponseComponent.Initialize(AbilitySystem);
+		// Temporary
+		MovementResponseComponent.SetIsAccelable(false);
+		MovementResponseComponent.StopLifeTime = 0;
 	}
 
 	UFUNCTION()
@@ -130,7 +136,7 @@ class AZombie : AActor
 	{
 		if (AttrName == n"MoveSpeed")
 		{
-			AnimateInst.SetMoveSpeed(Value);
+			SetMoveSpeed(Value);
 		}
 	}
 
@@ -143,6 +149,7 @@ class AZombie : AActor
 			if (AnimateInst.AnimMoveSpeed == 0)
 			{
 				AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
+				MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
 			}
 
 			FVector loc = GetActorLocation();
@@ -150,35 +157,16 @@ class AZombie : AActor
 			{
 				// Fall down animation should run at constant speed
 				loc.Z -= 80 * DeltaSeconds;
+				SetActorLocation(loc);
 			}
-			else if (loc.X < MovingLimit || !bIsAttacking)
+
+			if (loc.Z <= -10 || loc.X > ENDSCREEN_MOVING_LIMIT)
 			{
-				loc.X += AnimateInst.AnimMoveSpeed * DeltaSeconds;
-				if (loc.X > MovingLimit)
-				{
-					if (IsValid(Target))
-					{
-						loc.X = MovingLimit;
-						bIsAttacking = true;
-						StartAttacking(nullptr, false);
-					}
-					else
-					{
-						MovingLimit = ENDSCREEN_MOVING_LIMIT;
-					}
-				}
-			}
-			if (loc.Z <= -10 || loc.X > 1600)
-			{
-				if (!DamageResponseComponent.bIsDead)
+				if (!DamageResponseComponent.bIsDead) // Deal dmg to player
 				{
 					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"), GetName());
 				}
 				DestroyActor();
-			}
-			else
-			{
-				SetActorLocation(loc);
 			}
 		}
 		else if (AnimateInst.AnimMoveSpeed > 0)
@@ -223,8 +211,15 @@ class AZombie : AActor
 			Target = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(Target))
 			{
+				if (IsValid(Target) && !bIsAttacking)
+				{
+					MovementComp.StopMovementImmediately();
+					bIsAttacking = true;
+					StartAttacking(nullptr, false);
+				}
+
 				Target.DOnDeadCue.AddUFunction(this, n"StopAttacking");
-				SetMovingLimit(OtherActor.GetActorLocation().X - 100);
+				// SetMovingLimit(OtherActor.GetActorLocation().X - 100);
 			}
 		}
 	}
@@ -254,8 +249,11 @@ class AZombie : AActor
 		bIsAttacking = false;
 		AnimateInst.Montage_Stop(0.5f);
 		MovingLimit = ENDSCREEN_MOVING_LIMIT;
-		Target.DOnDeadCue.UnbindObject(this);
-		Target = nullptr;
+		if (Target != nullptr)
+		{
+			Target.DOnDeadCue.UnbindObject(this);
+			Target = nullptr;
+		}
 	}
 
 	UFUNCTION()
@@ -264,12 +262,15 @@ class AZombie : AActor
 		TMap<FName, float32> Data;
 		Data.Add(n"MaxHP", DataRow.HP);
 		Data.Add(n"Attack", DataRow.Atk);
-		Data.Add(n"MaxSpeed", DataRow.Speed);
+		Data.Add(n"MoveSpeed", DataRow.Speed);
 		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
+		Data.Add(n"Bounciness", DataRow.Bounciness);
+		Data.Add(n"Accel", DataRow.Accel);
 
 		AbilitySystem.ImportData(Data);
 
-		AnimateInst.SetMoveSpeed(DataRow.Speed);
+		SetMoveSpeed(DataRow.Speed);
+
 		SetActorScale3D(DataRow.Scale);
 		CoinValue = DataRow.CoinDropAmount;
 	}
@@ -280,6 +281,11 @@ class AZombie : AActor
 		MovingLimit = iLimit - (GetActorScale3D().Y - 1) * 75.f;
 	}
 
+	void SetMoveSpeed(float iSpeed)
+	{
+		AnimateInst.SetMoveSpeed(iSpeed);
+		MovementComp.MaxSpeed = iSpeed;
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Visual Cues:
 
@@ -292,6 +298,7 @@ class AZombie : AActor
 	UFUNCTION()
 	void TakeDamageCue()
 	{
+		StopAttacking();
 		DynamicMat.SetScalarParameterValue(n"IsHit", 1);
 		System::SetTimer(this, n"EndHitFlash", 0.25, false);
 		AnimateInst.Montage_Play(DamageAnim);
@@ -300,6 +307,7 @@ class AZombie : AActor
 		{
 			AnimateInst.OnMontageEnded.AddUFunction(this, n"StartAttacking");
 		}
+		MovementComp.StopMovementImmediately();
 		delayMove = 1;
 	}
 
@@ -307,6 +315,7 @@ class AZombie : AActor
 	void DeadCue()
 	{
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MovementComp.StopSimulating(FHitResult());
 		AnimateInst.StopSlotAnimation();
 		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
 		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
@@ -322,7 +331,11 @@ class AZombie : AActor
 	UFUNCTION(BlueprintCallable)
 	void EmergeDone()
 	{
-		AnimateInst.bIsEmergeDone = true;
+		if (AnimateInst.bIsEmergeDone == false)
+		{
+			AnimateInst.bIsEmergeDone = true;
+			MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		}
 	}
 
 	void SetStencilValue(int value)
