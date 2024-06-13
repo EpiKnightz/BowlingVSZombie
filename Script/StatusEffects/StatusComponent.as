@@ -129,7 +129,7 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	float32 FindAttrValue(FName AttrName)
 	{
-		float outValue = -1000;
+		float outValue = AbilitySystem::INVALID_VALUE;
 		if (!StatusData.AffectedAttributes.Find(FGameplayTag::RequestGameplayTag(AttrName), outValue))
 		{
 			PrintError("Attribute not found: " + AttrName.ToString());
@@ -140,7 +140,7 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	float GetAttrValue(FGameplayTag Tag)
 	{
-		float outValue = -1000;
+		float outValue = AbilitySystem::INVALID_VALUE;
 		if (!StatusData.AffectedAttributes.Find(Tag, outValue))
 		{
 			PrintError("Attribute not found: " + Tag.GetTagName());

@@ -14,6 +14,8 @@ class UMovementResponseComponent : UResponseComponent
 	float StopTimeCounter = 0;
 	float StopThreshold = 1000;
 	private float LocalAccel = 0;
+	private const float WorldDeaccel = -500;
+	// private bool bIsAccelable = true;
 	FVector AddedVelocity = FVector::ZeroVector;
 
 	bool InitChild() override
@@ -49,10 +51,10 @@ class UMovementResponseComponent : UResponseComponent
 		MovementComp.Activate();
 	}
 
-	void SetIsAccelable(bool bIsAccelable)
-	{
-		ComponentTickEnabled = bIsAccelable;
-	}
+	// void SetIsAccelable(bool IsAccelable)
+	// {
+	// 	bIsAccelable = IsAccelable;
+	// }
 
 	UFUNCTION()
 	private void OnChangeMoveSpeedModifier(UModifier Modifier){
@@ -99,6 +101,10 @@ class UMovementResponseComponent : UResponseComponent
 	void Tick(float DeltaSeconds)
 	{
 		LocalAccel = AbilitySystem.GetValue(n"Accel");
+		if (LocalAccel == 0 || LocalAccel == AbilitySystem::INVALID_VALUE)
+		{
+			LocalAccel = WorldDeaccel;
+		}
 		MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * LocalAccel * DeltaSeconds;
 
 		if (LocalAccel < 0 && MovementComp.Velocity.SizeSquared() <= StopThreshold && MovementComp.Velocity != FVector::ZeroVector)

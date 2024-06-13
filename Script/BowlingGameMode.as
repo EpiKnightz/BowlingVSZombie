@@ -53,7 +53,6 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager = Cast<AOptionCardManager>(Gameplay::GetActorOfClass(AOptionCardManager));
 		GameInst = Cast<UBowlingGameInstance>(GameInstance);
 
-		// gameInstance.CurrentLevel = 2;
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));

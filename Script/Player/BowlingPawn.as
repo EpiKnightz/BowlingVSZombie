@@ -161,7 +161,7 @@ class ABowlingPawn : APawn
 		StatusResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
 		// Temporary
-		MovementResponseComponent.SetIsAccelable(false);
+		// MovementResponseComponent.SetIsAccelable(false);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");

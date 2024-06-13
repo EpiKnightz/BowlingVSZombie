@@ -127,7 +127,6 @@ class AZombie : AActor
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		// Temporary
-		MovementResponseComponent.SetIsAccelable(false);
 		MovementResponseComponent.StopLifeTime = 0;
 	}
 
@@ -148,8 +147,7 @@ class AZombie : AActor
 		{
 			if (AnimateInst.AnimMoveSpeed == 0)
 			{
-				AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
-				MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+				RestartMove();
 			}
 
 			FVector loc = GetActorLocation();
@@ -308,7 +306,16 @@ class AZombie : AActor
 			AnimateInst.OnMontageEnded.AddUFunction(this, n"StartAttacking");
 		}
 		MovementComp.StopMovementImmediately();
+		// MovementResponseComponent.SetIsAccelable(false);
 		delayMove = 1;
+	}
+
+	UFUNCTION()
+	void RestartMove()
+	{
+		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
+		// MovementResponseComponent.SetIsAccelable(true);
+		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
 	}
 
 	UFUNCTION()

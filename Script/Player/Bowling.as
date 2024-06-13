@@ -55,7 +55,7 @@ class ABowling : AActor
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.SetBaseValue(n"Accel", -500);
+		AbilitySystem.SetBaseValue(n"Accel", 0);
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnAddForceCue.AddUFunction(this, n"OnAddForceCue");

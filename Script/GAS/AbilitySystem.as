@@ -1,3 +1,8 @@
+namespace AbilitySystem
+{
+	const float32 INVALID_VALUE = -1000;
+}
+
 struct FModifierContainer
 {
 	TArray<UModifier> ModifiersArray;
@@ -86,7 +91,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 		if (i >= 0)
 		{
 			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
-			float32 NewValue = -1000;
+			float32 NewValue = AbilitySystem::INVALID_VALUE;
 			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 			CalculateCurrent(AttrName, NewValue, i);
 			EOnPostAddModifier.Broadcast(AttrName, NewValue);
@@ -102,7 +107,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			if (ModifiersMap.Contains(AttrName))
 			{
 				ModifiersMap.FindOrAdd(AttrName).RemoveModifier(Object, ID);
-				float32 NewValue = -1000;
+				float32 NewValue = AbilitySystem::INVALID_VALUE;
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 				CalculateCurrent(AttrName, NewValue, i);
 				EOnPostRemoveModifier.Broadcast(AttrName, NewValue);
@@ -156,7 +161,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float GetValue(FName AttrName, bool bForceRecalculation = false)
 	{
-		float32 Result = -1000;
+		float32 Result = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
@@ -176,13 +181,17 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float GetPercentageDiff(FName AttrName)
 	{
-		float32 Result1 = -2000;
-		float32 Result2 = -1000;
+		float32 Result1 = AbilitySystem::INVALID_VALUE;
+		float32 Result2 = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
 			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
 			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
+		}
+		if (Result1 == AbilitySystem::INVALID_VALUE || Result2 == AbilitySystem::INVALID_VALUE)
+		{
+			return AbilitySystem::INVALID_VALUE;
 		}
 		return Result1 / Result2;
 	}
@@ -190,13 +199,17 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float GetFlatDiff(FName AttrName)
 	{
-		float32 Result1 = -2000;
-		float32 Result2 = -1000;
+		float32 Result1 = AbilitySystem::INVALID_VALUE;
+		float32 Result2 = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
 			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
 			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
+		}
+		if (Result1 == AbilitySystem::INVALID_VALUE || Result2 == AbilitySystem::INVALID_VALUE)
+		{
+			return AbilitySystem::INVALID_VALUE;
 		}
 		return Result1 - Result2;
 	}
@@ -204,7 +217,7 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	private float GetBaseValue(FName AttrName)
 	{
-		float32 Result = -1000;
+		float32 Result = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
