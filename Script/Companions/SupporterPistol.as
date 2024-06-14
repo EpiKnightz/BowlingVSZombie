@@ -1,22 +1,10 @@
 class ASupporterPistol : ASupporterGun
 {
-	// #if EDITOR
-	// 	default RightHandWp.AttachTo(CompanionSkeleton, n"RightPistol");
-
-	// #endif
-
 	UFUNCTION(BlueprintOverride, Meta = (NoSuperCall))
 	void ConstructionScript()
 	{
 		RightHandWp.AttachTo(CompanionSkeleton, n"RightPistol");
 	}
-
-	// UFUNCTION(BlueprintOverride)
-	// void BeginPlay()
-	// {
-	// 	RightHandWp.AttachTo(CompanionSkeleton, n"RightPistol");
-	// 	Super::BeginPlay();
-	// }
 
 	UFUNCTION(BlueprintOverride, Meta = (NoSuperCall))
 	void ActorBeginOverlap(AActor OtherActor)

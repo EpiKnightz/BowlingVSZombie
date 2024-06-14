@@ -29,6 +29,11 @@ class ACompanion : AActor
 		AtksLeft = NumberOfAtks;
 	}
 
+	UFUNCTION()
+	void Construct()
+	{
+	}
+
 	void ResetTransform()
 	{
 		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);

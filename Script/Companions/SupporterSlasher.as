@@ -1,9 +1,5 @@
 class ASupporterSlasher : ACompanion
 {
-	// #if EDITOR
-	// 	default RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
-	// #endif
-
 	UPROPERTY(BlueprintReadWrite)
 	float RotateTimer = 1;
 
@@ -12,11 +8,10 @@ class ASupporterSlasher : ACompanion
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
 	{
-		// Super::ConstructionScript();
 		RightHandWp.AttachTo(CompanionSkeleton, n"RightHand");
 	}
 
-	UFUNCTION(BlueprintOverride, Meta = (NoSuperCall))
+	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
 		ABowling pawn = Cast<ABowling>(OtherActor);
