@@ -17,6 +17,7 @@ delegate void FModDelegate(UModifier Calculation);
 delegate void FVectorDelegate(FVector Value);
 
 event void FVectorEvent(FVector Value);
+event void FVectorBoolEvent(FVector Value, bool Bool);
 event void FVoidEvent();
 event void FActorEvent(AActor OtherActor);
 event void FActorVectorEvent(AActor OtherActor, FVector Vector);

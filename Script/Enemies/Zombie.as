@@ -1,4 +1,9 @@
-const float ENDSCREEN_MOVING_LIMIT = 1650.f;
+const float ENDSCREEN_X_LIMIT = 1650;
+const float ENDSCREEN_Y_LIMIT = 500;
+const float ENDSCREEN_Z_LIMIT = -10;
+const float WAIT_TARGET_DEAD_TIME = 1.5;
+const float DAMAGE_DELAY = 0.5;
+const float DEAD_FALL_SPEED = 80;
 
 enum EAttackType
 {
@@ -32,6 +37,9 @@ class AZombie : AActor
 
 	UPROPERTY(DefaultComponent)
 	UMovementResponseComponent MovementResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UAttackResponseComponent AttackResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UStatusResponseComponent StatusResponseComponent;
@@ -86,12 +94,11 @@ class AZombie : AActor
 	float delayMove = 2.f;
 	int currentDeadAnim = 0;
 	bool bIsAttacking = false;
-	float MovingLimit;
 
 	UPROPERTY(DefaultComponent)
 	UAbilitySystem AbilitySystem;
 
-	private UDamageResponseComponent Target;
+	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
 	private UMaterialInstanceDynamic DynamicMat;
 
 	UPROPERTY(DefaultComponent)
@@ -102,7 +109,10 @@ class AZombie : AActor
 	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
 	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
 	default MovementComp.AutoActivate = false;
-	// TODO: refactor movment comp so it can be bounced off also
+	default MovementComp.Bounciness = 0.8;
+
+	UPROPERTY()
+	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -125,7 +135,11 @@ class AZombie : AActor
 
 		StatusResponseComponent.Initialize(AbilitySystem);
 
+		AttackResponseComponent.Initialize(AbilitySystem);
+
 		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
+		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		// Temporary
 		MovementResponseComponent.StopLifeTime = 0;
 	}
@@ -137,6 +151,10 @@ class AZombie : AActor
 		{
 			SetMoveSpeed(Value);
 		}
+		if (AttrName == n"AttackCooldown")
+		{
+			SetAttackCooldown(Value);
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -145,22 +163,32 @@ class AZombie : AActor
 		delayMove -= DeltaSeconds;
 		if (delayMove <= 0)
 		{
-			if (AnimateInst.AnimMoveSpeed == 0)
+			if (AnimateInst.AnimMoveSpeed == 0 && !bIsAttacking)
 			{
-				RestartMove();
+				if (IsValid(Target))
+				{
+					StartAttacking();
+				}
+				else
+				{
+					if (!CheckForNewTarget())
+					{
+						RestartMove();
+					}
+				}
 			}
 
 			FVector loc = GetActorLocation();
 			if (DamageResponseComponent.bIsDead)
 			{
 				// Fall down animation should run at constant speed
-				loc.Z -= 80 * DeltaSeconds;
+				loc.Z -= DEAD_FALL_SPEED * DeltaSeconds;
 				SetActorLocation(loc);
 			}
 
-			if (loc.Z <= -10 || loc.X > ENDSCREEN_MOVING_LIMIT)
+			if (loc.Z <= ENDSCREEN_Z_LIMIT || loc.X > ENDSCREEN_X_LIMIT || loc.Y > ENDSCREEN_Y_LIMIT || loc.Y < -ENDSCREEN_Y_LIMIT)
 			{
-				if (!DamageResponseComponent.bIsDead) // Deal dmg to player
+				if (!DamageResponseComponent.bIsDead) // If not dead, meaning the zomb goes to end screen, Deal dmg to player
 				{
 					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"), GetName());
 				}
@@ -204,27 +232,48 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
+		OverlapActor(OtherActor);
+	}
+
+	UFUNCTION()
+	bool OverlapActor(AActor OtherActor)
+	{
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			Target = UDamageResponseComponent::Get(OtherActor);
-			if (IsValid(Target))
+			if (IsValid(Target) && !bIsAttacking)
 			{
-				if (IsValid(Target) && !bIsAttacking)
-				{
-					MovementComp.StopMovementImmediately();
-					bIsAttacking = true;
-					StartAttacking(nullptr, false);
-				}
-
+				StartAttacking();
 				Target.DOnDeadCue.AddUFunction(this, n"StopAttacking");
-				// SetMovingLimit(OtherActor.GetActorLocation().X - 100);
+				Target.DOnDeadCue.AddUFunction(this, n"RemoveTarget");
+				return true;
+			}
+		}
+		return false;
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorEndOverlap(AActor OtherActor)
+	{
+		if (IsValid(Target) && bIsAttacking)
+		{
+			if (Target == UDamageResponseComponent::Get(OtherActor))
+			{
+				StopAttacking();
+				RemoveTarget();
 			}
 		}
 	}
 
 	UFUNCTION()
-	void StartAttacking(UAnimMontage Montage, bool bInterrupted)
+	void StartAttacking()
 	{
+		if (bIsAttacking)
+		{
+			PrintWarning("Already attacking");
+		}
+		MovementComp.StopMovementImmediately();
+		bIsAttacking = true;
 		AnimateInst.OnMontageEnded.Clear();
 		int random = Math::RandRange(0, AttackAnim.Num() - 1);
 		AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
@@ -243,15 +292,34 @@ class AZombie : AActor
 	UFUNCTION()
 	void StopAttacking()
 	{
-		delayMove = 1.5f;
-		bIsAttacking = false;
-		AnimateInst.Montage_Stop(0.5f);
-		MovingLimit = ENDSCREEN_MOVING_LIMIT;
+		if (bIsAttacking)
+		{
+			bIsAttacking = false;
+			AnimateInst.Montage_Stop(DAMAGE_DELAY);
+		}
+	}
+
+	UFUNCTION()
+	void RemoveTarget()
+	{
 		if (Target != nullptr)
 		{
 			Target.DOnDeadCue.UnbindObject(this);
 			Target = nullptr;
+			delayMove = WAIT_TARGET_DEAD_TIME;
 		}
+	}
+
+	UFUNCTION()
+	bool CheckForNewTarget()
+	{
+		TArray<AActor> OverlappingActors;
+		Collider.GetOverlappingActors(OverlappingActors, AObstacle);
+		if (OverlappingActors.Num() > 0)
+		{
+			return OverlapActor(OverlappingActors[0]);
+		}
+		return false;
 	}
 
 	UFUNCTION()
@@ -273,17 +341,6 @@ class AZombie : AActor
 		CoinValue = DataRow.CoinDropAmount;
 	}
 
-	UFUNCTION()
-	void SetMovingLimit(float iLimit)
-	{
-		MovingLimit = iLimit - (GetActorScale3D().Y - 1) * 75.f;
-	}
-
-	void SetMoveSpeed(float iSpeed)
-	{
-		AnimateInst.SetMoveSpeed(iSpeed);
-		MovementComp.MaxSpeed = iSpeed;
-	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Visual Cues:
 
@@ -299,23 +356,12 @@ class AZombie : AActor
 		StopAttacking();
 		DynamicMat.SetScalarParameterValue(n"IsHit", 1);
 		System::SetTimer(this, n"EndHitFlash", 0.25, false);
+		System::ClearTimer(this, "EmergeDone");
+		EmergeDone();
 		AnimateInst.Montage_Play(DamageAnim);
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-		if (bIsAttacking)
-		{
-			AnimateInst.OnMontageEnded.AddUFunction(this, n"StartAttacking");
-		}
-		MovementComp.StopMovementImmediately();
-		// MovementResponseComponent.SetIsAccelable(false);
-		delayMove = 1;
-	}
-
-	UFUNCTION()
-	void RestartMove()
-	{
-		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
-		// MovementResponseComponent.SetIsAccelable(true);
-		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		// MovementComp.StopMovementImmediately();
+		delayMove = DAMAGE_DELAY;
 	}
 
 	UFUNCTION()
@@ -325,7 +371,7 @@ class AZombie : AActor
 		MovementComp.StopSimulating(FHitResult());
 		AnimateInst.StopSlotAnimation();
 		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
-		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim]);
+		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim], 1);
 		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
 		DOnZombDie.ExecuteIfBound(GetName());
 
@@ -333,6 +379,42 @@ class AZombie : AActor
 
 		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
 		SpawnedActor.ExpectValueToCoinType(CoinValue);
+	}
+
+	void SetAttackCooldown(float Value)
+	{
+		if (IsValid(AnimateInst.CurrentActiveMontage) && !DamageResponseComponent.bIsDead)
+		{
+			AnimateInst.Montage_SetPlayRate(AnimateInst.CurrentActiveMontage, AnimateInst.CurrentActiveMontage.PlayLength / Value);
+		}
+	}
+
+	void SetMoveSpeed(float iSpeed)
+	{
+		AnimateInst.SetMoveSpeed(iSpeed);
+		MovementComp.MaxSpeed = iSpeed;
+	}
+
+	UFUNCTION()
+	void RestartMove()
+	{
+		MovementResponseComponent.SetIsAccelable(true);
+		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
+		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+	}
+	// Called when being bounced/added force by something else
+	UFUNCTION()
+	private void OnPreAddForceCue(FVector Value)
+	{
+		MovementComp.StopMovementImmediately();
+		MovementResponseComponent.SetIsAccelable(false);
+	}
+
+	// Called when bounced off something
+	UFUNCTION()
+	void OnBounceCue(const FHitResult Hit)
+	{
+		Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
 	}
 
 	UFUNCTION(BlueprintCallable)

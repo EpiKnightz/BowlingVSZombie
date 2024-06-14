@@ -92,11 +92,11 @@ class ABowlingPawn : APawn
 	float BowlingPowerMultiplier = 0;
 
 	UPROPERTY()
-	float MinSlowTime = 0.35;
+	float MinSlowTime = 0.25;
 	UPROPERTY()
 	float MaxSlowTime = 0.75;
 	UPROPERTY()
-	float MaxSlowTimeDistance = 1000;
+	float MaxSlowTimeDistance = 800;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent ThrowSFX;
@@ -143,6 +143,7 @@ class ABowlingPawn : APawn
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.Initialize(n"MoveSpeed", 500);
+		AbilitySystem.Initialize(n"Accel", 500);
 
 		// Add Input Mapping Context
 		if (PlayerController != nullptr)
@@ -161,7 +162,6 @@ class ABowlingPawn : APawn
 		StatusResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
 		// Temporary
-		// MovementResponseComponent.SetIsAccelable(false);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
@@ -231,7 +231,7 @@ class ABowlingPawn : APawn
 			{
 				if (CooldownPercent > 0)
 				{
-					Gameplay::SetGlobalTimeDilation(0.15);
+					// Gameplay::SetGlobalTimeDilation(0.15);
 
 					BowlingDataTable.FindRow(ItemsConfig.BowlingID[Math::RandRange(0, ItemsConfig.BowlingID.Num() - 1)], CurrentBallData);
 					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
@@ -271,7 +271,7 @@ class ABowlingPawn : APawn
 				if (CooldownPercent > 0)
 				{
 					// The further distance between each hold, the faster the game speed.
-					Gameplay::SetGlobalTimeDilation(Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, PressLoc.DistSquared(outResult.Location) / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime));
+					// Gameplay::SetGlobalTimeDilation(Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, PressLoc.DistSquared(outResult.Location) / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime));
 
 					PressLoc = outResult.Location;
 
@@ -359,9 +359,12 @@ class ABowlingPawn : APawn
 
 	void CalculateMovement(FVector currentLocation, FVector targetLocation)
 	{
+
 		float moveAmount = targetLocation.Y - currentLocation.Y;
-		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds());
-		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -400, 400), currentLocation.Z));
+		float newTimeDilation = Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, moveAmount / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime);
+		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds() / newTimeDilation);
+		Gameplay::SetGlobalTimeDilation(newTimeDilation);
+		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -MaxSlowTimeDistance, MaxSlowTimeDistance), currentLocation.Z));
 	}
 
 	UFUNCTION()

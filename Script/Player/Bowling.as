@@ -21,7 +21,7 @@ class ABowling : AActor
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.AutoActivate = false;
-	default MovementComp.MaxSpeed = 5000;
+	default MovementComp.MaxSpeed = 15000;
 	default MovementComp.bConstrainToPlane = true;
 	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
 	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
@@ -58,7 +58,7 @@ class ABowling : AActor
 		AbilitySystem.SetBaseValue(n"Accel", 0);
 
 		MovementResponseComponent.Initialize(AbilitySystem);
-		MovementResponseComponent.EOnAddForceCue.AddUFunction(this, n"OnAddForceCue");
+		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.DOnStopTimeReached.BindUFunction(this, n"K2_DestroyActor");
 	}
@@ -103,7 +103,7 @@ class ABowling : AActor
 	}
 
 	UFUNCTION()
-	private void OnAddForceCue(FVector Value)
+	private void OnPreAddForceCue(FVector Value)
 	{
 		MovementResponseComponent.StopTimeCounter = 0;
 	}

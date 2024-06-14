@@ -4,7 +4,8 @@ class UMovementResponseComponent : UResponseComponent
 	FObjectIntDelegate DOnRemoveMoveSpeedModifier;
 	FModDelegate DOnChangeAccelModifier;
 	FObjectIntDelegate DOnRemoveAccelModifier;
-	FVectorEvent EOnAddForceCue;
+	FVectorDelegate DOnAddForce;
+	FVectorEvent EOnPreAddForceCue;
 	FHitResultEvent EOnBounceCue;
 	FVoidDelegate DOnStopTimeReached;
 
@@ -12,10 +13,10 @@ class UMovementResponseComponent : UResponseComponent
 
 	float StopLifeTime = 1;
 	float StopTimeCounter = 0;
-	float StopThreshold = 1000;
+	float StopThreshold = 4900;
 	private float LocalAccel = 0;
 	private const float WorldDeaccel = -500;
-	// private bool bIsAccelable = true;
+	private bool bIsAccelable = true;
 	FVector AddedVelocity = FVector::ZeroVector;
 
 	bool InitChild() override
@@ -30,7 +31,7 @@ class UMovementResponseComponent : UResponseComponent
 		DOnRemoveMoveSpeedModifier.BindUFunction(this, n"OnRemoveMoveSpeedModifier");
 		DOnChangeAccelModifier.BindUFunction(this, n"OnChangeAccelModifier");
 		DOnRemoveAccelModifier.BindUFunction(this, n"OnRemoveAccelModifier");
-		EOnAddForceCue.AddUFunction(this, n"AddForce");
+		DOnAddForce.BindUFunction(this, n"AddForce");
 
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
 
@@ -51,10 +52,18 @@ class UMovementResponseComponent : UResponseComponent
 		MovementComp.Activate();
 	}
 
-	// void SetIsAccelable(bool IsAccelable)
-	// {
-	// 	bIsAccelable = IsAccelable;
-	// }
+	void SetIsAccelable(bool IsAccelable)
+	{
+		if (IsAccelable)
+		{
+			MovementComp.MaxSpeed = AbilitySystem.GetValue(n"MoveSpeed");
+		}
+		else
+		{
+			MovementComp.MaxSpeed = 5000;
+		}
+		bIsAccelable = IsAccelable;
+	}
 
 	UFUNCTION()
 	private void OnChangeMoveSpeedModifier(UModifier Modifier){
@@ -81,29 +90,45 @@ class UMovementResponseComponent : UResponseComponent
 	UFUNCTION()
 	private void AddForce(FVector VelocityVector)
 	{
-		MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(n"Bounciness");
+		if (!VelocityVector.IsZero())
+		{
+			EOnPreAddForceCue.Broadcast(VelocityVector);
+			MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(n"Bounciness");
+		}
 	}
 
 	UFUNCTION()
 	void ActorBounce(const FHitResult&in Hit, const FVector&in ImpactVelocity)
 	{
-		MovementComp.Velocity *= AbilitySystem.GetValue(n"Bounciness");
-		auto MovementResponse = UMovementResponseComponent::Get(Hit.GetActor());
-		if (IsValid(MovementResponse))
+		if (!ImpactVelocity.IsZero())
 		{
-			MovementResponse.EOnAddForceCue.Broadcast(ImpactVelocity);
-		}
+			auto MovementResponse = UMovementResponseComponent::Get(Hit.GetActor());
+			if (IsValid(MovementResponse))
+			{
+				// This bounciness will be multiplier to the already existing bounciness of Movement Component. (default is 0.8)
+				MovementComp.Velocity *= AbilitySystem.GetValue(n"Bounciness");
+				MovementResponse.DOnAddForce.ExecuteIfBound(ImpactVelocity);
+				// Print("ActorBounce: " + Hit.GetActor().GetName() + " with " + ImpactVelocity.ToString() + " result in:" + MovementComp.Velocity.ToString(), 100);
+			}
 
-		EOnBounceCue.Broadcast(Hit);
+			EOnBounceCue.Broadcast(Hit);
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
-		LocalAccel = AbilitySystem.GetValue(n"Accel");
-		if (LocalAccel == 0 || LocalAccel == AbilitySystem::INVALID_VALUE)
+		if (!bIsAccelable)
 		{
 			LocalAccel = WorldDeaccel;
+		}
+		else
+		{
+			LocalAccel = AbilitySystem.GetValue(n"Accel");
+			if (LocalAccel == 0 || LocalAccel == AbilitySystem::INVALID_VALUE)
+			{
+				LocalAccel = WorldDeaccel;
+			}
 		}
 		MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * LocalAccel * DeltaSeconds;
 
