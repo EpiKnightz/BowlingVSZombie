@@ -1,4 +1,4 @@
-class ACompanionManager : AActor
+class ASurvivorManager : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)
 	USceneComponent Root;

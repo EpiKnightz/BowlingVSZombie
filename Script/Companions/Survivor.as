@@ -1,4 +1,4 @@
-class ACompanion : AActor
+class ASurvivor : AActor
 {
 	UPROPERTY(RootComponent, DefaultComponent)
 	UCapsuleComponent Collider;

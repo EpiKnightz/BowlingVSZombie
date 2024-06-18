@@ -1,4 +1,4 @@
-class ASupporterGun : ACompanion
+class ASupporterGun : ASurvivor
 {
 	UPROPERTY(BlueprintReadWrite, Category = Bullet)
 	TSubclassOf<ABullet> BulletTemplate;

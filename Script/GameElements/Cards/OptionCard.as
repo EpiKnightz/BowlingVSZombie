@@ -24,9 +24,9 @@ class AOptionCard : AActor
 	FTransform CompanionTransform;
 
 	UPROPERTY()
-	TSubclassOf<ACompanion> CompanionClass;
+	TSubclassOf<ASurvivor> CompanionClass;
 
-	private ACompanion SpawnedCompanion;
+	private ASurvivor SpawnedCompanion;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -38,12 +38,12 @@ class AOptionCard : AActor
 	}
 
 	UFUNCTION()
-	void Init(int iID, TSubclassOf<ACompanion> iCompanionClass)
+	void Init(int iID, TSubclassOf<ASurvivor> iCompanionClass)
 	{
 		CompanionClass = iCompanionClass;
 		ID = iID;
 
-		SpawnedCompanion = Cast<ACompanion>(SpawnActor(CompanionClass, CompanionTransform.Location, CompanionTransform.Rotation.Rotator()));
+		SpawnedCompanion = Cast<ASurvivor>(SpawnActor(CompanionClass, CompanionTransform.Location, CompanionTransform.Rotation.Rotator()));
 		// TODO move this into a component to avoid casting
 		SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 		SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);

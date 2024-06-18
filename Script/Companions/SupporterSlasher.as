@@ -1,4 +1,4 @@
-class ASupporterSlasher : ACompanion
+class ASupporterSlasher : ASurvivor
 {
 	UPROPERTY(BlueprintReadWrite)
 	float RotateTimer = 1;

@@ -7,11 +7,11 @@ class AOptionCardManager : AActor
 	TMap<int, AOptionCard> CardMap;
 
 	UPROPERTY()
-	TArray<TSubclassOf<ACompanion>> CompanionClasses;
+	TArray<TSubclassOf<ASurvivor>> CompanionClasses;
 
 	void GameStart()
 	{
-		System::SetTimer(this, n"SpawnCard", 0.5, false);
+		// System::SetTimer(this, n"SpawnCard", 0.5, false);
 	}
 
 	void GamePause()
