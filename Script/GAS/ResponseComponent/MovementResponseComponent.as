@@ -8,6 +8,8 @@ class UMovementResponseComponent : UResponseComponent
 	FVectorEvent EOnPreAddForceCue;
 	FHitResultEvent EOnBounceCue;
 	FVoidDelegate DOnStopTimeReached;
+	FVoidEvent EOnStopCue;
+	FVoidEvent EOnDeaccelTick;
 
 	UProjectileMovementComponent MovementComp;
 
@@ -121,6 +123,7 @@ class UMovementResponseComponent : UResponseComponent
 		if (!bIsAccelable)
 		{
 			LocalAccel = WorldDeaccel;
+			EOnDeaccelTick.Broadcast();
 		}
 		else
 		{
@@ -128,6 +131,7 @@ class UMovementResponseComponent : UResponseComponent
 			if (LocalAccel == 0 || LocalAccel == AbilitySystem::INVALID_VALUE)
 			{
 				LocalAccel = WorldDeaccel;
+				EOnDeaccelTick.Broadcast();
 			}
 		}
 		MovementComp.Velocity += MovementComp.Velocity.GetSafeNormal() * LocalAccel * DeltaSeconds;
@@ -136,6 +140,7 @@ class UMovementResponseComponent : UResponseComponent
 		{
 			MovementComp.StopMovementImmediately();
 			StopTimeCounter = 0;
+			EOnStopCue.Broadcast();
 		}
 
 		if (MovementComp.Velocity == FVector::ZeroVector)

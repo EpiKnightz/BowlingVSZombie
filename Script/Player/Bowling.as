@@ -1,3 +1,8 @@
+const FRotator BASE_ROTATION_RATE = FRotator(0.4, 0, 0);
+const float BOUNCE_ROTATION_RATE_MULTIPLIER = 0.7;
+const float ADD_FORCE_ROTATION_RATE_MULTIPLIER = 0.5;
+const float DEACCEL_ROTATION_RATE_MULTIPLIER = 0.975;
+
 class ABowling : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)
@@ -21,12 +26,17 @@ class ABowling : AActor
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.AutoActivate = false;
-	default MovementComp.MaxSpeed = 15000;
+	default MovementComp.MaxSpeed = 10000;
 	default MovementComp.bConstrainToPlane = true;
 	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
 	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
 	default MovementComp.Velocity = FVector(-1, 0, 0);
 	default MovementComp.Bounciness = 0.8;
+
+	UPROPERTY(DefaultComponent)
+	URotatingMovementComponent RotatingComp;
+	default RotatingComp.RotationRate = BASE_ROTATION_RATE;
+	default RotatingComp.bUpdateOnlyIfRendered = true;
 
 	UPROPERTY(DefaultComponent)
 	UMovementResponseComponent MovementResponseComponent;
@@ -61,6 +71,8 @@ class ABowling : AActor
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.DOnStopTimeReached.BindUFunction(this, n"K2_DestroyActor");
+		MovementResponseComponent.EOnStopCue.AddUFunction(this, n"OnStopCue");
+		MovementResponseComponent.EOnDeaccelTick.AddUFunction(this, n"OnDeaccelTick");
 	}
 
 	UFUNCTION()
@@ -69,6 +81,8 @@ class ABowling : AActor
 		BallData = Data;
 		BowlingMesh.StaticMesh = BallData.BowlingMesh;
 		EffectSystem.Asset = Data.StatusVFX;
+
+		RotatingComp.RotationRate = BASE_ROTATION_RATE * BallData.BowlingSpeed;
 	}
 
 	UFUNCTION()
@@ -106,6 +120,13 @@ class ABowling : AActor
 	private void OnPreAddForceCue(FVector Value)
 	{
 		MovementResponseComponent.StopTimeCounter = 0;
+		RotatingComp.RotationRate += FRotator(-Value.X, Value.Z, -Value.Y) * ADD_FORCE_ROTATION_RATE_MULTIPLIER;
+	}
+
+	UFUNCTION()
+	private void OnDeaccelTick()
+	{
+		RotatingComp.RotationRate *= DEACCEL_ROTATION_RATE_MULTIPLIER;
 	}
 
 	UFUNCTION()
@@ -115,5 +136,12 @@ class ABowling : AActor
 		{
 			Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
 		}
+		RotatingComp.RotationRate *= BOUNCE_ROTATION_RATE_MULTIPLIER;
+	}
+
+	UFUNCTION()
+	private void OnStopCue()
+	{
+		RotatingComp.RotationRate = FRotator::ZeroRotator;
 	}
 }
