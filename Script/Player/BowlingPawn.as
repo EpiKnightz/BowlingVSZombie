@@ -15,19 +15,14 @@ class ABowlingPawn : APawn
 	default Collider.SimulatePhysics = false;
 
 	UPROPERTY(DefaultComponent)
-	USkeletalMeshComponent BodyMesh;
-	default BodyMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
-	default BodyMesh.ReceivesDecals = false;
+	USkeletalMeshComponent HamsterMesh;
+	default HamsterMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
+	default HamsterMesh.ReceivesDecals = false;
 
-	UPROPERTY(DefaultComponent, Attach = BodyMesh)
-	USkeletalMeshComponent HeadMesh;
-	default HeadMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
-	default HeadMesh.ReceivesDecals = false;
+	UCustomAnimInst AnimateInst;
 
-	UPROPERTY(DefaultComponent, Attach = BodyMesh) // , AttachSocket = RightHand
-	USkeletalMeshComponent AccessoryMesh;
-	default AccessoryMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
-	default AccessoryMesh.ReceivesDecals = false;
+	UPROPERTY(BlueprintReadWrite, Category = Animation)
+	UAnimMontage AttackAnim;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent WorldWidget;
@@ -128,13 +123,6 @@ class ABowlingPawn : APawn
 	FActorVectorEvent EOnTouchReleased;
 
 	UFUNCTION(BlueprintOverride)
-	void ConstructionScript()
-	{
-		HeadMesh.SetLeaderPoseComponent(BodyMesh);
-		AccessoryMesh.SetLeaderPoseComponent(BodyMesh);
-	}
-
-	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		// Controller is nullptr in ConstructionScript(), but is valid in BeginPlay(), so this is the proper place to init this I guess.
@@ -144,6 +132,8 @@ class ABowlingPawn : APawn
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.Initialize(n"MoveSpeed", 500);
 		AbilitySystem.Initialize(n"Accel", 500);
+
+		AnimateInst = Cast<UCustomAnimInst>(HamsterMesh.GetAnimInstance());
 
 		// Add Input Mapping Context
 		if (PlayerController != nullptr)
@@ -159,6 +149,7 @@ class ABowlingPawn : APawn
 
 		DamageResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.EOnAttackHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 		StatusResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
 		// Temporary
@@ -245,6 +236,9 @@ class ABowlingPawn : APawn
 					// Print("Touch " + bowlingPowerMultiplier, 100);
 					SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).ZYaw, 0));
 					DrawPredictLine();
+
+					AnimateInst.Montage_Play(AttackAnim);
+					AnimateInst.Montage_JumpToSection(n"Start", AttackAnim);
 				}
 			}
 			else
@@ -303,23 +297,15 @@ class ABowlingPawn : APawn
 		{
 			if (CooldownPercent >= 1 && BowlingPowerMultiplier != 0)
 			{
-				ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
-				CurrentBallData.Atk = AbilitySystem.GetValue(n"Attack");
-				SpawnedActor.SetData(CurrentBallData);
-				SpawnedActor.SetOwner(this);
-				SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed * BowlingPowerMultiplier);
-
-				SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
-
-				FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
-
-				// AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
 				SetCooldownPercent(0);
 
 				ClearTween();
 				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::InQuad);
 				FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
 				FloatTween.Start();
+
+				AnimateInst.Montage_Play(AttackAnim);
+				AnimateInst.Montage_JumpToSection(n"Attacking", AttackAnim);
 			}
 			PredictLine.ClearInstances();
 			PressLoc = FVector::ZeroVector;
@@ -339,6 +325,20 @@ class ABowlingPawn : APawn
 		{
 			EOnTouchReleased.Broadcast(outResult.Actor, outResult.Location);
 		}
+	}
+
+	UFUNCTION()
+	private void OnAttackHitNotify()
+	{
+		ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, GetActorLocation(), GetActorRotation()));
+		CurrentBallData.Atk = AbilitySystem.GetValue(n"Attack");
+		SpawnedActor.SetData(CurrentBallData);
+		SpawnedActor.SetOwner(this);
+		SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed);
+
+		SpawnedActor.DOnHit.BindUFunction(this, n"OnHit");
+
+		FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 	}
 
 	void ClearTween(bool bSkipCheck = false)

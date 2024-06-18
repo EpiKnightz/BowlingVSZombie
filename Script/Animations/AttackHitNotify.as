@@ -6,11 +6,15 @@ class UAttackHitNotify : UAnimNotify
 	bool Notify(USkeletalMeshComponent MeshComp, UAnimSequenceBase Animation,
 				FAnimNotifyEventReference EventReference) const
 	{
-		AZombie zomb = Cast<AZombie>(MeshComp.GetOwner());
-		if (zomb != nullptr)
+		if (IsValid(MeshComp))
 		{
-			zomb.AttackHit();
+			auto AttackResponse = UAttackResponseComponent::Get(MeshComp.GetOwner());
+			if (IsValid(AttackResponse))
+			{
+				AttackResponse.NotifyAttackHit();
+				return true;
+			}
 		}
-		return true;
+		return false;
 	}
 }

@@ -86,7 +86,6 @@ class AZombie : AActor
 	TSubclassOf<ACoin> CoinTemplate;
 
 	UZombieAnimInst AnimateInst;
-	// FFloatDelegate DOnAttackHit;
 	FNameDelegate DOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
@@ -136,6 +135,7 @@ class AZombie : AActor
 		StatusResponseComponent.Initialize(AbilitySystem);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.EOnAttackHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
@@ -284,7 +284,7 @@ class AZombie : AActor
 
 	// Called when the animation trigger an event
 	UFUNCTION()
-	void AttackHit()
+	void OnAttackHitNotify()
 	{
 		if (IsValid(Target))
 		{

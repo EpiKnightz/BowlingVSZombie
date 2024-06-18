@@ -5,6 +5,8 @@ class UAttackResponseComponent : UResponseComponent
 	FModDelegate DOnChangeAttackCooldownModifier;
 	FObjectIntDelegate DOnRemoveAttackCooldownModifier;
 
+	FVoidEvent EOnAttackHitNotify;
+
 	bool InitChild() override
 	{
 
@@ -37,5 +39,11 @@ class UAttackResponseComponent : UResponseComponent
 	void OnRemoveAttackModifier(const UObject Object, int ID)
 	{
 		AbilitySystem.RemoveModifier(n"Attack", Object, ID);
+	}
+
+	UFUNCTION()
+	void NotifyAttackHit()
+	{
+		EOnAttackHitNotify.Broadcast();
 	}
 };
