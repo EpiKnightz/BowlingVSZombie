@@ -186,7 +186,10 @@ class AZombie : AActor
 				SetActorLocation(loc);
 			}
 
-			if (loc.Z <= ENDSCREEN_Z_LIMIT || loc.X > ENDSCREEN_X_LIMIT || loc.Y > ENDSCREEN_Y_LIMIT || loc.Y < -ENDSCREEN_Y_LIMIT)
+			if (loc.Z <= ENDSCREEN_Z_LIMIT
+				|| loc.X > ENDSCREEN_X_LIMIT
+				|| loc.Y > ENDSCREEN_Y_LIMIT
+				|| loc.Y < -ENDSCREEN_Y_LIMIT)
 			{
 				if (!DamageResponseComponent.bIsDead) // If not dead, meaning the zomb goes to end screen, Deal dmg to player
 				{
