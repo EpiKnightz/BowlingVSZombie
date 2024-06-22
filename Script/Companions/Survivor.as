@@ -21,10 +21,25 @@ class ASurvivor : AActor
 	UCustomAnimInst AnimateInst;
 	UFCTweenBPActionFloat FloatTween;
 
+	UPROPERTY(DefaultComponent)
+	ULiteAbilitySystem AbilitySystem;
+
+	UPROPERTY(DefaultComponent)
+	UAttackResponseComponent AttackResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Survivor;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UCustomAnimInst>(CompanionSkeleton.GetAnimInstance());
+
+		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
+		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
+
+		AttackResponseComponent.Initialize(AbilitySystem);
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		AtksLeft = NumberOfAtks;
 	}
@@ -32,6 +47,7 @@ class ASurvivor : AActor
 	UFUNCTION()
 	void Construct()
 	{
+		// Construct the abilities here
 	}
 
 	void ResetTransform()

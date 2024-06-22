@@ -5,7 +5,14 @@ class UAttackResponseComponent : UResponseComponent
 	FModDelegate DOnChangeAttackCooldownModifier;
 	FObjectIntDelegate DOnRemoveAttackCooldownModifier;
 
-	FVoidEvent EOnAttackHitNotify;
+	FVectorReturnDelegate DGetAttackLocation;
+	FRotatorReturnDelegate DGetAttackRotation;
+
+	FVoidEvent EOnAnimHitNotify;
+	FVoidEvent EOnAttackHitCue;
+	FVoidDelegate DPlayAttackAnim;
+	FActorEvent EOnOverlapEvent;
+	FName2VectorDelegate DGetSocketLocation;
 
 	bool InitChild() override
 	{
@@ -44,6 +51,7 @@ class UAttackResponseComponent : UResponseComponent
 	UFUNCTION()
 	void NotifyAttackHit()
 	{
-		EOnAttackHitNotify.Broadcast();
+		EOnAnimHitNotify.Broadcast();
+		EOnAttackHitCue.Broadcast();
 	}
 };
