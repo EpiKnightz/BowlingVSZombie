@@ -1,0 +1,3 @@
+class UThrowBallAbility : UAbility
+{
+};
