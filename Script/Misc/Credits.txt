@@ -32,3 +32,12 @@ Use Shape (like circle, hexa, triangle, square) to convey card aspect
 117,649 years
 
 papyrus vietnamese translator rakuen
+
+Survivor with stats:
+Str - Increase weapon (Size n stuff) - Rock
+Agi - Increase movement - Scissor
+Int - Increase skill effect - Paper
+Survivor with tags:
+Class
+Element
+Personality

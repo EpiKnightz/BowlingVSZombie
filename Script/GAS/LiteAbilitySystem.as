@@ -30,7 +30,7 @@ struct FModifierContainer
 		}
 	}
 
-	void CalculateData(const UAbilitySystem AbilitySystem, FName AttrName, float32& Result)
+	void CalculateData(const ULiteAbilitySystem AbilitySystem, FName AttrName, float32& Result)
 	{
 		for (int i = 0; i < ModifiersArray.Num(); i++)
 		{
@@ -44,7 +44,7 @@ struct FModifierContainer
 	}
 }
 
-class UAbilitySystem : ULiteAbilitySystemComponent
+class ULiteAbilitySystem : ULiteAbilitySystemComponent
 {
 	private FGameplayTagContainer ActorTags;
 
@@ -258,4 +258,13 @@ class UAbilitySystem : ULiteAbilitySystemComponent
 			PrintError("Import Error Count: " + (Data.Num() - ImportCount));
 		}
 	}
+
+	//////////////////////////////////////////
+	// Abilities
+	//////////////////////////////////////////
+
+	// UFUNCTION(BlueprintOverride)
+	// ULiteAbilityBase PostRegisterAbility()
+	// {
+	// }
 };

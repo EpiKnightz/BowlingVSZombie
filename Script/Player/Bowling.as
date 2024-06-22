@@ -43,18 +43,18 @@ class ABowling : AActor
 
 	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
-	default TargetResponseComponent.TargetType = ETargetType::Player;
+	default TargetResponseComponent.TargetType = ETargetType::Bowling;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Stats")
 	FBallDT BallData;
 
-	FActorDelegate DOnHit;
+	FActorEvent EOnHit;
 
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
 	UPROPERTY(DefaultComponent)
-	UAbilitySystem AbilitySystem;
+	ULiteAbilitySystem AbilitySystem;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -88,7 +88,7 @@ class ABowling : AActor
 	UFUNCTION()
 	void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		DOnHit.ExecuteIfBound(OtherActor);
+		EOnHit.Broadcast(OtherActor);
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);

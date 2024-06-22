@@ -8,8 +8,8 @@ class ABullet : AActor
 
 	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent ProjectileMovement;
-	default ProjectileMovement.InitialSpeed = 1000;
-	default ProjectileMovement.MaxSpeed = 1000;
+	default ProjectileMovement.InitialSpeed = 1500;
+	default ProjectileMovement.MaxSpeed = 1500;
 	default ProjectileMovement.ProjectileGravityScale = 0;
 	default ProjectileMovement.Velocity = FVector(0, 1, 0);
 

@@ -11,7 +11,7 @@ class AOptionCardManager : AActor
 
 	void GameStart()
 	{
-		// System::SetTimer(this, n"SpawnCard", 0.5, false);
+		System::SetTimer(this, n"SpawnCard", 0.5, false);
 	}
 
 	void GamePause()

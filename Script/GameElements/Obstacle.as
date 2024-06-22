@@ -17,7 +17,7 @@ class AObstacle : AActor
 	FVector OriginalLoc;
 
 	UPROPERTY(DefaultComponent)
-	UAbilitySystem AbilitySystem;
+	ULiteAbilitySystem AbilitySystem;
 
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;

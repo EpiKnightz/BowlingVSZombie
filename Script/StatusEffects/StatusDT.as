@@ -2,7 +2,8 @@ enum ETargetType
 {
 	Zombie,
 	Player,
-	Both,
+	Bowling,
+	Survivor,
 	Untargetable,
 	Neutral
 }
@@ -16,10 +17,6 @@ enum EDurationType
 
 struct FStatusDT
 {
-	/// The status effect currently applied to the zombie.
-	// UPROPERTY()
-	// EEffectType EffectType;
-
 	UPROPERTY()
 	FGameplayTag EffectTag;
 

@@ -1,9 +1,9 @@
 class UResponseComponent : UActorComponent
 {
-	protected UAbilitySystem AbilitySystem;
+	protected ULiteAbilitySystem AbilitySystem;
 
 	UFUNCTION()
-	void Initialize(UAbilitySystem iAbilitySystem)
+	void Initialize(ULiteAbilitySystem iAbilitySystem)
 	{
 		if (IsValid(iAbilitySystem))
 		{

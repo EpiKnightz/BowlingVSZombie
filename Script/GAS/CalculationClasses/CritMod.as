@@ -1,7 +1,7 @@
 class UCritMod : UModifier
 {
 
-	void DoCalculateChildren(const UAbilitySystem& AbilitySystem, float32& SourceValue) override
+	void DoCalculateChildren(const ULiteAbilitySystem& AbilitySystem, float32& SourceValue) override
 	{
 		float CritChance = Params[0];
 		float CritDamage = Params[1];

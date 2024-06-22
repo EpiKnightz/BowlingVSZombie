@@ -95,7 +95,7 @@ class AZombie : AActor
 	bool bIsAttacking = false;
 
 	UPROPERTY(DefaultComponent)
-	UAbilitySystem AbilitySystem;
+	ULiteAbilitySystem AbilitySystem;
 
 	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
 	private UMaterialInstanceDynamic DynamicMat;
@@ -135,7 +135,7 @@ class AZombie : AActor
 		StatusResponseComponent.Initialize(AbilitySystem);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
-		AttackResponseComponent.EOnAttackHitNotify.AddUFunction(this, n"OnAttackHitNotify");
+		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");

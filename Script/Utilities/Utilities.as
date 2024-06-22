@@ -15,8 +15,12 @@ delegate bool FBoolReturnDelegate();
 delegate void FObjectIntDelegate(const UObject Object, int ID);
 delegate void FModDelegate(UModifier Calculation);
 delegate void FVectorDelegate(FVector Value);
+delegate FRotator FRotatorReturnDelegate();
+delegate FVector FVectorReturnDelegate();
+delegate FVector FName2VectorDelegate(FName Name);
 
 event void FVectorEvent(FVector Value);
+event void FVectorRotatorEvent(FVector Value, FRotator Rotator);
 event void FVectorBoolEvent(FVector Value, bool Bool);
 event void FVoidEvent();
 event void FActorEvent(AActor OtherActor);
