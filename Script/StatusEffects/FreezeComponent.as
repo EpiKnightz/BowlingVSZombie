@@ -17,6 +17,15 @@ class UFreezeComponent : UStatusComponent
 			CooldownMod.Setup(ModID, 999999);
 			AttackResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(CooldownMod);
 		}
+
+		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
+		if (IsValid(StatusResponse))
+		{
+			StatusResponse.DChangeAddedColor.ExecuteIfBound(FLinearColor::Blue);
+		}
+
+		// @ts-ignore
+		System::ClearTimer(GetOwner(), "EndHitFlash");
 	}
 
 	void EndStatusEffect() override
@@ -38,6 +47,13 @@ class UFreezeComponent : UStatusComponent
 		{
 			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
 		}
+
+		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
+		if (IsValid(StatusResponse))
+		{
+			StatusResponse.DChangeAddedColor.ExecuteIfBound(FLinearColor::Black);
+		}
+
 		Super::EndStatusEffect();
 	}
 }

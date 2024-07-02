@@ -109,7 +109,7 @@ class AStatusManager : AActor
 		if (IsValid(statusComp))
 		{
 			statusComp.Init(EffectData);
-			DRC.DOnDeadCue.AddUFunction(statusComp, n"EndStatusEffect");
+			DRC.EOnDeadCue.AddUFunction(statusComp, n"EndStatusEffect");
 			return true;
 		}
 		return false;

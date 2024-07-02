@@ -4,6 +4,8 @@ enum ETargetType
 	Player,
 	Bowling,
 	Survivor,
+	Obstacle,
+	Objective,
 	Untargetable,
 	Neutral
 }
