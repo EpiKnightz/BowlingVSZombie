@@ -1,11 +1,11 @@
-class UShootOnOverlapAbility : UAbility
+class USlashOnOverlapAbility : UAbility
 {
 	bool SetupAbilityChild() override
 	{
 		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
 		if (IsValid(AttackResponse))
 		{
-			GetAbilityData(GameplayTags::Ability_ShootOnOverlap);
+			GetAbilityData(GameplayTags::Ability_SlashOnOverlap);
 			if (AbilityData.AbilityID.IsValid())
 			{
 				AttackResponse.EOnBeginOverlapEvent.AddUFunction(this, n"TriggerOnOverlap");
@@ -37,19 +37,22 @@ class UShootOnOverlapAbility : UAbility
 	private void OnAnimHitNotify()
 	{
 		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-		if (IsValid(AttackResponse) && AttackResponse.DGetAttackLocation.IsBound() && AttackResponse.DGetAttackRotation.IsBound())
+		if (IsValid(AttackResponse) && AttackResponse.DGetAttackLocation.IsBound())
 		{
-			SpawnActor(AbilityData.ActorTemplate, AttackResponse.DGetAttackLocation.Execute(), AttackResponse.DGetAttackRotation.Execute());
-		}
-	}
+			TArray<EObjectTypeQuery> traceObjectTypes;
+			traceObjectTypes.Add(EObjectTypeQuery::Enemy);
+			TArray<AActor> ignoreActors;
+			TArray<AActor> outActors;
+			System::SphereOverlapActors(AttackResponse.DGetAttackLocation.Execute(), 165, traceObjectTypes, nullptr, ignoreActors, outActors);
 
-	void StopAbility() override
-	{
-		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-		if (IsValid(AttackResponse))
-		{
-			AttackResponse.EOnBeginOverlapEvent.UnbindObject(this);
-			AttackResponse.EOnAnimHitNotify.UnbindObject(this);
+			for (AActor overlappedActor : outActors)
+			{
+				UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
+				if (IsValid(DamageResponse))
+				{
+					DamageResponse.DOnTakeHit.ExecuteIfBound(100);
+				}
+			}
 		}
 	}
-};
+}

@@ -125,8 +125,11 @@ class AZombieManager : AActor
 		AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
 		SpawnedActor.SetData(Row);
 
-		int randomZombieIdx = Math::RandRange(0, Row.ZombieModelList.Num() - 1);
-		SpawnedActor.SetSkeletonMesh(Row.ZombieModelList[randomZombieIdx]);
+		USkeletalMesh HeadMesh = Row.HeadMeshList.Num() > 0 ? Row.HeadMeshList[Math::RandRange(0, Row.HeadMeshList.Num() - 1)] : nullptr;
+		USkeletalMesh BodyMesh = Row.BodyMeshList.Num() > 0 ? Row.BodyMeshList[Math::RandRange(0, Row.BodyMeshList.Num() - 1)] : nullptr;
+		USkeletalMesh AccessoryMesh = Row.AccessoryMeshList.Num() > 0 ? Row.AccessoryMeshList[Math::RandRange(0, Row.AccessoryMeshList.Num() - 1)] : nullptr;
+
+		SpawnedActor.SetSkeletonMesh(HeadMesh, BodyMesh, AccessoryMesh);
 
 		// Set weapon
 		UStaticMesh RightHand = nullptr, LeftHand = nullptr;

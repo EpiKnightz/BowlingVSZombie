@@ -39,8 +39,9 @@ class UAbility : ULiteAbilityBase
 	}
 
 	UFUNCTION()
-	void GetAbilityData()
+	void GetAbilityData(FGameplayTag InAbilityID)
 	{
+		AbilityID = InAbilityID;
 		AbilityData = AbilitiesManager.GetAbilityData(AbilityID);
 	}
 

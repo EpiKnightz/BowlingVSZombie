@@ -15,18 +15,19 @@ enum EAttackType
 	Gun
 }
 
-class AZombie : AActor
+class AZombie : AHumanlite
 {
-	UPROPERTY(RootComponent, DefaultComponent)
-	UCapsuleComponent Collider;
+	// UPROPERTY(RootComponent, DefaultComponent)
+	// UCapsuleComponent Collider;
+	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
 
-	UPROPERTY(DefaultComponent)
-	USkeletalMeshComponent ZombieSkeleton;
+	// UPROPERTY(DefaultComponent)
+	// USkeletalMeshComponent BodyMesh;
 
-	UPROPERTY(DefaultComponent, Attach = ZombieSkeleton, AttachSocket = RightHand)
+	UPROPERTY(DefaultComponent, Attach = BodyMesh, AttachSocket = RightHand)
 	UStaticMeshComponent RightHandWp;
 
-	UPROPERTY(DefaultComponent, Attach = ZombieSkeleton, AttachSocket = LeftHand)
+	UPROPERTY(DefaultComponent, Attach = BodyMesh, AttachSocket = LeftHand)
 	UStaticMeshComponent LeftHandWp;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -74,6 +75,9 @@ class AZombie : AActor
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent DeadSFX;
 
+	UPROPERTY(BlueprintReadWrite, Category = SFX)
+	UNiagaraSystem DeadVFX;
+
 	// UPROPERTY(BlueprintReadWrite, Category = Stats)
 	// EAttackType AtkType = EAttackType::Punch;
 	UPROPERTY(BlueprintReadWrite, Category = Stats)
@@ -98,7 +102,7 @@ class AZombie : AActor
 	ULiteAbilitySystem AbilitySystem;
 
 	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
-	private UMaterialInstanceDynamic DynamicMat;
+	// private UMaterialInstanceDynamic DynamicMat;
 
 	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent MovementComp;
@@ -116,9 +120,8 @@ class AZombie : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		AnimateInst = Cast<UZombieAnimInst>(ZombieSkeleton.GetAnimInstance());
-		DynamicMat = Material::CreateDynamicMaterialInstance(ZombieSkeleton.GetMaterial(0));
-		ZombieSkeleton.SetMaterial(0, DynamicMat);
+		AnimateInst = Cast<UZombieAnimInst>(BodyMesh.GetAnimInstance());
+
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 		System::SetTimer(this, n"EmergeDone", delayMove, false);
 
@@ -128,11 +131,12 @@ class AZombie : AActor
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DamageResponseComponent.Initialize(AbilitySystem);
-		DamageResponseComponent.DOnHitCue.AddUFunction(this, n"TakeHitCue");
-		DamageResponseComponent.DOnDamageCue.AddUFunction(this, n"TakeDamageCue");
-		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
+		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
+		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
 		StatusResponseComponent.Initialize(AbilitySystem);
+		StatusResponseComponent.DChangeAddedColor.BindUFunction(this, n"ChangeAddedColor");
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
@@ -204,9 +208,20 @@ class AZombie : AActor
 		}
 	}
 
-	void SetSkeletonMesh(USkeletalMesh mesh)
+	void SetSkeletonMesh(USkeletalMesh InHeadMesh, USkeletalMesh InBodyMesh, USkeletalMesh InAccMesh)
 	{
-		ZombieSkeleton.SkeletalMeshAsset = mesh;
+		if (IsValid(InHeadMesh))
+		{
+			HeadMesh.SkeletalMeshAsset = InHeadMesh;
+		}
+		if (IsValid(InBodyMesh))
+		{
+			BodyMesh.SkeletalMeshAsset = InBodyMesh;
+		}
+		if (IsValid(InAccMesh))
+		{
+			AccessoryMesh.SkeletalMeshAsset = InAccMesh;
+		}
 	}
 
 	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield, EAttackType iAtkType)
@@ -227,7 +242,7 @@ class AZombie : AActor
 
 		if (AnimateInst.AtkType == EAttackType::Shield)
 		{
-			LeftHandWp.AttachTo(ZombieSkeleton, n"LeftShield");
+			LeftHandWp.AttachTo(BodyMesh, n"LeftShield");
 			AttackAnim = ShieldAttackAnim;
 		}
 	}
@@ -247,8 +262,8 @@ class AZombie : AActor
 			if (IsValid(Target) && !bIsAttacking)
 			{
 				StartAttacking();
-				Target.DOnDeadCue.AddUFunction(this, n"StopAttacking");
-				Target.DOnDeadCue.AddUFunction(this, n"RemoveTarget");
+				Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
+				Target.EOnDeadCue.AddUFunction(this, n"RemoveTarget");
 				return true;
 			}
 		}
@@ -307,7 +322,7 @@ class AZombie : AActor
 	{
 		if (Target != nullptr)
 		{
-			Target.DOnDeadCue.UnbindObject(this);
+			Target.EOnDeadCue.UnbindObject(this);
 			Target = nullptr;
 			delayMove = WAIT_TARGET_DEAD_TIME;
 		}
@@ -357,7 +372,7 @@ class AZombie : AActor
 	void TakeDamageCue()
 	{
 		StopAttacking();
-		DynamicMat.SetScalarParameterValue(n"IsHit", 1);
+		ChangeAddedColor(FLinearColor(0.205357, 0, 0, 1));
 		System::SetTimer(this, n"EndHitFlash", 0.25, false);
 		System::ClearTimer(this, "EmergeDone");
 		EmergeDone();
@@ -378,6 +393,7 @@ class AZombie : AActor
 		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
 		DOnZombDie.ExecuteIfBound(GetName());
 
+		Niagara::SpawnSystemAtLocation(DeadVFX, GetActorLocation() + FVector(0, 0, 220)); // TODO: Change this with HeadMesh Location, also need to consider the scale
 		FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
 
 		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
@@ -432,12 +448,6 @@ class AZombie : AActor
 
 	void SetStencilValue(int value)
 	{
-		ZombieSkeleton.SetCustomDepthStencilValue(value);
-	}
-
-	UFUNCTION()
-	void EndHitFlash()
-	{
-		DynamicMat.SetScalarParameterValue(n"IsHit", 0);
+		BodyMesh.SetCustomDepthStencilValue(value);
 	}
 }

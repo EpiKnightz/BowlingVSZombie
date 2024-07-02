@@ -23,8 +23,8 @@ class AOptionCard : AActor
 	UPROPERTY()
 	FTransform CompanionTransform;
 
-	UPROPERTY()
-	TSubclassOf<ASurvivor> CompanionClass;
+	// UPROPERTY()
+	// TSubclassOf<ASurvivor> CompanionClass;
 
 	private ASurvivor SpawnedCompanion;
 
@@ -38,19 +38,24 @@ class AOptionCard : AActor
 	}
 
 	UFUNCTION()
-	void Init(int iID, TSubclassOf<ASurvivor> iCompanionClass)
+	void Init(int iID)
 	{
-		CompanionClass = iCompanionClass;
+		// CompanionClass = iCompanionClass;
 		ID = iID;
 
-		SpawnedCompanion = Cast<ASurvivor>(SpawnActor(CompanionClass, CompanionTransform.Location, CompanionTransform.Rotation.Rotator()));
-		// TODO move this into a component to avoid casting
-		SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
-		SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);
+		ASurvivorManager SM = Gameplay::GetActorOfClass(ASurvivorManager);
+		if (SM.CreateRandomSurvior(SpawnedCompanion))
+		{
+			SpawnedCompanion.SetActorLocationAndRotation(CompanionTransform.Location, CompanionTransform.Rotation.Rotator());
+			// TODO move this into a component to avoid casting
+			SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
+			SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);
 
-		UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[ID], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
-		TemplSequActor.SetBinding(this);
-		TemplSequActor.GetSequencePlayer().Play();
+			UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[ID], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
+			TemplSequActor.SetBinding(this);
+			TemplSequActor.GetSequencePlayer().SetPlayRate(1 / Gameplay::GetGlobalTimeDilation());
+			TemplSequActor.GetSequencePlayer().Play();
+		}
 	}
 
 	UFUNCTION()

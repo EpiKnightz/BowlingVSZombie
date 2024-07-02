@@ -11,7 +11,7 @@ class UAttackResponseComponent : UResponseComponent
 	FVoidEvent EOnAnimHitNotify;
 	FVoidEvent EOnAttackHitCue;
 	FVoidDelegate DPlayAttackAnim;
-	FActorEvent EOnOverlapEvent;
+	FActorEvent EOnBeginOverlapEvent;
 	FName2VectorDelegate DGetSocketLocation;
 
 	bool InitChild() override

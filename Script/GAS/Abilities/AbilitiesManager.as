@@ -26,8 +26,38 @@ class AAbilitiesManager : AActor
 		}
 		else
 		{
-			PrintError("AbilityID not found");
+			PrintError("GetAbilityData: AbilityID not found");
 			return Ability;
+		}
+	}
+
+	UFUNCTION()
+	void RegisterAbilities(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	{
+		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
+		{
+			RegisterSingleAbility(AbilityID, AbilitySystem);
+		}
+	}
+
+	UFUNCTION()
+	void RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
+	{
+		if (AbilityID.MatchesTag(GameplayTags::Ability_ShootAtTarget))
+		{
+			AbilitySystem.RegisterAbility(UShootAtTargetAbility);
+		}
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_ShootOnOverlap))
+		{
+			AbilitySystem.RegisterAbility(UShootOnOverlapAbility);
+		}
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_SlashOnOverlap))
+		{
+			AbilitySystem.RegisterAbility(USlashOnOverlapAbility);
+		}
+		else
+		{
+			PrintError("RegisterSingleAbility: AbilityID not found");
 		}
 	}
 };

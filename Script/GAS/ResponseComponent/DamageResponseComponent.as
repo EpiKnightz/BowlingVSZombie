@@ -6,9 +6,9 @@ class UDamageResponseComponent : UResponseComponent
 	FFloatDelegate DOnDmgReceivedBoost;
 	FBoolReturnDelegate DOnIsAlive;
 
-	FVoidEvent DOnHitCue;
-	FVoidEvent DOnDamageCue;
-	FVoidEvent DOnDeadCue;
+	FVoidEvent EOnHitCue;
+	FVoidEvent EOnDamageCue;
+	FVoidEvent EOnDeadCue;
 
 	bool bIsDead = false;
 
@@ -27,7 +27,7 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			DOnHitCue.Broadcast();
+			EOnHitCue.Broadcast();
 
 			if (Damage > 0)
 			{
@@ -47,13 +47,13 @@ class UDamageResponseComponent : UResponseComponent
 		// AbilitySystem.Calculate(n"Damage");
 		if (CheckIsAlive())
 		{
-			DOnDamageCue.Broadcast();
+			EOnDamageCue.Broadcast();
 			return true;
 		}
 		else
 		{
 			bIsDead = true;
-			DOnDeadCue.Broadcast();
+			EOnDeadCue.Broadcast();
 			return false;
 		}
 	}
@@ -73,7 +73,7 @@ class UDamageResponseComponent : UResponseComponent
 			else
 			{
 				bIsDead = true;
-				DOnDeadCue.Broadcast();
+				EOnDeadCue.Broadcast();
 				return false;
 			}
 		}

@@ -1,22 +1,9 @@
-class ASurvivor : AActor
+const float SURVIVOR_Y_LIMIT = 400;
+class ASurvivor : AHumanlite
 {
-	UPROPERTY(RootComponent, DefaultComponent)
-	UCapsuleComponent Collider;
 	default Collider.SetCollisionProfileName(n"Companion");
-
-	UPROPERTY(DefaultComponent)
-	USkeletalMeshComponent CompanionSkeleton;
-	default CompanionSkeleton.SetRelativeLocation(FVector(0, 0, -50));
-
-	UPROPERTY(DefaultComponent, Attach = CompanionSkeleton)
-	UStaticMeshComponent RightHandWp;
-
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	UAnimMontage AttackAnim;
-
-	UPROPERTY(BlueprintReadWrite, Category = Bullet)
-	int NumberOfAtks = 3;
-	int AtksLeft = 3;
+	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
+	default BodyMesh.SetRelativeLocationAndRotation(FVector(0, 0, -50), FRotator(0, 90, 0));
 
 	UCustomAnimInst AnimateInst;
 	UFCTweenBPActionFloat FloatTween;
@@ -31,23 +18,60 @@ class ASurvivor : AActor
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Survivor;
 
+	UPROPERTY(DefaultComponent)
+	UDamageResponseComponent DamageResponseComponent;
+
+	UWeapon Weapon;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		AnimateInst = Cast<UCustomAnimInst>(CompanionSkeleton.GetAnimInstance());
+		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
+		TargetResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.Initialize(AbilitySystem);
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		AtksLeft = NumberOfAtks;
 	}
 
 	UFUNCTION()
-	void Construct()
+	void SetData(FSurvivorDT Data)
 	{
-		// Construct the abilities here
+		AWeaponsManager WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
+		if (IsValid(WeaponsManager))
+		{
+			WeaponsManager.CreateWeapon(Data.WeaponTag, this, Weapon);
+		}
+
+		HeadMesh.SetSkeletalMeshAsset(Data.HeadMesh);
+		BodyMesh.SetSkeletalMeshAsset(Data.BodyMesh);
+		AccessoryMesh.SetSkeletalMeshAsset(Data.AccessoryMesh);
+
+		SetBodyScale(Data.BodyScale);
+		SetHeadScale(Data.HeadScale);
+
+		Collider.OnComponentHit.AddUFunction(this, n"OnHit");
+
+		AttackResponseComponent.DGetAttackLocation.BindUFunction(this, n"GetAttackLocation");
+		AttackResponseComponent.DGetAttackRotation.BindUFunction(this, n"GetAttackRotation");
+		AttackResponseComponent.EOnAttackHitCue.AddUFunction(Weapon, n"AttackHitCue");
+		AttackResponseComponent.DPlayAttackAnim.BindUFunction(this, n"PlayAttackAnim");
+		AttackResponseComponent.DGetSocketLocation.BindUFunction(this, n"GetSocketLocation");
+
+		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
+
+		Gameplay::GetActorOfClass(AAbilitiesManager)
+			.RegisterAbilities(Data.AbilitiesTags, AbilitySystem);
+	}
+
+	UFUNCTION()
+	private void DeadCue()
+	{
+		ChangeAddedColor(FLinearColor::White);
 	}
 
 	void ResetTransform()
@@ -74,13 +98,95 @@ class ASurvivor : AActor
 	UFUNCTION()
 	private void OnDragged(AActor OtherActor, FVector Vector)
 	{
+		DynamicMat.SetScalarParameterValue(n"IsAddEnable", 1);
 		SetActorLocation(FVector(Vector.X, Vector.Y, GetActorLocation().Z));
+		if (Vector.Y > SURVIVOR_Y_LIMIT || Vector.Y < -SURVIVOR_Y_LIMIT)
+		{
+			DynamicMat.SetVectorParameterValue(n"AddedColor", FLinearColor::Red);
+		}
+		else
+		{
+			DynamicMat.SetVectorParameterValue(n"AddedColor", FLinearColor::Green);
+		}
 	}
 
 	UFUNCTION()
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 50));
+		DynamicMat.SetScalarParameterValue(n"IsAddEnable", 0);
+		PopUpAnimation();
 		RegisterDragEvents(false);
+	}
+
+	UFUNCTION()
+	void PopUpAnimation()
+	{
+		if (IsValid(FloatTween) && FloatTween.IsValid())
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0.1, 1, 0.5f, EFCEase::OutElastic);
+		FloatTween.ApplyEasing.AddUFunction(this, n"SetScaleFloat");
+		FloatTween.Start();
+	}
+
+	UFUNCTION()
+	void SetScaleFloat(float32 Scale)
+	{
+		SetActorScale3D(FVector(Scale));
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorBeginOverlap(AActor OtherActor)
+	{
+		OnHit(nullptr, OtherActor, nullptr, FVector::ZeroVector, FHitResult());
+	}
+
+	UFUNCTION()
+	private void OnHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
+	{
+		AttackResponseComponent.EOnBeginOverlapEvent.Broadcast(OtherActor);
+	}
+
+	UFUNCTION()
+	void PlayAttackAnim()
+	{
+		AnimateInst.Montage_Play(Weapon.AttackAnim);
+	}
+
+	UFUNCTION()
+	FVector GetSocketLocation(FName InSocketName)
+	{
+		return BodyMesh.GetSocketLocation(InSocketName);
+	}
+
+	UFUNCTION()
+	FVector GetAttackLocation()
+	{
+		return Weapon.GetSocketLocation(n"Muzzle");
+	}
+
+	UFUNCTION()
+	FRotator GetAttackRotation()
+	{
+		FRotator Result = BodyMesh.GetWorldRotation();
+		Result.XRoll = 0;
+		Result.YPitch = 0;
+		return Result;
+	}
+
+	////////////////////////////////////
+	// Visual Cues
+	////////////////////////////////////
+
+	UFUNCTION()
+	void TakeDamageCue()
+	{
+		ChangeAddedColor(FLinearColor(0.205357, 0, 0, 1));
+		System::SetTimer(this, n"EndHitFlash", 0.25, false);
+		// AnimateInst.Montage_Play(DamageAnim);
+		//  FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 	}
 }

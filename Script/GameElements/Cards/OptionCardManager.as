@@ -1,3 +1,5 @@
+const float TIME_SCALE_WHEN_SPAWNED_CARD = 0.05;
+
 class AOptionCardManager : AActor
 {
 	UPROPERTY()
@@ -20,14 +22,15 @@ class AOptionCardManager : AActor
 	UFUNCTION()
 	void SpawnCard()
 	{
+		Gameplay::SetGlobalTimeDilation(TIME_SCALE_WHEN_SPAWNED_CARD);
 		AOptionCard Card = SpawnActor(CardTemplate);
 		Card.DOnCardClicked.BindUFunction(this, n"OnCardClicked");
-		Card.Init(CurrentID, CompanionClasses[CurrentID]);
+		Card.Init(CurrentID);
 		CardMap.Add(CurrentID, Card);
 		CurrentID++;
 		if (CurrentID < 3)
 		{
-			System::SetTimer(this, n"SpawnCard", 0.5, false);
+			System::SetTimer(this, n"SpawnCard", 0.5 * TIME_SCALE_WHEN_SPAWNED_CARD, false);
 		}
 	}
 
@@ -41,5 +44,8 @@ class AOptionCardManager : AActor
 				CardMap.FindOrAdd(i).Outro();
 			}
 		}
+
+		CurrentID = 0;
+		System::SetTimer(this, n"SpawnCard", 10, false);
 	}
 };

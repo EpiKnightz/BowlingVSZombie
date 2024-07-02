@@ -7,11 +7,10 @@ class UShootAtTargetAbility : UAbility
 		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
 		if (IsValid(AttackResponse))
 		{
-			AbilityID = FGameplayTag::RequestGameplayTag(n"Ability.ShootAtTarget");
-			GetAbilityData();
+			GetAbilityData(GameplayTags::Ability_ShootAtTarget);
 			if (AbilityData.AbilityID.IsValid())
 			{
-				AttackResponse.EOnOverlapEvent.AddUFunction(this, n"TriggerOnOverlap");
+				AttackResponse.EOnBeginOverlapEvent.AddUFunction(this, n"TriggerOnOverlap");
 				AttackResponse.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
 				return true;
 			}
@@ -59,6 +58,18 @@ class UShootAtTargetAbility : UAbility
 														   + FRotator(0, 180, 0));
 				SpawnActor(AbilityData.ActorTemplate, AttackResponse.DGetAttackLocation.Execute(), AttackResponse.DGetAttackRotation.Execute());
 			}
+		}
+	}
+
+	void StopAbility() override
+	{
+		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
+		if (IsValid(AttackResponse))
+		{
+			AttackResponse.EOnBeginOverlapEvent.UnbindObject(this);
+			AttackResponse.EOnAnimHitNotify.UnbindObject(this);
+
+			// What about OnHit function? Guess we'll find out...
 		}
 	}
 };

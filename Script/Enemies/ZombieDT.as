@@ -43,7 +43,13 @@ struct FZombieDT
 	int CoinDropAmount = 1;
 
 	UPROPERTY()
-	TArray<USkeletalMesh> ZombieModelList;
+	TArray<USkeletalMesh> HeadMeshList;
+
+	UPROPERTY()
+	TArray<USkeletalMesh> BodyMeshList; // List of possible models for the zombie
+
+	UPROPERTY()
+	TArray<USkeletalMesh> AccessoryMeshList;
 
 	UPROPERTY()
 	ESocketType RightSocketType;
