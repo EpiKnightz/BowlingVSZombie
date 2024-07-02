@@ -8,6 +8,7 @@ class ABowling : AActor
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
 	default Collider.SimulatePhysics = false;
+	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UStaticMeshComponent BowlingMesh;
@@ -83,6 +84,8 @@ class ABowling : AActor
 		EffectSystem.Asset = Data.StatusVFX;
 
 		RotatingComp.RotationRate = BASE_ROTATION_RATE * BallData.BowlingSpeed;
+
+		SetPiercable(BallData.bIsPiercable);
 	}
 
 	UFUNCTION()
@@ -94,7 +97,7 @@ class ABowling : AActor
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(BallData.Atk);
+				DamageResponse.TakeHit(BallData.Atk); // This is because the atk should already been buff/debuff at spawned
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
@@ -102,6 +105,21 @@ class ABowling : AActor
 				}
 			}
 		}
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorBeginOverlap(AActor OtherActor)
+	{
+		ActorBeginHit(nullptr, OtherActor, nullptr, FVector(0, 0, 0), FHitResult());
+	}
+
+	UFUNCTION()
+	void SetPiercable(bool bPierce)
+	{
+		Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy,
+											   bPierce ? ECollisionResponse::ECR_Overlap : ECollisionResponse::ECR_Block);
+		Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion,
+											   bPierce ? ECollisionResponse::ECR_Overlap : ECollisionResponse::ECR_Block);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
