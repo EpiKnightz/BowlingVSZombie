@@ -2,6 +2,7 @@ class ABullet : AActor
 {
 	UPROPERTY(RootComponent, DefaultComponent)
 	UCapsuleComponent Collider;
+	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
 
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent BulletSystem;
@@ -23,6 +24,14 @@ class ABullet : AActor
 	void BeginPlay()
 	{
 		FMODBlueprint::PlayEventAtLocation(this, FiredSFX, GetActorTransform(), true);
+		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+	}
+
+	UFUNCTION()
+	private void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
+	{
+		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
+		DestroyActor();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -38,7 +47,6 @@ class ABullet : AActor
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
-		DestroyActor();
+		ActorBeginHit(nullptr, OtherActor, nullptr, FVector(), FHitResult());
 	}
 }
