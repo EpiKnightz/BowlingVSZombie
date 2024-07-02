@@ -50,15 +50,19 @@ class ACollectible : AActor
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		if (OtherActor.IsA(ABowling) && HomingMovement.GetHomingTargetComponent() == nullptr)
+		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(TargetRC))
 		{
-			SetTarget(OtherActor.GetOwner().RootComponent);
-			OnCollectibleOverlap(OtherActor);
-		}
-		if (OtherActor.IsA(ABowlingPawn))
-		{
-			OnCollectibleCollected(OtherActor);
-			DestroyActor();
+			if (TargetRC.TargetType == ETargetType::Bowling && HomingMovement.GetHomingTargetComponent() == nullptr)
+			{
+				SetTarget(OtherActor.GetOwner().RootComponent);
+				OnCollectibleOverlap(OtherActor);
+			}
+			else if (TargetRC.TargetType == ETargetType::Player)
+			{
+				OnCollectibleCollected(OtherActor);
+				DestroyActor();
+			}
 		}
 	}
 

@@ -24,7 +24,7 @@ class AObstacle : AActor
 
 	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
-	default TargetResponseComponent.TargetType = ETargetType::Player;
+	default TargetResponseComponent.TargetType = ETargetType::Obstacle;
 
 	float OldHP;
 
@@ -38,9 +38,9 @@ class AObstacle : AActor
 		OldHP = AbilitySystem.GetValue(n"HP");
 
 		DamageResponseComponent.Initialize(AbilitySystem);
-		DamageResponseComponent.DOnHitCue.AddUFunction(this, n"TakeHitCue");
-		DamageResponseComponent.DOnDamageCue.AddUFunction(this, n"TakeDamageCue");
-		DamageResponseComponent.DOnDeadCue.AddUFunction(this, n"DeadCue");
+		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
+		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

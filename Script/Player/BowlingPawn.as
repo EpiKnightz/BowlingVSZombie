@@ -51,6 +51,10 @@ class ABowlingPawn : APawn
 	UPROPERTY(DefaultComponent)
 	UStatusResponseComponent StatusResponseComponent;
 
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Player;
+
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext DefaultMappingContext;
 
@@ -155,6 +159,7 @@ class ABowlingPawn : APawn
 
 		StatusResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
+		TargetResponseComponent.Initialize(AbilitySystem);
 		// Temporary
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
