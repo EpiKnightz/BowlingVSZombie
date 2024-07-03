@@ -68,12 +68,6 @@ class ASurvivor : AHumanlite
 			.RegisterAbilities(Data.AbilitiesTags, AbilitySystem);
 	}
 
-	UFUNCTION()
-	private void DeadCue()
-	{
-		ChangeAddedColor(FLinearColor::White);
-	}
-
 	void ResetTransform()
 	{
 		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);
@@ -98,15 +92,14 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	private void OnDragged(AActor OtherActor, FVector Vector)
 	{
-		DynamicMat.SetScalarParameterValue(n"IsAddEnable", 1);
 		SetActorLocation(FVector(Vector.X, Vector.Y, GetActorLocation().Z));
 		if (Vector.Y > SURVIVOR_Y_LIMIT || Vector.Y < -SURVIVOR_Y_LIMIT)
 		{
-			DynamicMat.SetVectorParameterValue(n"AddedColor", FLinearColor::Red);
+			ChangeOverlayColor(FLinearColor::Red);
 		}
 		else
 		{
-			DynamicMat.SetVectorParameterValue(n"AddedColor", FLinearColor::Green);
+			ChangeOverlayColor(FLinearColor::Green);
 		}
 	}
 
@@ -114,7 +107,7 @@ class ASurvivor : AHumanlite
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 50));
-		DynamicMat.SetScalarParameterValue(n"IsAddEnable", 0);
+		ResetOverlayColor();
 		PopUpAnimation();
 		RegisterDragEvents(false);
 	}
@@ -175,18 +168,5 @@ class ASurvivor : AHumanlite
 		Result.XRoll = 0;
 		Result.YPitch = 0;
 		return Result;
-	}
-
-	////////////////////////////////////
-	// Visual Cues
-	////////////////////////////////////
-
-	UFUNCTION()
-	void TakeDamageCue()
-	{
-		ChangeAddedColor(FLinearColor(0.205357, 0, 0, 1));
-		System::SetTimer(this, n"EndHitFlash", 0.25, false);
-		// AnimateInst.Montage_Play(DamageAnim);
-		//  FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 	}
 }

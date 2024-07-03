@@ -136,7 +136,7 @@ class AZombie : AHumanlite
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
 		StatusResponseComponent.Initialize(AbilitySystem);
-		StatusResponseComponent.DChangeAddedColor.BindUFunction(this, n"ChangeAddedColor");
+		StatusResponseComponent.DChangeOverlayColor.BindUFunction(this, n"ChangeOverlayColor");
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
@@ -368,12 +368,12 @@ class AZombie : AHumanlite
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 	}
 
-	UFUNCTION()
-	void TakeDamageCue()
+	void TakeDamageCue() override
 	{
+		Super::TakeDamageCue();
 		StopAttacking();
-		ChangeAddedColor(FLinearColor(0.205357, 0, 0, 1));
-		System::SetTimer(this, n"EndHitFlash", 0.25, false);
+
+		System::SetTimer(this, n"ResetOverlayColor", 0.25, false);
 		System::ClearTimer(this, "EmergeDone");
 		EmergeDone();
 		AnimateInst.Montage_Play(DamageAnim);
@@ -382,9 +382,10 @@ class AZombie : AHumanlite
 		delayMove = DAMAGE_DELAY;
 	}
 
-	UFUNCTION()
-	void DeadCue()
+	void DeadCue() override
 	{
+		Super::DeadCue();
+
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MovementComp.StopSimulating(FHitResult());
 		AnimateInst.StopSlotAnimation();

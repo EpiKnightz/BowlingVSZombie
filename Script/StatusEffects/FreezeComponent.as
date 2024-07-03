@@ -21,11 +21,11 @@ class UFreezeComponent : UStatusComponent
 		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
 		if (IsValid(StatusResponse))
 		{
-			StatusResponse.DChangeAddedColor.ExecuteIfBound(FLinearColor::Blue);
+			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Blue);
 		}
 
-		// @ts-ignore
-		System::ClearTimer(GetOwner(), "EndHitFlash");
+		FString FunctionName = "ResetOverlayColor";
+		System::ClearTimer(GetOwner(), FunctionName);
 	}
 
 	void EndStatusEffect() override
@@ -51,7 +51,7 @@ class UFreezeComponent : UStatusComponent
 		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
 		if (IsValid(StatusResponse))
 		{
-			StatusResponse.DChangeAddedColor.ExecuteIfBound(FLinearColor::Black);
+			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Transparent);
 		}
 
 		Super::EndStatusEffect();

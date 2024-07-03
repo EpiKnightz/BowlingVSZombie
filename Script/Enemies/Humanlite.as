@@ -46,23 +46,34 @@ class AHumanlite : AActor
 		HeadMesh.SetRelativeLocation(FVector(0, 0, 100 - 100 * Scale.Z / BodyZ));
 	}
 
+	////////////////////////////////////
+	// Visual Cues
+	////////////////////////////////////
+
 	UFUNCTION()
-	void EndHitFlash()
+	void TakeDamageCue()
 	{
-		ChangeAddedColor(FLinearColor::Transparent);
+		ChangeOverlayColor(FLinearColor::Red);
+		System::SetTimer(this, n"ResetOverlayColor", 0.25, false);
+		// AnimateInst.Montage_Play(DamageAnim);
+		//  FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 	}
 
 	UFUNCTION()
-	void ChangeAddedColor(FLinearColor Color)
+	void DeadCue()
 	{
-		if (Color.A == 0)
-		{
-			DynamicMat.SetScalarParameterValue(n"IsAddEnable", 0);
-		}
-		else
-		{
-			DynamicMat.SetScalarParameterValue(n"IsAddEnable", 1);
-			DynamicMat.SetVectorParameterValue(n"AddedColor", Color);
-		}
+		ChangeOverlayColor(FLinearColor::Gray);
+	}
+
+	UFUNCTION()
+	void ResetOverlayColor()
+	{
+		ChangeOverlayColor(FLinearColor::Transparent);
+	}
+
+	UFUNCTION()
+	void ChangeOverlayColor(FLinearColor Color)
+	{
+		DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
 	}
 };
