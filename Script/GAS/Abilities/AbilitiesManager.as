@@ -55,6 +55,10 @@ class AAbilitiesManager : AActor
 		{
 			AbilitySystem.RegisterAbility(USlashOnOverlapAbility);
 		}
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_MultiShootOnOverlap))
+		{
+			AbilitySystem.RegisterAbility(UMultiShootOnOverlapAbility);
+		}
 		else
 		{
 			PrintError("RegisterSingleAbility: AbilityID not found");

@@ -11,4 +11,7 @@ struct FAbilityDT
 
 	UPROPERTY()
 	TSubclassOf<AActor> ActorTemplate;
+
+	UPROPERTY()
+	FGameplayTagContainer AbilityTags;
 };

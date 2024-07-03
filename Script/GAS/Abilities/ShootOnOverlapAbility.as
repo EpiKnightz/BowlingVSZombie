@@ -34,7 +34,7 @@ class UShootOnOverlapAbility : UAbility
 	}
 
 	UFUNCTION()
-	private void OnAnimHitNotify()
+	void OnAnimHitNotify()
 	{
 		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
 		if (IsValid(AttackResponse) && AttackResponse.DGetAttackLocation.IsBound() && AttackResponse.DGetAttackRotation.IsBound())
