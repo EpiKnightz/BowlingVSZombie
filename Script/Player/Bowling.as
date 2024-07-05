@@ -74,13 +74,13 @@ class ABowling : AProjectile
 	UFUNCTION()
 	void SetData(FBallDT Data)
 	{
-		ProjectileData = Data;
+		ProjectileDataComp.ProjectileData = Data;
 		BowlingMesh.StaticMesh = Data.BowlingMesh;
 		EffectSystem.Asset = Data.StatusVFX;
 
 		RotatingComp.RotationRate = BASE_ROTATION_RATE * Data.BowlingSpeed;
 
-		SetPiercable(ProjectileData.bIsPiercable);
+		SetPiercable(ProjectileDataComp.ProjectileData.bIsPiercable);
 	}
 
 	UFUNCTION()
@@ -92,11 +92,11 @@ class ABowling : AProjectile
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
+				DamageResponse.TakeHit(ProjectileDataComp.ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileData.EffectTags);
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
 				}
 			}
 		}
@@ -123,7 +123,7 @@ class ABowling : AProjectile
 	UFUNCTION()
 	private void OnInitForceCue()
 	{
-		if (!ProjectileData.EffectTags.IsEmpty())
+		if (!ProjectileDataComp.ProjectileData.EffectTags.IsEmpty())
 		{
 			EffectSystem.Activate();
 		}

@@ -3,6 +3,9 @@ class AProjectile : AActor
 	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent MovementComp;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	FProjectileData ProjectileData;
+	UPROPERTY(DefaultComponent)
+	UProjectileDataComponent ProjectileDataComp;
+
+	// UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	// FProjectileData ProjectileData;
 };

@@ -366,21 +366,21 @@ class AZombie : AHumanlite
 	void TakeHitCue()
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-	}
-
-	void TakeDamageCue() override
-	{
-		Super::TakeDamageCue();
 		StopAttacking();
 
-		System::SetTimer(this, n"ResetOverlayColor", 0.25, false);
 		System::ClearTimer(this, "EmergeDone");
 		EmergeDone();
+
 		AnimateInst.Montage_Play(DamageAnim);
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 		MovementComp.StopMovementImmediately();
 		delayMove = DAMAGE_DELAY;
 	}
+
+	// void TakeDamageCue() override
+	// {
+	// 	Super::TakeDamageCue();
+	// }
 
 	void DeadCue() override
 	{

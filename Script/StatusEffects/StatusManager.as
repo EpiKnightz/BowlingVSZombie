@@ -68,7 +68,7 @@ class AStatusManager : AActor
 			{
 				if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Burn))
 				{
-					statusComp = UDoTComponent::GetOrCreate(Target, EffectTag.TagName);
+					statusComp = UBurningComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
 				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Chill))
 				{

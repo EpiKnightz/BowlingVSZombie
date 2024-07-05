@@ -42,6 +42,12 @@ class UShootOnOverlapAbility : UAbility
 			auto Actor = SpawnActor(AbilityData.ActorTemplate,
 									AttackResponse.DGetAttackLocation.Execute(),
 									AttackResponse.DGetAttackRotation.Execute());
+
+			// Get component from actor? Then transfer the ability tag?
+			// Attack = Attack stats from Survivor * Ability modifier
+			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
+			ProjDataComp.ProjectileData = AbilityData;
+			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(n"Attack");
 		}
 	}
 

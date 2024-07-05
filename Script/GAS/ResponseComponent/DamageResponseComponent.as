@@ -3,6 +3,7 @@ class UDamageResponseComponent : UResponseComponent
 	FFloat2BoolDelegate DOnTakeHit;
 	FFloat2BoolDelegate DOnTakeDamage;
 	FFloat2BoolDelegate DOnHPRemoval;
+	FFloat2BoolDelegate DOnHPPercentRemoval;
 	FFloatDelegate DOnDmgReceivedBoost;
 	FBoolReturnDelegate DOnIsAlive;
 
@@ -17,6 +18,7 @@ class UDamageResponseComponent : UResponseComponent
 		DOnTakeHit.BindUFunction(this, n"TakeHit");
 		DOnTakeDamage.BindUFunction(this, n"TakeDamage");
 		DOnHPRemoval.BindUFunction(this, n"RemoveHP");
+		DOnHPPercentRemoval.BindUFunction(this, n"RemoveHPPercent");
 		DOnIsAlive.BindUFunction(this, n"CheckIsAlive");
 		return true;
 	}
@@ -78,6 +80,13 @@ class UDamageResponseComponent : UResponseComponent
 			}
 		}
 		return false;
+	}
+
+	UFUNCTION()
+	private bool RemoveHPPercent(float Value)
+	{
+		float Amount = AbilitySystem.GetValue(n"MaxHP") * Value;
+		return (RemoveHP(Amount));
 	}
 
 	UFUNCTION()

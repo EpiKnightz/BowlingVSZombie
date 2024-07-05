@@ -22,7 +22,7 @@ class ABullet : AProjectile
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent FiredSFX;
 
-	float Attack = 10;
+	// float Attack = 10;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -34,7 +34,7 @@ class ABullet : AProjectile
 	UFUNCTION()
 	void SetData(FSurvivorDT SurvivorData)
 	{
-		ProjectileData = SurvivorData;
+		ProjectileDataComp.ProjectileData = SurvivorData;
 	}
 
 	UFUNCTION()
@@ -46,12 +46,12 @@ class ABullet : AProjectile
 			if (IsValid(DamageResponse))
 			{
 				// This is because the atk should already been buff/debuff at spawned
-				DamageResponse.TakeHit(Attack);
-				// auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
-				// if (IsValid(StatusResponse))
-				// {
-				// 	StatusResponse.DOnApplyStatus.ExecuteIfBound(BallData.EffectTags);
-				// }
+				DamageResponse.TakeHit(ProjectileDataComp.ProjectileData.Atk);
+				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+				if (IsValid(StatusResponse))
+				{
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+				}
 			}
 		}
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());

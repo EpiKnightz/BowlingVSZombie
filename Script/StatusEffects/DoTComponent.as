@@ -2,7 +2,7 @@ class UDoTComponent : UStatusComponent
 {
 	float Interval;
 	float CurrentInterval = -1;
-	float ParameterPerInterval;
+	float DamagePerInterval;
 
 	UDamageResponseComponent DamageResponse;
 
@@ -10,25 +10,27 @@ class UDoTComponent : UStatusComponent
 
 	void DoInitChildren() override
 	{
-		Interval = FindAttrValue(n"Interval");
-		// ParameterPerInterval = iParam2;
-		// CurrentInterval = Interval;
+		Interval = FindAttrValue(n"DurationAttributeSet.Interval");
+		FindDamageSource();
+		CurrentInterval = Interval;
 
-		// DamageResponse = UDamageResponseComponent::Get(GetOwner());
-		// if (!IsValid(DamageResponse))
-		// {
-		// 	EndStatusEffect();
-		// }
-		// UAbilitySystem abSystem = UAbilitySystem::Get(GetOwner());
-		// if (IsValid(abSystem))
-		// {
-		// 	abSystem.AddGameplayTag(FGameplayTag::RequestGameplayTag(n"StatusEffect.Negative.Burn"));
-		// }
+		DamageResponse = UDamageResponseComponent::Get(GetOwner());
+		if (!IsValid(DamageResponse)
+			|| Interval == AbilitySystem::INVALID_VALUE
+			|| DamagePerInterval == AbilitySystem::INVALID_VALUE)
+		{
+			EndStatusEffect();
+		}
+	}
+
+	void FindDamageSource()
+	{
+		DamagePerInterval = FindAttrValue(n"AttackAttrSet.Attack");
 	}
 
 	bool ActionPerInterval()
 	{
-		return DamageResponse.DOnTakeDamage.ExecuteIfBound(ParameterPerInterval);
+		return DamageResponse.DOnTakeDamage.ExecuteIfBound(DamagePerInterval);
 	}
 
 	UFUNCTION(BlueprintOverride)

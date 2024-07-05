@@ -30,4 +30,15 @@ struct FProjectileData
 			GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Negative));
 		return this;
 	}
+
+	FProjectileData& opAssign(FAbilityDT Other)
+	{
+		if (Other.AbilityTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
+		{
+			bIsPiercable = true;
+		}
+		EffectTags = Other.AbilityTags.Filter(
+			GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Negative));
+		return this;
+	}
 }
