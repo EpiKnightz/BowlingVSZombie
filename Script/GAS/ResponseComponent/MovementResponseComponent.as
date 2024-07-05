@@ -89,6 +89,7 @@ class UMovementResponseComponent : UResponseComponent
 		AbilitySystem.RemoveModifier(n"Accel", Object, ID);
 	}
 
+	// Called when being bounced by another actor.
 	UFUNCTION()
 	private void AddForce(FVector VelocityVector)
 	{
@@ -99,6 +100,7 @@ class UMovementResponseComponent : UResponseComponent
 		}
 	}
 
+	// Happen natually when the projectile hits something.
 	UFUNCTION()
 	void ActorBounce(const FHitResult&in Hit, const FVector&in ImpactVelocity)
 	{

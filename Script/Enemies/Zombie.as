@@ -378,7 +378,7 @@ class AZombie : AHumanlite
 		EmergeDone();
 		AnimateInst.Montage_Play(DamageAnim);
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
-		// MovementComp.StopMovementImmediately();
+		MovementComp.StopMovementImmediately();
 		delayMove = DAMAGE_DELAY;
 	}
 
@@ -426,7 +426,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void OnPreAddForceCue(FVector Value)
 	{
-		MovementComp.StopMovementImmediately();
+		// MovementComp.StopMovementImmediately();
 		MovementResponseComponent.SetIsAccelable(false);
 	}
 

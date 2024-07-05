@@ -7,7 +7,10 @@ class UTargetResponseComponent : UResponseComponent
 	{
 		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
 		// If the target is untargetable, or the target type matches the target type of the response component, return false.
-		if (!IsValid(TargetRC) || TargetRC.TargetType == ETargetType::Untargetable || TargetRC.TargetType == TargetType || TargetRC.TargetType == ETargetType::Player)
+		if (!IsValid(TargetRC)
+			|| TargetRC.TargetType == ETargetType::Untargetable
+			|| TargetRC.TargetType == TargetType
+			|| TargetRC.TargetType == ETargetType::Player)
 		{
 			return false;
 		}

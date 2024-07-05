@@ -21,11 +21,14 @@ class ASurvivor : AHumanlite
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
 
+	// Static mesh component
 	UWeapon Weapon;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
@@ -107,6 +110,7 @@ class ASurvivor : AHumanlite
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 50));
+		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ResetOverlayColor();
 		PopUpAnimation();
 		RegisterDragEvents(false);

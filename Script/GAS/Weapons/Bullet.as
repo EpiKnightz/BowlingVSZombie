@@ -1,4 +1,4 @@
-class ABullet : AActor
+class ABullet : AProjectile
 {
 	UPROPERTY(RootComponent, DefaultComponent)
 	UCapsuleComponent Collider;
@@ -7,18 +7,22 @@ class ABullet : AActor
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent BulletSystem;
 
+	default MovementComp.InitialSpeed = 1500;
+	default MovementComp.MaxSpeed = 1500;
+	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.Velocity = FVector(0, 1, 0);
+
 	UPROPERTY(DefaultComponent)
-	UProjectileMovementComponent ProjectileMovement;
-	default ProjectileMovement.InitialSpeed = 1500;
-	default ProjectileMovement.MaxSpeed = 1500;
-	default ProjectileMovement.ProjectileGravityScale = 0;
-	default ProjectileMovement.Velocity = FVector(0, 1, 0);
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Untargetable;
 
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem HitVFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent FiredSFX;
+
+	float Attack = 10;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -28,8 +32,28 @@ class ABullet : AActor
 	}
 
 	UFUNCTION()
+	void SetData(FSurvivorDT SurvivorData)
+	{
+		ProjectileData = SurvivorData;
+	}
+
+	UFUNCTION()
 	private void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
+		if (TargetResponseComponent.IsTargetable(OtherActor))
+		{
+			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
+			if (IsValid(DamageResponse))
+			{
+				// This is because the atk should already been buff/debuff at spawned
+				DamageResponse.TakeHit(Attack);
+				// auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+				// if (IsValid(StatusResponse))
+				// {
+				// 	StatusResponse.DOnApplyStatus.ExecuteIfBound(BallData.EffectTags);
+				// }
+			}
+		}
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
 		DestroyActor();
 	}

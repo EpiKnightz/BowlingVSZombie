@@ -10,16 +10,16 @@ struct FBallDT
 	UStaticMesh BowlingMesh;
 
 	UPROPERTY()
-	float Atk = 50;
+	float32 Atk = 50;
 
 	UPROPERTY()
-	float Cooldown = 1.5;
+	float32 Cooldown = 1.5;
 
 	UPROPERTY()
-	float BowlingSpeed = 1000;
+	float32 BowlingSpeed = 1000;
 
 	UPROPERTY()
-	float Bounciness = 0.8;
+	float32 Bounciness = 0.8;
 
 	UPROPERTY()
 	bool bIsPiercable = false;

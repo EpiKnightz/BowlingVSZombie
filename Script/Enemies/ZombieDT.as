@@ -18,17 +18,17 @@ struct FZombieDT
 	FText Description = FText::FromString("Zombie");
 
 	UPROPERTY()
-	int HP = 100;
+	float32 HP = 100;
 
 	// Atk is amount of power dealing to obstacles
 	UPROPERTY()
-	int Atk = 10;
+	float32 Atk = 10;
 
 	UPROPERTY()
-	int Speed = 100;
+	float32 Speed = 100;
 
 	UPROPERTY()
-	int Accel = 200;
+	float32 Accel = 200;
 
 	UPROPERTY()
 	float32 AttackCooldown = 1.f;

@@ -3,7 +3,7 @@ const float BOUNCE_ROTATION_RATE_MULTIPLIER = 0.7;
 const float ADD_FORCE_ROTATION_RATE_MULTIPLIER = 0.5;
 const float DEACCEL_ROTATION_RATE_MULTIPLIER = 0.975;
 
-class ABowling : AActor
+class ABowling : AProjectile
 {
 	UPROPERTY(DefaultComponent, RootComponent)
 	USphereComponent Collider;
@@ -22,8 +22,6 @@ class ABowling : AActor
 	UPROPERTY(BlueprintReadOnly)
 	UMaterialInstanceDynamic MaterialInstance;
 
-	UPROPERTY(DefaultComponent)
-	UProjectileMovementComponent MovementComp;
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.AutoActivate = false;
@@ -45,9 +43,6 @@ class ABowling : AActor
 	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Bowling;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	FBallDT BallData;
 
 	FActorEvent EOnHit;
 
@@ -79,13 +74,13 @@ class ABowling : AActor
 	UFUNCTION()
 	void SetData(FBallDT Data)
 	{
-		BallData = Data;
-		BowlingMesh.StaticMesh = BallData.BowlingMesh;
+		ProjectileData = Data;
+		BowlingMesh.StaticMesh = Data.BowlingMesh;
 		EffectSystem.Asset = Data.StatusVFX;
 
-		RotatingComp.RotationRate = BASE_ROTATION_RATE * BallData.BowlingSpeed;
+		RotatingComp.RotationRate = BASE_ROTATION_RATE * Data.BowlingSpeed;
 
-		SetPiercable(BallData.bIsPiercable);
+		SetPiercable(ProjectileData.bIsPiercable);
 	}
 
 	UFUNCTION()
@@ -97,11 +92,11 @@ class ABowling : AActor
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(BallData.Atk); // This is because the atk should already been buff/debuff at spawned
+				DamageResponse.TakeHit(ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(BallData.EffectTags);
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileData.EffectTags);
 				}
 			}
 		}
@@ -128,7 +123,7 @@ class ABowling : AActor
 	UFUNCTION()
 	private void OnInitForceCue()
 	{
-		if (!BallData.EffectTags.IsEmpty())
+		if (!ProjectileData.EffectTags.IsEmpty())
 		{
 			EffectSystem.Activate();
 		}

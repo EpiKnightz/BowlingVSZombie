@@ -85,6 +85,12 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	FGameplayTagContainer Filter(FGameplayTagContainer Tags)
+	{
+		return ActorTags.Filter(Tags);
+	}
+
+	UFUNCTION()
 	void AddModifier(FName AttrName, UModifier Modifier)
 	{
 		int i = GetSetIdx(AttrName);
@@ -159,7 +165,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	float GetValue(FName AttrName, bool bForceRecalculation = false)
+	float32 GetValue(FName AttrName, bool bForceRecalculation = false)
 	{
 		float32 Result = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
@@ -179,7 +185,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	float GetPercentageDiff(FName AttrName)
+	float32 GetPercentageDiff(FName AttrName)
 	{
 		float32 Result1 = AbilitySystem::INVALID_VALUE;
 		float32 Result2 = AbilitySystem::INVALID_VALUE;
@@ -197,7 +203,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	float GetFlatDiff(FName AttrName)
+	float32 GetFlatDiff(FName AttrName)
 	{
 		float32 Result1 = AbilitySystem::INVALID_VALUE;
 		float32 Result2 = AbilitySystem::INVALID_VALUE;
@@ -215,7 +221,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	private float GetBaseValue(FName AttrName)
+	private float32 GetBaseValue(FName AttrName)
 	{
 		float32 Result = AbilitySystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);

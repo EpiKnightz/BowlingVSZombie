@@ -39,7 +39,9 @@ class UShootOnOverlapAbility : UAbility
 		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
 		if (IsValid(AttackResponse) && AttackResponse.DGetAttackLocation.IsBound() && AttackResponse.DGetAttackRotation.IsBound())
 		{
-			SpawnActor(AbilityData.ActorTemplate, AttackResponse.DGetAttackLocation.Execute(), AttackResponse.DGetAttackRotation.Execute());
+			auto Actor = SpawnActor(AbilityData.ActorTemplate,
+									AttackResponse.DGetAttackLocation.Execute(),
+									AttackResponse.DGetAttackRotation.Execute());
 		}
 	}
 

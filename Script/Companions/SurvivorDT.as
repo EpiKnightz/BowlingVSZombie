@@ -3,24 +3,26 @@ struct FSurvivorDT
 	UPROPERTY()
 	FGameplayTag SurvivorID;
 
+	// FString is for friendly name
 	UPROPERTY()
 	FString Name = "SWAT";
 
+	// FText is for localization, for user facing classes
 	UPROPERTY()
 	FText Description = FText::FromString("Description");
 
 	UPROPERTY()
-	int HP = 100;
+	float32 HP = 100;
 
 	// Atk is amount of power dealing to obstacles
 	UPROPERTY()
-	int Atk = 10;
+	float32 Atk = 10;
 
 	UPROPERTY()
-	int Speed = 100;
+	float32 Speed = 0;
 
 	UPROPERTY()
-	int Accel = 200;
+	float32 Accel = 0;
 
 	UPROPERTY()
 	float32 AttackCooldown = 1.f;
@@ -51,4 +53,7 @@ struct FSurvivorDT
 
 	UPROPERTY()
 	FGameplayTag WeaponTag;
+
+	UPROPERTY()
+	FGameplayTagContainer EffectTags;
 }
