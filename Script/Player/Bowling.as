@@ -92,7 +92,7 @@ class ABowling : AProjectile
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(ProjectileDataComp.ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
+				DamageResponse.TakeHit(TargetResponseComponent.IsSameTeam(OtherActor) ? 0 : ProjectileDataComp.ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
