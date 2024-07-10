@@ -1,7 +1,7 @@
 class UStatusResponseComponent : UResponseComponent
 {
 	FGameplayTagDelegate DOnApplyStatus;
-	FColorDelegate DChangeOverlayColor;
+	FColorBoolDelegate DChangeOverlayColor;
 
 	private AStatusManager StatusManager;
 

@@ -21,11 +21,11 @@ class UFreezeComponent : UStatusComponent
 		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
 		if (IsValid(StatusResponse))
 		{
-			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Blue);
+			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Blue, true);
 		}
 
-		FString FunctionName = "ResetOverlayColor";
-		System::ClearTimer(GetOwner(), FunctionName);
+		// FString FunctionName = "ResetOverlayColor";
+		// System::ClearTimer(GetOwner(), FunctionName);
 	}
 
 	void EndStatusEffect() override
@@ -42,16 +42,16 @@ class UFreezeComponent : UStatusComponent
 			AttackResponse.DOnRemoveAttackCooldownModifier.ExecuteIfBound(this, ModID);
 		}
 
+		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
+		if (IsValid(StatusResponse))
+		{
+			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Transparent, true);
+		}
+
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
 			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
-		}
-
-		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
-		if (IsValid(StatusResponse))
-		{
-			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Transparent);
 		}
 
 		Super::EndStatusEffect();
