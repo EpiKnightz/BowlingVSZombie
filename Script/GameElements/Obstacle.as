@@ -104,13 +104,13 @@ class AObstacle : AActor
 			FloatTween.ApplyEasing.Clear();
 		}
 		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -120.f, 1.5f, EFCEase::InQuart);
-		FloatTween.ApplyEasing.AddUFunction(this, n"GoingDown");
+		FloatTween.ApplyEasing.AddUFunction(this, n"ChangeZLocation");
 		FloatTween.OnComplete.AddUFunction(this, n"Dead");
 		FloatTween.Start();
 	}
 
 	UFUNCTION()
-	void GoingDown(float32 Change)
+	void ChangeZLocation(float32 Change)
 	{
 		SetActorLocation(FVector(OriginalLoc.X, OriginalLoc.Y, OriginalLoc.Z + Change));
 	}

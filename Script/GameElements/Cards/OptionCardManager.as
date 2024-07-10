@@ -46,6 +46,6 @@ class AOptionCardManager : AActor
 		}
 
 		CurrentID = 0;
-		System::SetTimer(this, n"SpawnCard", 10, false);
+		System::SetTimer(this, n"SpawnCard", 15, false);
 	}
 };

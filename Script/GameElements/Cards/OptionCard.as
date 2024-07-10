@@ -49,7 +49,7 @@ class AOptionCard : AActor
 			SpawnedCompanion.SetActorLocationAndRotation(CompanionTransform.Location, CompanionTransform.Rotation.Rotator());
 			// TODO move this into a component to avoid casting
 			SpawnedCompanion.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
-			SpawnedCompanion.SetActorRelativeScale3D(CompanionTransform.Scale3D);
+			SpawnedCompanion.SetTempScale(CompanionTransform.Scale3D);
 
 			UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[ID], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
 			TemplSequActor.SetBinding(this);

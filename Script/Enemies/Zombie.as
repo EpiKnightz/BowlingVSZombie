@@ -66,9 +66,6 @@ class AZombie : AHumanlite
 
 	TArray<UAnimMontage> AttackAnim;
 
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimMontage> DeadAnims;
-
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent HitSFX;
 
@@ -95,7 +92,6 @@ class AZombie : AHumanlite
 
 	// float speedModifier = 1;
 	float delayMove = 2.f;
-	int currentDeadAnim = 0;
 	bool bIsAttacking = false;
 
 	UPROPERTY(DefaultComponent)
@@ -167,20 +163,6 @@ class AZombie : AHumanlite
 		delayMove -= DeltaSeconds;
 		if (delayMove <= 0)
 		{
-			if (AnimateInst.AnimMoveSpeed == 0 && !bIsAttacking)
-			{
-				if (IsValid(Target))
-				{
-					StartAttacking();
-				}
-				else
-				{
-					if (!CheckForNewTarget())
-					{
-						RestartMove();
-					}
-				}
-			}
 
 			FVector loc = GetActorLocation();
 			if (DamageResponseComponent.bIsDead)
@@ -188,6 +170,21 @@ class AZombie : AHumanlite
 				// Fall down animation should run at constant speed
 				loc.Z -= DEAD_FALL_SPEED * DeltaSeconds;
 				SetActorLocation(loc);
+			}
+			else if (AnimateInst.AnimMoveSpeed == 0 && !bIsAttacking)
+			{
+				if (IsValid(Target))
+				{
+					StartAttacking();
+				}
+				else
+				{
+					// Start Attacking was called if there is a new target
+					if (!CheckForNewTarget())
+					{
+						RestartMove();
+					}
+				}
 			}
 
 			if (loc.Z <= ENDSCREEN_Z_LIMIT
@@ -205,22 +202,6 @@ class AZombie : AHumanlite
 		else if (AnimateInst.AnimMoveSpeed > 0)
 		{
 			AnimateInst.SetMoveSpeed(0);
-		}
-	}
-
-	void SetSkeletonMesh(USkeletalMesh InHeadMesh, USkeletalMesh InBodyMesh, USkeletalMesh InAccMesh)
-	{
-		if (IsValid(InHeadMesh))
-		{
-			HeadMesh.SkeletalMeshAsset = InHeadMesh;
-		}
-		if (IsValid(InBodyMesh))
-		{
-			BodyMesh.SkeletalMeshAsset = InBodyMesh;
-		}
-		if (IsValid(InAccMesh))
-		{
-			AccessoryMesh.SkeletalMeshAsset = InAccMesh;
 		}
 	}
 
@@ -355,7 +336,8 @@ class AZombie : AHumanlite
 
 		SetMoveSpeed(DataRow.Speed);
 
-		SetActorScale3D(DataRow.Scale);
+		SetBodyScale(DataRow.BodyScale);
+		SetHeadScale(DataRow.HeadScale);
 		CoinValue = DataRow.CoinDropAmount;
 	}
 
@@ -385,13 +367,9 @@ class AZombie : AHumanlite
 	void DeadCue() override
 	{
 		Super::DeadCue();
+		StatusResponseComponent.DChangeOverlayColor.Clear();
 
-		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MovementComp.StopSimulating(FHitResult());
-		AnimateInst.StopSlotAnimation();
-		currentDeadAnim = Math::RandRange(0, DeadAnims.Num() - 1);
-		AnimateInst.Montage_Play(DeadAnims[currentDeadAnim], 1);
-		delayMove = DeadAnims[currentDeadAnim].GetPlayLength();
 		DOnZombDie.ExecuteIfBound(GetName());
 
 		Niagara::SpawnSystemAtLocation(DeadVFX, GetActorLocation() + FVector(0, 0, 220)); // TODO: Change this with HeadMesh Location, also need to consider the scale
@@ -399,6 +377,13 @@ class AZombie : AHumanlite
 
 		ACoin SpawnedActor = Cast<ACoin>(SpawnActor(CoinTemplate, GetActorLocation(), GetActorRotation()));
 		SpawnedActor.ExpectValueToCoinType(CoinValue);
+	}
+
+	void PlayDeadAnim(int AnimIndex) override
+	{
+		AnimateInst.StopSlotAnimation();
+		AnimateInst.Montage_Play(DeadAnims[AnimIndex], 1);
+		delayMove = DeadAnims[AnimIndex].GetPlayLength();
 	}
 
 	void SetAttackCooldown(float Value)
@@ -422,6 +407,7 @@ class AZombie : AHumanlite
 		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
 		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
 	}
+
 	// Called when being bounced/added force by something else
 	UFUNCTION()
 	private void OnPreAddForceCue(FVector Value)

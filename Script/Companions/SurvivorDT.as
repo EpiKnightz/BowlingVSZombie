@@ -31,13 +31,13 @@ struct FSurvivorDT
 	float32 Bounciness = 0.05;
 
 	UPROPERTY()
-	USkeletalMesh HeadMesh;
-
-	UPROPERTY()
 	USkeletalMesh BodyMesh;
 
 	UPROPERTY()
-	USkeletalMesh AccessoryMesh;
+	UStaticMesh HeadMesh;
+
+	UPROPERTY()
+	UStaticMesh AccessoryMesh;
 
 	UPROPERTY()
 	FVector HeadScale = FVector::OneVector;

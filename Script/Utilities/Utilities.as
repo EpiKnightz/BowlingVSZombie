@@ -19,6 +19,7 @@ delegate FRotator FRotatorReturnDelegate();
 delegate FVector FVectorReturnDelegate();
 delegate FVector FName2VectorDelegate(FName Name);
 delegate void FColorDelegate(FLinearColor Value);
+delegate void FColorBoolDelegate(FLinearColor Value, bool Bool);
 
 event void FVectorEvent(FVector Value);
 event void FVectorRotatorEvent(FVector Value, FRotator Rotator);

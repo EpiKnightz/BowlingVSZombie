@@ -37,19 +37,25 @@ struct FZombieDT
 	float32 Bounciness = 0.05;
 
 	UPROPERTY()
-	FVector Scale = FVector::OneVector;
+	FVector HeadScale = FVector::OneVector;
+
+	UPROPERTY()
+	FVector BodyScale = FVector::OneVector;
+
+	UPROPERTY()
+	FVector WeaponScale = FVector::OneVector;
 
 	UPROPERTY()
 	int CoinDropAmount = 1;
 
 	UPROPERTY()
-	TArray<USkeletalMesh> HeadMeshList;
-
-	UPROPERTY()
 	TArray<USkeletalMesh> BodyMeshList; // List of possible models for the zombie
 
 	UPROPERTY()
-	TArray<USkeletalMesh> AccessoryMeshList;
+	TArray<UStaticMesh> HeadMeshList;
+
+	UPROPERTY()
+	TArray<UStaticMesh> AccessoryMeshList;
 
 	UPROPERTY()
 	ESocketType RightSocketType;

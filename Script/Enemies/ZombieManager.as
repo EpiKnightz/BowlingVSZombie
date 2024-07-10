@@ -120,16 +120,16 @@ class AZombieManager : AActor
 
 		FVector SpawnLocation = SpawnPosition.Location;
 		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
-		SpawnLocation.Z *= Row.Scale.Z;
+		SpawnLocation.Z *= Row.BodyScale.Z;
 
 		AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
 		SpawnedActor.SetData(Row);
 
-		USkeletalMesh HeadMesh = Row.HeadMeshList.Num() > 0 ? Row.HeadMeshList[Math::RandRange(0, Row.HeadMeshList.Num() - 1)] : nullptr;
 		USkeletalMesh BodyMesh = Row.BodyMeshList.Num() > 0 ? Row.BodyMeshList[Math::RandRange(0, Row.BodyMeshList.Num() - 1)] : nullptr;
-		USkeletalMesh AccessoryMesh = Row.AccessoryMeshList.Num() > 0 ? Row.AccessoryMeshList[Math::RandRange(0, Row.AccessoryMeshList.Num() - 1)] : nullptr;
+		UStaticMesh HeadMesh = Row.HeadMeshList.Num() > 0 ? Row.HeadMeshList[Math::RandRange(0, Row.HeadMeshList.Num() - 1)] : nullptr;
+		UStaticMesh AccessoryMesh = Row.AccessoryMeshList.Num() > 0 ? Row.AccessoryMeshList[Math::RandRange(0, Row.AccessoryMeshList.Num() - 1)] : nullptr;
 
-		SpawnedActor.SetSkeletonMesh(HeadMesh, BodyMesh, AccessoryMesh);
+		SpawnedActor.SetMeshes(BodyMesh, HeadMesh, AccessoryMesh);
 
 		// Set weapon
 		UStaticMesh RightHand = nullptr, LeftHand = nullptr;

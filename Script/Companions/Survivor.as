@@ -6,7 +6,6 @@ class ASurvivor : AHumanlite
 	default BodyMesh.SetRelativeLocationAndRotation(FVector(0, 0, -50), FRotator(0, 90, 0));
 
 	UCustomAnimInst AnimateInst;
-	UFCTweenBPActionFloat FloatTween;
 
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
@@ -49,9 +48,7 @@ class ASurvivor : AHumanlite
 			WeaponsManager.CreateWeapon(Data.WeaponTag, this, Weapon);
 		}
 
-		HeadMesh.SetSkeletalMeshAsset(Data.HeadMesh);
-		BodyMesh.SetSkeletalMeshAsset(Data.BodyMesh);
-		AccessoryMesh.SetSkeletalMeshAsset(Data.AccessoryMesh);
+		SetMeshes(Data.BodyMesh, Data.HeadMesh, Data.AccessoryMesh);
 
 		SetBodyScale(Data.BodyScale);
 		SetHeadScale(Data.HeadScale);
@@ -74,7 +71,7 @@ class ASurvivor : AHumanlite
 	void ResetTransform()
 	{
 		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);
-		SetActorScale3D(FVector::OneVector);
+		ResetTempScale();
 	}
 
 	void RegisterDragEvents(bool bEnabled = true)
@@ -109,7 +106,7 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
-		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 50));
+		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 60));
 		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ResetOverlayColor();
 		PopUpAnimation();
@@ -132,7 +129,7 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	void SetScaleFloat(float32 Scale)
 	{
-		SetActorScale3D(FVector(Scale));
+		BodyMesh.SetRelativeScale3D(FVector((Scale)));
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -147,11 +144,49 @@ class ASurvivor : AHumanlite
 		AttackResponseComponent.EOnBeginOverlapEvent.Broadcast(OtherActor);
 	}
 
+	////////////////////////////
+	// Visual Cues
+	////////////////////////////
+
 	UFUNCTION()
 	void PlayAttackAnim()
 	{
-		AnimateInst.Montage_Play(Weapon.AttackAnim);
+		if (!DamageResponseComponent.bIsDead)
+		{
+			AnimateInst.Montage_Play(Weapon.AttackAnim);
+		}
 	}
+
+	void PlayDeadAnim(int AnimIndex) override
+	{
+		AnimateInst.Montage_Stop(0, AnimateInst.GetCurrentActiveMontage());
+		AnimateInst.StopSlotAnimation();
+		System::SetTimer(this, n"GoingDown", AnimateInst.Montage_Play(DeadAnims[AnimIndex], 1), false);
+	}
+
+	UFUNCTION()
+	private void GoingDown()
+	{
+		if (IsValid(FloatTween) && FloatTween.IsValid())
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -80.f, 2.5f, EFCEase::Linear);
+		FloatTween.ApplyEasing.AddUFunction(this, n"ChangeZLocation");
+		FloatTween.OnComplete.AddUFunction(this, n"K2_DestroyActor");
+		FloatTween.Start();
+	}
+
+	UFUNCTION()
+	void ChangeZLocation(float32 ZChange)
+	{
+		SetActorLocation(GetActorLocation() + FVector(0, 0, ZChange));
+	}
+
+	////////////////////////////
+	// Utilities
+	////////////////////////////
 
 	UFUNCTION()
 	FVector GetSocketLocation(FName InSocketName)
