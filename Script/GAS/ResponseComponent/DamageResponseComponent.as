@@ -45,19 +45,22 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	private bool TakeDamage(float Damage)
 	{
-		AbilitySystem.SetBaseValue(n"Damage", Damage);
-		// AbilitySystem.Calculate(n"Damage");
-		if (CheckIsAlive())
+		if (!bIsDead)
 		{
-			EOnDamageCue.Broadcast();
-			return true;
+			AbilitySystem.SetBaseValue(n"Damage", Damage);
+			// AbilitySystem.Calculate(n"Damage");
+			if (CheckIsAlive())
+			{
+				EOnDamageCue.Broadcast();
+				return true;
+			}
+			else
+			{
+				HandleDeadLogic();
+				return false;
+			}
 		}
-		else
-		{
-			bIsDead = true;
-			EOnDeadCue.Broadcast();
-			return false;
-		}
+		return false;
 	}
 
 	UFUNCTION()
@@ -74,8 +77,7 @@ class UDamageResponseComponent : UResponseComponent
 			}
 			else
 			{
-				bIsDead = true;
-				EOnDeadCue.Broadcast();
+				HandleDeadLogic();
 				return false;
 			}
 		}
@@ -100,5 +102,17 @@ class UDamageResponseComponent : UResponseComponent
 		{
 			return true;
 		}
+	}
+
+	UFUNCTION()
+	void HandleDeadLogic()
+	{
+		bIsDead = true;
+		DOnTakeHit.Clear();
+		DOnTakeDamage.Clear();
+		DOnHPRemoval.Clear();
+		DOnHPPercentRemoval.Clear();
+		EOnDeadCue.Broadcast();
+		EOnDeadCue.Clear();
 	}
 };
