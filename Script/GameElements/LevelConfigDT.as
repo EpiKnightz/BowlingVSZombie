@@ -14,4 +14,10 @@ struct FLevelConfigsDT
 
 	UPROPERTY()
 	FItemConfigsDT ItemConfigsDT;
+
+	UPROPERTY()
+	FItemConfigsDT SurvivorConfigsDT;
+
+	UPROPERTY()
+	FItemConfigsDT RewardConfigsDT;
 }

@@ -6,6 +6,7 @@ class UModifier
 	UPROPERTY()
 	private int Priority = 0;
 
+	UPROPERTY()
 	TArray<float32> Params;
 
 	void Calculate(const ULiteAbilitySystem& AbilitySystem, float32& SourceValue)
