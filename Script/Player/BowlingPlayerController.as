@@ -16,4 +16,15 @@ class ABowlingPlayerController : APlayerController
 		}
 		bShowMouseCursor = true;
 	}
+
+	UFUNCTION()
+	void ClearMappingContext()
+	{
+		auto Subsystem = UEnhancedInputLocalPlayerSubsystem::Get(GetLocalPlayer());
+		check(Subsystem != nullptr);
+		if (Subsystem != nullptr)
+		{
+			Subsystem.RemoveMappingContext(InputMappingContext, FModifyContextOptions());
+		}
+	}
 }

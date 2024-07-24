@@ -12,6 +12,14 @@ class UShootAtTargetAbility : UAbility
 			{
 				AttackResponse.EOnBeginOverlapEvent.AddUFunction(this, n"TriggerOnOverlap");
 				AttackResponse.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
+
+				//  Allow the bowling to pass through if using this ability
+				auto Collider = UCapsuleComponent::Get(AbilitySystem.GetOwner());
+				if (IsValid(Collider))
+				{
+					Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Overlap);
+				}
+
 				return true;
 			}
 		}

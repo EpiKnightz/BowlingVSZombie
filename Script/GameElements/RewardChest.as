@@ -1,4 +1,4 @@
-class ARewardChest : ACollectible
+class ARewardChest : ACollectable
 {
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	USkeletalMeshComponent RewardBody;
@@ -25,16 +25,26 @@ class ARewardChest : ACollectible
 
 	void SetTarget(USceneComponent NewTarget) override
 	{
-		Print("" + NewTarget.GetName() + " " + NewTarget.GetWorldLocation());
-		Super::SetTarget(NewTarget);
+		ACollectable::SetTarget(NewTarget);
 	}
 
 	void OnCollectibleCollected(AActor OtherActor) override
 	{
 		HomingMovement.MaxSpeed = 150;
 		HomingMovement.HomingAccelerationMagnitude = 450;
+		RotateMovement.RotationRate = FRotator(0, 90, 0);
 		RewardBody.Play(false);
-		// DOnRewardCollected.ExecuteIfBound();
+		System::SetTimer(this, n"OnRewardOpen", 2, false);
+	}
+
+	UFUNCTION()
+	private void OnRewardOpen()
+	{
+		HomingMovement.MaxSpeed = 150;
+		HomingMovement.HomingAccelerationMagnitude = 300;
+		RotateMovement.RotationRate = FRotator(0, 0, 0);
+		SetActorRotation(FRotator(0, 90, 0));
+		DOnRewardCollected.ExecuteIfBound();
 	}
 
 	// Leave empty so don't destroy when collected

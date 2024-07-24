@@ -1,9 +1,14 @@
 const float SURVIVOR_Y_LIMIT = 400;
+const float SURVIVOR_MAX_X = 685;
+const float SURVIVOR_MIN_X = -1200;
 class ASurvivor : AHumanlite
 {
 	default Collider.SetCollisionProfileName(n"Companion");
 	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
 	default BodyMesh.SetRelativeLocationAndRotation(FVector(0, 0, -50), FRotator(0, 90, 0));
+
+	// Static mesh component
+	UWeapon Weapon;
 
 	UCustomAnimInst AnimateInst;
 
@@ -20,8 +25,18 @@ class ASurvivor : AHumanlite
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
 
-	// Static mesh component
-	UWeapon Weapon;
+	UPROPERTY(DefaultComponent)
+	UMovementResponseComponent MovementResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UProjectileMovementComponent MovementComp;
+	default MovementComp.bShouldBounce = true;
+	default MovementComp.ProjectileGravityScale = 0;
+	default MovementComp.bConstrainToPlane = true;
+	default MovementComp.PlaneConstraintAxisSetting = EPlaneConstraintAxisSetting::UseGlobalPhysicsSetting;
+	default MovementComp.PlaneConstraintNormal = FVector(0, 0, 1);
+	default MovementComp.AutoActivate = true;
+	default MovementComp.Bounciness = 0.8;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -32,11 +47,23 @@ class ASurvivor : AHumanlite
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
+		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
+		AbilitySystem.SetBaseValue(n"Accel", 0);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		TargetResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.Initialize(AbilitySystem);
-		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.StopLifeTime = 0;
+		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"OnPostAddForce");
+		// MovementResponseComponent.InitForce(FVector::OneVector, 1);
+		//  Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+	}
+
+	UFUNCTION()
+	private void OnPostAddForce()
+	{
+		Print("");
 	}
 
 	UFUNCTION()
@@ -79,6 +106,8 @@ class ASurvivor : AHumanlite
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 		if (bEnabled)
 		{
+			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
 			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
 		}
@@ -86,6 +115,7 @@ class ASurvivor : AHumanlite
 		{
 			Pawn.EOnTouchHold.UnbindObject(this);
 			Pawn.EOnTouchReleased.UnbindObject(this);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
 		}
 	}
 
@@ -93,7 +123,10 @@ class ASurvivor : AHumanlite
 	private void OnDragged(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(Vector.X, Vector.Y, GetActorLocation().Z));
-		if (Vector.Y > SURVIVOR_Y_LIMIT || Vector.Y < -SURVIVOR_Y_LIMIT)
+		if (Vector.Y > SURVIVOR_Y_LIMIT
+			|| Vector.Y < -SURVIVOR_Y_LIMIT
+			|| Vector.X > SURVIVOR_MAX_X
+			|| Vector.X < SURVIVOR_MIN_X)
 		{
 			ChangeOverlayColor(FLinearColor::Red);
 		}
@@ -106,7 +139,10 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
-		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 60));
+		SetActorLocation(FVector(
+			Math::Clamp(GetActorLocation().X, SURVIVOR_MIN_X, SURVIVOR_MAX_X),
+			Math::Clamp(GetActorLocation().Y, -SURVIVOR_Y_LIMIT, SURVIVOR_Y_LIMIT),
+			60));
 		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ResetOverlayColor();
 		PopUpAnimation();
@@ -172,16 +208,16 @@ class ASurvivor : AHumanlite
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(0, -80.f, 2.5f, EFCEase::Linear);
-		FloatTween.ApplyEasing.AddUFunction(this, n"ChangeZLocation");
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(GetActorLocation().Z, -80.f, 2.5f, EFCEase::Linear);
+		FloatTween.ApplyEasing.AddUFunction(this, n"SetZLocation");
 		FloatTween.OnComplete.AddUFunction(this, n"K2_DestroyActor");
 		FloatTween.Start();
 	}
 
 	UFUNCTION()
-	void ChangeZLocation(float32 ZChange)
+	void SetZLocation(float32 ZChange)
 	{
-		SetActorLocation(GetActorLocation() + FVector(0, 0, ZChange));
+		SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, ZChange));
 	}
 
 	////////////////////////////

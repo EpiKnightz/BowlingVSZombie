@@ -9,7 +9,7 @@ const float BRONZE_COIN_VALUE = 1;
 const float SILVER_COIN_VALUE = 5;
 const float GOLD_COIN_VALUE = 10;
 
-class ACoin : ACollectible
+class ACoin : ACollectable
 {
 	default DropComponent.StartHeight = 150;
 	default DropComponent.DropDuration = 2;
@@ -28,7 +28,7 @@ class ACoin : ACollectible
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		Super::BeginPlay();
+		ACollectable::BeginPlay();
 		ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
 		DOnCoinGet.BindUFunction(GM, n"CoinGetHandler");
 		DOnCoinCombo.BindUFunction(Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0)), n"CoinComboHandler");
@@ -71,7 +71,7 @@ class ACoin : ACollectible
 
 	void OnCollectibleOverlap(AActor OtherActor) override
 	{
-		Super::OnCollectibleOverlap(OtherActor);
+		ACollectable::OnCollectibleOverlap(OtherActor);
 		DOnCoinCombo.ExecuteIfBound(CoinData.CoinValue);
 	}
 

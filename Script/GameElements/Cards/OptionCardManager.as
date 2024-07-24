@@ -19,6 +19,11 @@ class AOptionCardManager : AActor
 	void GamePause()
 	{}
 
+	void EndGame()
+	{
+		System::ClearTimer(this, "SpawnCard");
+	}
+
 	UFUNCTION()
 	void SpawnCard()
 	{

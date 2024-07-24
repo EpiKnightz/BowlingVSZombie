@@ -1,4 +1,4 @@
-class ACollectible : AActor
+class ACollectable : AActor
 {
 	UPROPERTY(RootComponent, DefaultComponent)
 	USphereComponent Collider;
@@ -61,7 +61,7 @@ class ACollectible : AActor
 			else if (TargetRC.TargetType == ETargetType::Player)
 			{
 				OnCollectibleCollected(OtherActor);
-				DestroyActor();
+				PostCollectedAction();
 			}
 		}
 	}
@@ -73,5 +73,10 @@ class ACollectible : AActor
 
 	void OnCollectibleCollected(AActor OtherActor)
 	{
+	}
+
+	void PostCollectedAction()
+	{
+		DestroyActor();
 	}
 };

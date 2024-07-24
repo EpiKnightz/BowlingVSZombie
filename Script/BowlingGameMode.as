@@ -1,3 +1,12 @@
+enum EGameStatus
+{
+	PreGame,
+	Ongoing,
+	PostGame,
+	Win,
+	Lose,
+}
+
 class ABowlingGameMode : AGameMode
 /**
  * BowlingGameMode implements the core gameplay logic for a simple bowling game.
@@ -22,8 +31,9 @@ class ABowlingGameMode : AGameMode
 
 	FIntDelegate DOnUpdateScore;
 	FFloatDelegate DOnUpdateHP;
-	FVoidDelegate DOnWin;
-	FVoidDelegate DOnLose;
+	FVoidEvent EOnRewardReceived;
+	FVoidEvent EOnLose;
+	FCardDTEvent EOnRewardCollected;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
@@ -34,32 +44,45 @@ class ABowlingGameMode : AGameMode
 	UPROPERTY()
 	FLevelConfigsDT LevelConfigsData;
 
-	// TArray<ULevelSequence> LevelSequence;
-	AZombieManager ZombieManager;
-	APowerUpManager PowerUpManager;
-	ABowlingPawn BowlingPawn;
-	AOptionCardManager OptionCardManager;
-	UBowlingGameInstance GameInst;
+	UPROPERTY()
+	TArray<ULevelSequence> OpeningSequenceAssets;
 
 	UPROPERTY()
-	TArray<ULevelSequence> SequenceAssets;
+	ULevelSequence WinningSequence;
+
+	UPROPERTY()
+	TSubclassOf<ARewardChest> RewardChestBP;
+
+	AZombieManager ZombieManager;
+	ABoostManager BoostManager;
+	ABowlingPawn BowlingPawn;
+	AOptionCardManager OptionCardManager;
+	ASurvivorManager SurvivorManager;
+	APowerManager PowerManager;
+	UBowlingGameInstance GameInst;
+	EGameStatus GameStatus = EGameStatus::PreGame;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		ZombieManager = Cast<AZombieManager>(Gameplay::GetActorOfClass(AZombieManager));
-		PowerUpManager = Cast<APowerUpManager>(Gameplay::GetActorOfClass(APowerUpManager));
-		BowlingPawn = Cast<ABowlingPawn>(Gameplay::GetActorOfClass(ABowlingPawn));
-		OptionCardManager = Cast<AOptionCardManager>(Gameplay::GetActorOfClass(AOptionCardManager));
+		ZombieManager = Gameplay::GetActorOfClass(AZombieManager);
+		BoostManager = Gameplay::GetActorOfClass(ABoostManager);
+		BowlingPawn = Gameplay::GetActorOfClass(ABowlingPawn);
+		OptionCardManager = Gameplay::GetActorOfClass(AOptionCardManager);
+		SurvivorManager = Gameplay::GetActorOfClass(ASurvivorManager);
+		PowerManager = Gameplay::GetActorOfClass(APowerManager);
 		GameInst = Cast<UBowlingGameInstance>(GameInstance);
+		// TODO: Load GameInst.CurrentPowers and apply to the cards.
 
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
-		DOnWin.BindUFunction(UserWidget, n"WinUI");
-		DOnLose.BindUFunction(UserWidget, n"LoseUI");
+		EOnRewardReceived.AddUFunction(UserWidget, n"WinUI");
+		EOnLose.AddUFunction(UserWidget, n"LoseUI");
+		EOnRewardCollected.AddUFunction(UserWidget.RewardUI, n"SetRewardData");
+		EOnRewardCollected.AddUFunction(GameInst, n"AddRewards");
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
 		DOnUpdateHP.ExecuteIfBound(HP);
@@ -68,12 +91,14 @@ class ABowlingGameMode : AGameMode
 		BowlingPawn.EOnCooldownUpdate.AddUFunction(UserWidget, n"UpdateCooldownPercent");
 		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		ZombieManager.DOnClearedAllZombies.BindUFunction(this, n"Win");
 
 		LevelConfigsDT.FindRow(FName("Item_" + (GameInst.CurrentLevel - 1)), LevelConfigsData);
 		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
 		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		PowerUpManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
+		BoostManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		BowlingPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
+		SurvivorManager.ItemsConfig = LevelConfigsData.SurvivorConfigsDT;
 
 		PauseGame();
 		if (LevelConfigsData.Delay > 0)
@@ -87,7 +112,7 @@ class ABowlingGameMode : AGameMode
 
 		FLatentActionInfo LatentInfo;
 		LatentInfo.CallbackTarget = this;
-		LatentInfo.ExecutionFunction = n"PlaySequence";
+		LatentInfo.ExecutionFunction = n"PlayOpeningSequence";
 		LatentInfo.Linkage = 0;
 		LatentInfo.UUID = 1;
 
@@ -95,49 +120,83 @@ class ABowlingGameMode : AGameMode
 		{
 			case 1:
 				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
-				// Cast<ALevelVariantSetsActor>(Gameplay::GetActorOfClass(ALevelVariantSetsActor)).SwitchOnVariantByName("Lane", "SingleLane");
 				break;
 			case 2:
-				PlaySequence();
+				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
+				PlayOpeningSequence();
 				break;
 			case 3:
 				Gameplay::LoadStreamLevel(n"M_Level3", true, true, LatentInfo);
 				break;
 			default:
 		}
-		// bool success;
-		// ULevelStreamingDynamic::LoadLevelInstance("M_Level2", FVector::ZeroVector, FRotator::ZeroRotator, success).OnLevelLoaded.AddUFunction(this, n"PlaySequence");
 	}
 
 	UFUNCTION()
-	void PlaySequence()
+	void PlayOpeningSequence()
 	{
-		if (GameInst.CurrentLevel <= SequenceAssets.Num() && SequenceAssets[GameInst.CurrentLevel - 1] != nullptr)
+		if (GameInst.CurrentLevel <= OpeningSequenceAssets.Num() && OpeningSequenceAssets[GameInst.CurrentLevel - 1] != nullptr)
 		{
-			ALevelSequenceActor LSActor;
-			ULevelSequencePlayer::CreateLevelSequencePlayer(SequenceAssets[GameInst.CurrentLevel - 1], FMovieSceneSequencePlaybackSettings(), LSActor).Play();
+			PlaySequence(OpeningSequenceAssets[GameInst.CurrentLevel - 1]);
 		}
+	}
+
+	UFUNCTION()
+	void PlaySequence(ULevelSequence Sequence)
+	{
+		ALevelSequenceActor LSActor;
+		ULevelSequencePlayer::CreateLevelSequencePlayer(Sequence, FMovieSceneSequencePlaybackSettings(), LSActor).Play();
 	}
 
 	UFUNCTION()
 	void StartGame()
 	{
+		GameStatus = EGameStatus::Ongoing;
 		ZombieManager.GameStart();
-		PowerUpManager.GameStart();
-		OptionCardManager.GameStart();
+		BoostManager.GameStart();
+		if (!LevelConfigsData.SurvivorConfigsDT.ItemIDs.IsEmpty())
+		{
+			OptionCardManager.GameStart();
+		}
 		BowlingPawn.SetCooldownPercent(1);
 	}
 
 	void PauseGame()
 	{
 		ZombieManager.GamePause();
-		PowerUpManager.GamePause();
+		BoostManager.GamePause();
 		OptionCardManager.GamePause();
 		BowlingPawn.SetCooldownPercent(-1);
 	}
 
+	void EndGame()
+	{
+		OptionCardManager.EndGame();
+	}
+
 	UFUNCTION()
-	void ScoreChange(FName actorName)
+	void PostEndgameEvents()
+	{
+		switch (GameStatus)
+		{
+			case EGameStatus::Win:
+			{
+				FCardDT Reward = PowerManager.GetPowerData(n"Item_0");
+				EOnRewardCollected.Broadcast(Reward);
+				EOnRewardReceived.Broadcast();
+				break;
+			}
+			case EGameStatus::Lose:
+				EOnLose.Broadcast();
+				break;
+			default:
+				Print("No game status");
+				break;
+		}
+	}
+
+	UFUNCTION()
+	void ScoreChange(FName ActorName)
 	{
 		Score++;
 		if (Score == 14)
@@ -148,7 +207,7 @@ class ABowlingGameMode : AGameMode
 	}
 
 	UFUNCTION()
-	void HPChange(float Damage, FName zombieName)
+	void HPChange(float Damage, FName ZombieName)
 	{
 		HP -= Damage;
 		if (HP <= 0)
@@ -157,21 +216,29 @@ class ABowlingGameMode : AGameMode
 			Lose();
 		}
 		DOnUpdateHP.ExecuteIfBound(HP);
-		ZombieManager.UpdateZombieList(zombieName);
+		ZombieManager.UpdateZombieList(ZombieName);
 	}
 
 	UFUNCTION()
 	void Win()
 	{
-		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
-		DOnWin.ExecuteIfBound();
+		// TODO: Test. Make a proper endgame sequence here
+		BowlingPawn.WinGameAnimation();
+		PlaySequence(WinningSequence);
+		auto RewardChest = SpawnActor(RewardChestBP);
+		RewardChest.DOnRewardCollected.BindUFunction(this, n"PostEndgameEvents");
+		GameStatus = EGameStatus::Win;
+		EndGame();
+		//  Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
 
 	UFUNCTION()
 	void Lose()
 	{
+		GameStatus = EGameStatus::Lose;
+		EndGame();
+		PostEndgameEvents();
 		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
-		DOnLose.ExecuteIfBound();
 	}
 
 	UFUNCTION(BlueprintCallable)

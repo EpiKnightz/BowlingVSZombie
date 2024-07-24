@@ -13,6 +13,9 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(BindWidget)
 	UCommonNumericTextBlock ComboText;
 
+	UPROPERTY(BindWidget)
+	UUIReward RewardUI;
+
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation ComboAnim;
 
@@ -22,8 +25,8 @@ class UUIZombieGameplay : UUserWidget
 	// UPROPERTY(BindWidget)
 	// UCommonNumericTextBlock CoinText;
 
-	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation CoinAnim;
+	// UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	// UWidgetAnimation CoinAnim;
 
 	UPROPERTY(BindWidget)
 	USlider LevelProgress;
@@ -84,20 +87,22 @@ class UUIZombieGameplay : UUserWidget
 		if (NewValue > 0)
 		{
 			// CoinText.SetCurrentValue(NewValue);
-			PlayAnimation(CoinAnim);
+			// PlayAnimation(CoinAnim);
 		}
 	}
 
 	UFUNCTION(BlueprintEvent)
 	void WinUI()
 	{
-		// To be implemented in Blueprint
+		// RewardUI.SetVisibility(ESlateVisibility::Visible);
+		//  To be implemented in Blueprint
 	}
 
 	UFUNCTION(BlueprintEvent)
 	void LoseUI()
 	{
-		// To be implemented in Blueprint
+		// RewardUI.SetVisibility(ESlateVisibility::Hidden);
+		//  To be implemented in Blueprint
 	}
 
 	UFUNCTION()

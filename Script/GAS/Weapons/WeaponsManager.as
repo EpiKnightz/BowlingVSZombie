@@ -45,7 +45,7 @@ class AWeaponsManager : AActor
 			{
 				WeaponPtr = UWeaponPistol::GetOrCreate(Target, WeaponID.TagName);
 			}
-			else if (WeaponID.MatchesTag(GameplayTags::Weapon_Sword))
+			else if (WeaponID.MatchesTag(GameplayTags::Weapon_Melee_Sword))
 			{
 				WeaponPtr = UWeaponSword::GetOrCreate(Target, WeaponID.TagName);
 			}

@@ -20,6 +20,7 @@ delegate FVector FVectorReturnDelegate();
 delegate FVector FName2VectorDelegate(FName Name);
 delegate void FColorDelegate(FLinearColor Value);
 delegate void FColorBoolDelegate(FLinearColor Value, bool Bool);
+// delegate void FStringTextDelegate(FString RewardName, FText Description);
 
 event void FVectorEvent(FVector Value);
 event void FVectorRotatorEvent(FVector Value, FRotator Rotator);
@@ -35,6 +36,7 @@ event void FNameModifierEvent(FName Name, UModifier Modifier);
 event void FNameFloat32Event(FName Name, float32 Value);
 event void FHitResultEvent(FHitResult HitResult);
 event void FGameplayTagEvent(FGameplayTagContainer TagContainer);
+event void FCardDTEvent(FCardDT Value);
 
 namespace Utilities
 {

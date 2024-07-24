@@ -181,6 +181,10 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 				AttrSetContainer[i].GetCurrentValue(AttrName, Result);
 			}
 		}
+		else
+		{
+			PrintWarning(AttrName + " is not a valid attribute for " + Owner.GetName());
+		}
 		return Result;
 	}
 

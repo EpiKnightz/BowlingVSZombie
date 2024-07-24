@@ -44,6 +44,10 @@ class ABowling : AProjectile
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Bowling;
 
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent WorldWidget;
+	UUIMultiplierText MultiplierText;
+
 	FActorEvent EOnHit;
 
 	UPROPERTY()
@@ -51,6 +55,8 @@ class ABowling : AProjectile
 
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
+
+	private int MultiplierCount = 0;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -62,6 +68,13 @@ class ABowling : AProjectile
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", 0);
+		AbilitySystem.RegisterAttrSet(UMultiplierAttrSet);
+		MultiplierCount = 0;
+		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
+		if (!IsValid(MultiplierText))
+		{
+			PrintError("MultiplierText is invalid");
+		}
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
@@ -69,6 +82,10 @@ class ABowling : AProjectile
 		MovementResponseComponent.DOnStopTimeReached.BindUFunction(this, n"K2_DestroyActor");
 		MovementResponseComponent.EOnStopCue.AddUFunction(this, n"OnStopCue");
 		MovementResponseComponent.EOnDeaccelTick.AddUFunction(this, n"OnDeaccelTick");
+
+		// This could be specific to each bowling type, like ice ball get multiplier from overlap instead
+		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"AddMultiplier");
+		MovementResponseComponent.EOnPostBounce.AddUFunction(this, n"AddMultiplier");
 	}
 
 	UFUNCTION()
@@ -92,7 +109,10 @@ class ABowling : AProjectile
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.TakeHit(TargetResponseComponent.IsSameTeam(OtherActor) ? 0 : ProjectileDataComp.ProjectileData.Atk); // This is because the atk should already been buff/debuff at spawned
+				// This is because the atk should already been buff/debuff at spawned time.
+				DamageResponse.TakeHit(TargetResponseComponent.IsSameTeam(OtherActor) ?
+										   0 :
+										   CalculateMultiplierAttack());
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
@@ -150,6 +170,27 @@ class ABowling : AProjectile
 			Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
 		}
 		RotatingComp.RotationRate *= BOUNCE_ROTATION_RATE_MULTIPLIER;
+	}
+
+	UFUNCTION()
+	void AddMultiplier()
+	{
+		MultiplierCount++;
+		MultiplierText.SetMultiplierCountText(MultiplierCount);
+	}
+
+	float32 CalculateMultiplierAttack()
+	{
+		if (MultiplierCount > 0)
+		{
+			float32 multiplier = AbilitySystem.GetValue(n"FirstMultiplier") + (MultiplierCount - 1) * AbilitySystem.GetValue(n"SubsequentMultiplier");
+			Print("" + multiplier);
+			return ProjectileDataComp.ProjectileData.Atk * multiplier;
+		}
+		else
+		{
+			return ProjectileDataComp.ProjectileData.Atk;
+		}
 	}
 
 	UFUNCTION()

@@ -29,6 +29,7 @@ class ABowlingPawn : APawn
 	default WorldWidget.CollisionEnabled = ECollisionEnabled::NoCollision;
 	default WorldWidget.ReceivesDecals = false;
 	default WorldWidget.SetHiddenInGame(true);
+	default WorldWidget.TickMode = ETickMode::Automatic;
 
 	UPROPERTY(DefaultComponent)
 	UEnhancedInputComponent InputComponent;
@@ -54,9 +55,6 @@ class ABowlingPawn : APawn
 	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Player;
-
-	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext DefaultMappingContext;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction TouchAction;
@@ -126,6 +124,10 @@ class ABowlingPawn : APawn
 	FActorVectorEvent EOnTouchHold;
 	FActorVectorEvent EOnTouchReleased;
 
+	/////////////////////////////////////////
+	// Setup
+	/////////////////////////////////////////
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -138,17 +140,6 @@ class ABowlingPawn : APawn
 		AbilitySystem.Initialize(n"Accel", 500);
 
 		AnimateInst = Cast<UCustomAnimInst>(HamsterMesh.GetAnimInstance());
-
-		// Add Input Mapping Context
-		if (PlayerController != nullptr)
-		{
-			auto Subsystem = UEnhancedInputLocalPlayerSubsystem::Get(PlayerController.GetLocalPlayer());
-			check(Subsystem != nullptr);
-			if (Subsystem != nullptr)
-			{
-				Subsystem.AddMappingContext(DefaultMappingContext, 0, FModifyContextOptions());
-			}
-		}
 		OriginalPos = GetActorLocation();
 
 		DamageResponseComponent.Initialize(AbilitySystem);
@@ -191,7 +182,9 @@ class ABowlingPawn : APawn
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////// Input
+	/////////////////////////////////////////
+	// Input
+	/////////////////////////////////////////
 
 	void SetupPlayerInputComponent(UEnhancedInputComponent EnhancedInputComponent)
 	{
@@ -232,7 +225,7 @@ class ABowlingPawn : APawn
 				{
 					// Gameplay::SetGlobalTimeDilation(0.15);
 
-					BowlingDataTable.FindRow(ItemsConfig.BowlingID[Math::RandRange(0, ItemsConfig.BowlingID.Num() - 1)], CurrentBallData);
+					BowlingDataTable.FindRow(ItemsConfig.ItemIDs[Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1)], CurrentBallData);
 					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
 					AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
 					// Print("Attack " + CurrentBallData.Atk);
@@ -245,6 +238,7 @@ class ABowlingPawn : APawn
 					SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).ZYaw, 0));
 					DrawPredictLine();
 
+					AttackAnim.bEnableAutoBlendOut = false;
 					AnimateInst.Montage_Play(AttackAnim);
 					AnimateInst.Montage_JumpToSection(n"Start", AttackAnim);
 				}
@@ -312,6 +306,7 @@ class ABowlingPawn : APawn
 				FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
 				FloatTween.Start();
 
+				AttackAnim.bEnableAutoBlendOut = true;
 				AnimateInst.Montage_Play(AttackAnim);
 				AnimateInst.Montage_JumpToSection(n"Attacking", AttackAnim);
 			}
@@ -411,7 +406,7 @@ class ABowlingPawn : APawn
 		FPredictProjectilePathParams PredictProjectilePathParams;
 		PredictProjectilePathParams.StartLocation = GetActorLocation();
 		PredictProjectilePathParams.bTraceWithCollision = true;
-		PredictProjectilePathParams.TraceChannel = ECollisionChannel::ECC_Pawn;
+		PredictProjectilePathParams.TraceChannel = ECollisionChannel::Bowling;
 		FVector predictVector = -GetActorForwardVector() * CurrentBallData.BowlingSpeed * BowlingPowerMultiplier * 1.5;
 		PredictProjectilePathParams.LaunchVelocity = predictVector;
 		PredictProjectilePathParams.OverrideGravityZ = 0.0001f;
@@ -434,7 +429,7 @@ class ABowlingPawn : APawn
 			PredictLine.AddInstance(transform);
 		}
 
-		if (PredictProjectilePathResult.HitResult.GetActor() != nullptr && PredictProjectilePathResult.HitResult.Component.GetCollisionObjectType() == ECollisionChannel::ECC_WorldStatic)
+		if (PredictProjectilePathResult.HitResult.GetActor() != nullptr)
 		{
 			FTransform transform = FTransform::Identity;
 			transform.SetLocation(PredictProjectilePathResult.HitResult.Location);
@@ -510,5 +505,37 @@ class ABowlingPawn : APawn
 	void CoinComboHandler(int value)
 	{
 		OnComboTrigger(1);
+	}
+
+	//////////////////////////////
+	// Visual Cue
+	//////////////////////////////
+
+	UFUNCTION()
+	void WinGameAnimation()
+	{
+		PlayerController.ClearMappingContext();
+		SetActorRotation(FRotator(0, -180, 0));
+		auto FocusTracker = Gameplay::GetActorOfClass(AFocusTracker);
+		FocusTracker.SetActorLocation(GetActorLocation() + FVector(0, 0, 30));
+		FocusTracker.EOnSequenceFinished.AddUFunction(this, n"OnSequenceFinished");
+	}
+
+	UFUNCTION()
+	private void OnSequenceFinished()
+	{
+		auto FocusTracker = Gameplay::GetActorOfClass(AFocusTracker);
+		if (IsValid(FloatTween) && FloatTween.IsValid())
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(FocusTracker.GetActorLocation().Z,
+													   FocusTracker.GetActorLocation().Z + 10,
+													   3.5f,
+													   EFCEase::InOutSine);
+		FloatTween.ApplyEasing.AddUFunction(FocusTracker, n"SetZLocation");
+		FloatTween.Start();
+		Gameplay::GetActorOfClass(ARewardChest).SetTarget(FocusTracker.ExtraTarget);
 	}
 }

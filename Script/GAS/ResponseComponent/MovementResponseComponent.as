@@ -6,14 +6,16 @@ class UMovementResponseComponent : UResponseComponent
 	FObjectIntDelegate DOnRemoveAccelModifier;
 	FVectorDelegate DOnAddForce;
 	FVectorEvent EOnPreAddForceCue;
+	FVoidEvent EOnPostAddForce;
 	FHitResultEvent EOnBounceCue;
+	FVoidEvent EOnPostBounce;
 	FVoidDelegate DOnStopTimeReached;
 	FVoidEvent EOnStopCue;
 	FVoidEvent EOnDeaccelTick;
 
 	UProjectileMovementComponent MovementComp;
 
-	float StopLifeTime = 1;
+	float StopLifeTime = 2;
 	float StopTimeCounter = 0;
 	float StopThreshold = 4900;
 	private float LocalAccel = 0;
@@ -45,7 +47,7 @@ class UMovementResponseComponent : UResponseComponent
 	{
 		if (Direction.IsZero() || Force == 0)
 		{
-			PrintError("MovementResponseComponent::InitForce: Direction or Force is zero");
+			PrintWarning("MovementResponseComponent::InitForce: Direction or Force is zero");
 			return;
 		}
 		ComponentTickEnabled = true;
@@ -97,6 +99,7 @@ class UMovementResponseComponent : UResponseComponent
 		{
 			EOnPreAddForceCue.Broadcast(VelocityVector);
 			MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(n"Bounciness");
+			EOnPostAddForce.Broadcast();
 		}
 	}
 
@@ -106,6 +109,7 @@ class UMovementResponseComponent : UResponseComponent
 	{
 		if (!ImpactVelocity.IsZero())
 		{
+			EOnBounceCue.Broadcast(Hit);
 			auto MovementResponse = UMovementResponseComponent::Get(Hit.GetActor());
 			if (IsValid(MovementResponse))
 			{
@@ -115,7 +119,7 @@ class UMovementResponseComponent : UResponseComponent
 				// Print("ActorBounce: " + Hit.GetActor().GetName() + " with " + ImpactVelocity.ToString() + " result in:" + MovementComp.Velocity.ToString(), 100);
 			}
 
-			EOnBounceCue.Broadcast(Hit);
+			EOnPostBounce.Broadcast();
 		}
 	}
 

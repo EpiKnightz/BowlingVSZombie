@@ -37,6 +37,9 @@ class AZombieManager : AActor
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable SpawnSequenceDT;
 
+	UPROPERTY(BlueprintReadWrite)
+	float CurrentLevelProgress = 0;
+
 	private float countdown = 1;
 	private int currentSequenceMilestone = -1;
 	private int nextSequenceMilestone = 0;
@@ -44,11 +47,9 @@ class AZombieManager : AActor
 	private float currentGameTime;
 	private int multipleSpawnCount = 0;
 
-	UPROPERTY(BlueprintReadWrite)
-	float CurrentLevelProgress = 0;
-
 	FFloatDelegate DOnProgressChanged;
 	FFTextDelegate DOnWarning;
+	FVoidDelegate DOnClearedAllZombies;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -213,7 +214,7 @@ class AZombieManager : AActor
 	UFUNCTION()
 	void GameEnd()
 	{
-		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).Win();
+		DOnClearedAllZombies.ExecuteIfBound();
 		SetActorTickEnabled(false);
 	}
 

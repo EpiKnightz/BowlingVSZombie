@@ -90,7 +90,6 @@ class AZombie : AHumanlite
 	FNameDelegate DOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
-	// float speedModifier = 1;
 	float delayMove = 2.f;
 	bool bIsAttacking = false;
 
@@ -98,7 +97,6 @@ class AZombie : AHumanlite
 	ULiteAbilitySystem AbilitySystem;
 
 	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
-	// private UMaterialInstanceDynamic DynamicMat;
 
 	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent MovementComp;
@@ -244,23 +242,28 @@ class AZombie : AHumanlite
 			{
 				StartAttacking();
 				Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
-				Target.EOnDeadCue.AddUFunction(this, n"RemoveTarget");
+				Target.EOnDeadCue.AddUFunction(this, n"RemoveTargetWhenDead");
+				auto TargetMoveRes = UMovementResponseComponent::Get(OtherActor);
+				if (IsValid(TargetMoveRes))
+				{
+					TargetMoveRes.EOnPostAddForce.AddUFunction(this, n"InterruptAttacking");
+				}
 				return true;
 			}
 		}
 		return false;
 	}
 
-	UFUNCTION(BlueprintOverride)
-	void ActorEndOverlap(AActor OtherActor)
+	UFUNCTION()
+	void InterruptAttacking()
 	{
 		if (IsValid(Target) && bIsAttacking)
 		{
-			if (Target == UDamageResponseComponent::Get(OtherActor))
-			{
-				StopAttacking();
-				RemoveTarget();
-			}
+			// if (Target == UDamageResponseComponent::Get(OtherActor))
+			// {
+			StopAttacking();
+			RemoveTarget();
+			//}
 		}
 	}
 
@@ -274,8 +277,15 @@ class AZombie : AHumanlite
 		MovementComp.StopMovementImmediately();
 		bIsAttacking = true;
 		AnimateInst.OnMontageEnded.Clear();
-		int random = Math::RandRange(0, AttackAnim.Num() - 1);
-		AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
+		if (AttackAnim.Num() > 0)
+		{
+			int random = Math::RandRange(0, AttackAnim.Num() - 1);
+			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
+		}
+		else
+		{
+			PrintWarning("No attack anim");
+		}
 	}
 
 	// Called when the animation trigger an event
@@ -299,14 +309,24 @@ class AZombie : AHumanlite
 	}
 
 	UFUNCTION()
-	void RemoveTarget()
+	void RemoveTargetWhenDead()
+	{
+		if (RemoveTarget())
+		{
+			delayMove = WAIT_TARGET_DEAD_TIME;
+		}
+	}
+
+	UFUNCTION()
+	bool RemoveTarget()
 	{
 		if (Target != nullptr)
 		{
 			Target.EOnDeadCue.UnbindObject(this);
 			Target = nullptr;
-			delayMove = WAIT_TARGET_DEAD_TIME;
+			return true;
 		}
+		return false;
 	}
 
 	UFUNCTION()
@@ -317,6 +337,14 @@ class AZombie : AHumanlite
 		if (OverlappingActors.Num() > 0)
 		{
 			return OverlapActor(OverlappingActors[0]);
+		}
+		else
+		{
+			Collider.GetOverlappingActors(OverlappingActors, ASurvivor);
+			if (OverlappingActors.Num() > 0)
+			{
+				return OverlapActor(OverlappingActors[0]);
+			}
 		}
 		return false;
 	}
@@ -348,7 +376,6 @@ class AZombie : AHumanlite
 	void TakeHitCue()
 	{
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
-		StopAttacking();
 
 		System::ClearTimer(this, "EmergeDone");
 		EmergeDone();
@@ -357,6 +384,7 @@ class AZombie : AHumanlite
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 		MovementComp.StopMovementImmediately();
 		delayMove = DAMAGE_DELAY;
+		InterruptAttacking();
 	}
 
 	// void TakeDamageCue() override

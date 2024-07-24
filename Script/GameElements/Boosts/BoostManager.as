@@ -3,10 +3,10 @@ namespace PowerUpManager
 	const float WARNING_DURATION = 2.5;
 }
 
-class APowerUpManager : AActor
+class ABoostManager : AActor
 {
 	UPROPERTY()
-	TSubclassOf<APowerUp> PowerUpTemplate;
+	TSubclassOf<ABoost> PowerUpTemplate;
 
 	UPROPERTY()
 	FTransform SpawnPosition;
@@ -93,7 +93,7 @@ class APowerUpManager : AActor
 		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
 		// SpawnLocation.Z *= Row.Scale.Z;
 
-		APowerUp SpawnedActor = Cast<APowerUp>(SpawnActor(PowerUpTemplate, SpawnLocation, SpawnPosition.Rotator()));
+		ABoost SpawnedActor = Cast<ABoost>(SpawnActor(PowerUpTemplate, SpawnLocation, SpawnPosition.Rotator()));
 		// SpawnedActor.Mesh.SetStaticMesh(Row.PowerUpModel);
 		SpawnedActor.InitData(Row, EffectRow);
 

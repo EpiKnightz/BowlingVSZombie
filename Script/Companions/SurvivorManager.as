@@ -1,3 +1,5 @@
+const int MAX_RANDOM_RETRY = 3;
+
 class ASurvivorManager : AActor
 {
 	UPROPERTY(BlueprintReadWrite)
@@ -7,6 +9,10 @@ class ASurvivorManager : AActor
 
 	UPROPERTY()
 	TSubclassOf<ASurvivor> SurvivorTemplate;
+
+	FItemConfigsDT ItemsConfig;
+
+	private int LastSpawnedID = -1;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -54,7 +60,17 @@ class ASurvivorManager : AActor
 	bool CreateRandomSurvior(ASurvivor& ActorToSpawned)
 	{
 		FSurvivorDT SurvivorData;
-		SurvivorDataTable.FindRow(FName("Item_" + Math::RandRange(0, SurvivorsDataMap.Num() - 1)), SurvivorData);
+		int NewSpawnedID = Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1);
+		int CurrentRetry = 0;
+		while (NewSpawnedID == LastSpawnedID
+			   && CurrentRetry < MAX_RANDOM_RETRY
+			   && ItemsConfig.ItemIDs.Num() > 1)
+		{
+			NewSpawnedID = Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1);
+			CurrentRetry++;
+		}
+		SurvivorDataTable.FindRow(ItemsConfig.ItemIDs[NewSpawnedID], SurvivorData);
+		LastSpawnedID = NewSpawnedID;
 		if (SurvivorData.SurvivorID.IsValid())
 		{
 			ActorToSpawned = SpawnActor(SurvivorTemplate);
@@ -68,3 +84,7 @@ class ASurvivorManager : AActor
 		}
 	}
 };
+
+// Spawn random survivor at start
+// Fill "noise" bar to 100% -> can spawn again?
+// Later
