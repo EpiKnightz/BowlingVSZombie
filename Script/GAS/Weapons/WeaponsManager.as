@@ -3,16 +3,16 @@ class AWeaponsManager : AActor
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable WeaponDataTable;
 
-	TMap<FGameplayTag, FWeaponDT> WeaponsData;
+	TMap<FGameplayTag, FWeaponDT> WeaponsMap;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		TArray<FWeaponDT> WeaponsArray;
 		WeaponDataTable.GetAllRows(WeaponsArray);
-		for (FWeaponDT Ability : WeaponsArray)
+		for (FWeaponDT Weapon : WeaponsArray)
 		{
-			WeaponsData.Add(Ability.WeaponID, Ability);
+			WeaponsMap.Add(Weapon.WeaponID, Weapon);
 		}
 	}
 
@@ -20,7 +20,7 @@ class AWeaponsManager : AActor
 	FWeaponDT GetWeaponData(FGameplayTag WeaponID)
 	{
 		FWeaponDT Weapon;
-		if (WeaponsData.Find(WeaponID, Weapon) != false)
+		if (WeaponsMap.Find(WeaponID, Weapon) != false)
 		{
 			return Weapon;
 		}
@@ -35,7 +35,7 @@ class AWeaponsManager : AActor
 	bool CreateWeapon(FGameplayTag WeaponID, AActor Target, UWeapon& WeaponPtr)
 	{
 		FWeaponDT WeaponData;
-		if (WeaponsData.Find(WeaponID, WeaponData))
+		if (WeaponsMap.Find(WeaponID, WeaponData))
 		{
 			if (WeaponID.MatchesTag(GameplayTags::Weapon_Rifle))
 			{

@@ -7,7 +7,7 @@ class UCooldownComponent : UStatusComponent
 		if (IsValid(PlayerResponse))
 		{
 			UMultiplierMod Mod = NewObject(this, UMultiplierMod);
-			Mod.Setup(ModID, FindAttrValue(n"AttackAttrSet.AttackCooldown"));
+			Mod.SetupOnce(ModID, FindAttrValue(n"AttackAttrSet.AttackCooldown"));
 			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(Mod);
 		}
 	}

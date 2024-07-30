@@ -7,7 +7,7 @@ class UAttackBoostComponent : UStatusComponent
 		if (IsValid(PlayerResponse))
 		{
 			UMultiplierMod Mod = NewObject(this, UMultiplierMod);
-			Mod.Setup(ModID, FindAttrValue(n"AttackAttrSet.Attack"));
+			Mod.SetupOnce(ModID, FindAttrValue(n"AttackAttrSet.Attack"));
 			PlayerResponse.DOnChangeAttackModifier.ExecuteIfBound(Mod);
 		}
 	}

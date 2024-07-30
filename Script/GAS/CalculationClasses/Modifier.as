@@ -17,7 +17,7 @@ class UModifier
 		}
 		else
 		{
-			PrintError("Invalid Input");
+			PrintError("Invalid Input/Params");
 		}
 	}
 
@@ -25,15 +25,21 @@ class UModifier
 	{
 	}
 
-	void AddParams(TArray<float32> iParams)
+	void ReplaceParams(TArray<float32> iParams)
 	{
 		Params = iParams;
 	}
 
-	void Setup(int iID, float32 Param)
+	void SetupOnce(int iID, float32 Param)
 	{
 		ID = iID;
 		Params.Add(Param);
+	}
+
+	void SetupMulti(int iID, TArray<float32> iParams)
+	{
+		ID = iID;
+		Params = iParams;
 	}
 
 	bool IsValidInput(float SourceValue)

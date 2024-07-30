@@ -6,7 +6,7 @@ class UFreezeComponent : UStatusComponent
 		if (IsValid(SpeedResponse))
 		{
 			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
-			SpeedMod.Setup(ModID, 0);
+			SpeedMod.SetupOnce(ModID, 0);
 			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
 		}
 
@@ -14,7 +14,7 @@ class UFreezeComponent : UStatusComponent
 		if (IsValid(AttackResponse))
 		{
 			UMultiplierMod CooldownMod = NewObject(this, UMultiplierMod);
-			CooldownMod.Setup(ModID, 999999);
+			CooldownMod.SetupOnce(ModID, 999999);
 			AttackResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(CooldownMod);
 		}
 
