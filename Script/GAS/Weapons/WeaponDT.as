@@ -10,6 +10,9 @@ struct FWeaponDT
 	FText Description = FText::FromString("Description");
 
 	UPROPERTY()
+	UTexture2D Icon;
+
+	UPROPERTY()
 	UStaticMesh WeaponMesh;
 
 	UPROPERTY()

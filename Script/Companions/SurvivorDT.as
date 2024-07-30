@@ -12,6 +12,9 @@ struct FSurvivorDT
 	FText Description = FText::FromString("Description");
 
 	UPROPERTY()
+	UTexture2D Icon;
+
+	UPROPERTY()
 	float32 HP = 100;
 
 	// Atk is amount of power dealing to obstacles

@@ -16,11 +16,11 @@ enum ECardType
 	UTexture2D Icon;
 
 	UPROPERTY()
-	FName ItemID;
+	FGameplayTag ItemID;
 
 	ECardType CardType;
 
-	void SetID(FName ID)
+	void SetID(FGameplayTag ID)
 	{
 		ItemID = ID;
 	}
@@ -31,6 +31,7 @@ enum ECardType
 		Description = Other.Description;
 		Icon = Other.Icon;
 		CardType = ECardType::Power;
+		ItemID = Other.PowerID;
 		return this;
 	}
 
@@ -38,8 +39,9 @@ enum ECardType
 	{
 		Name = Other.Name;
 		Description = Other.Description;
-		// Icon = Other.Icon;
+		Icon = Other.Icon;
 		CardType = ECardType::Survivor;
+		ItemID = Other.SurvivorID;
 		return this;
 	}
 
@@ -47,8 +49,9 @@ enum ECardType
 	{
 		Name = Other.Name;
 		Description = Other.Description;
-		// Icon = Other.Icon;
+		Icon = Other.Icon;
 		CardType = ECardType::Survivor;
+		ItemID = Other.WeaponID;
 		return this;
 	}
 
@@ -56,8 +59,9 @@ enum ECardType
 	{
 		Name = Other.Name;
 		Description = Other.Description;
-		// Icon = Other.Icon;
+		Icon = Other.Icon;
 		CardType = ECardType::Survivor;
+		ItemID = Other.AbilityID;
 		return this;
 	}
 }

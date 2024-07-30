@@ -10,6 +10,9 @@ struct FAbilityDT
 	FText Description = FText::FromString("Description");
 
 	UPROPERTY()
+	UTexture2D Icon;
+
+	UPROPERTY()
 	TSubclassOf<AActor> ActorTemplate;
 
 	UPROPERTY()

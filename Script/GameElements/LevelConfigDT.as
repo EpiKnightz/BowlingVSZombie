@@ -13,11 +13,18 @@ struct FLevelConfigsDT
 	UDataTable SpawnSequenceDT;
 
 	UPROPERTY()
-	FItemConfigsDT ItemConfigsDT;
+	FItemConfigsDT BowlingConfigsDT;
 
 	UPROPERTY()
 	FItemConfigsDT SurvivorConfigsDT;
 
+	// Possible rewards: Power, Survivor, Weapon, Ability
 	UPROPERTY()
-	FItemConfigsDT RewardConfigsDT;
+	FGameplayTagContainer RewardConfigsDT;
+
+	FGameplayTag GetRandomReward()
+	{
+		int Idx = RewardConfigsDT.Num() > 1 ? Math::RandRange(0, RewardConfigsDT.Num() - 1) : 0;
+		return RewardConfigsDT.GameplayTags[Idx];
+	}
 }

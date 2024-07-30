@@ -8,6 +8,9 @@ enum EPowerTarget
 struct FPowerDT
 {
 	UPROPERTY()
+	FGameplayTag PowerID;
+
+	UPROPERTY()
 	FString Name = "Bouncer Power";
 
 	UPROPERTY()
@@ -17,14 +20,8 @@ struct FPowerDT
 	UTexture2D Icon;
 
 	UPROPERTY()
-	EPowerTarget EffectType;
+	EPowerTarget PowerTarget;
 
 	UPROPERTY()
-	FGameplayTagContainer AffectedAttributes;
-
-	UPROPERTY()
-	TSubclassOf<UModifier> Modifier;
-
-	UPROPERTY()
-	TArray<float32> Params;
+	TArray<FModifierSpec> ModifiersSpecList;
 };
