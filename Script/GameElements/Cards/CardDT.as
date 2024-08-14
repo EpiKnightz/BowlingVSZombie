@@ -1,5 +1,6 @@
 enum ECardType
 {
+	None,
 	Power,
 	Survivor,
 	Ability,
@@ -18,11 +19,34 @@ enum ECardType
 	UPROPERTY()
 	FGameplayTag ItemID;
 
-	ECardType CardType;
+	ECardType CardType = ECardType::None;
+
+	bool IsValid()
+	{
+		return CardType != ECardType::None;
+	}
 
 	void SetID(FGameplayTag ID)
 	{
 		ItemID = ID;
+	}
+
+	FCardDT(FGameplayTag Tag, ECardType iCardType)
+	{
+		ItemID = Tag;
+		CardType = iCardType;
+	}
+
+	FCardDT(FSurvivorDT Other)
+	{
+		if (Other.SurvivorID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Survivor;
+			ItemID = Other.SurvivorID;
+		}
 	}
 
 	FCardDT& opAssign(FPowerDT Other)
@@ -37,31 +61,40 @@ enum ECardType
 
 	FCardDT& opAssign(FSurvivorDT Other)
 	{
-		Name = Other.Name;
-		Description = Other.Description;
-		Icon = Other.Icon;
-		CardType = ECardType::Survivor;
-		ItemID = Other.SurvivorID;
+		if (Other.SurvivorID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Survivor;
+			ItemID = Other.SurvivorID;
+		}
 		return this;
 	}
 
 	FCardDT& opAssign(FWeaponDT Other)
 	{
-		Name = Other.Name;
-		Description = Other.Description;
-		Icon = Other.Icon;
-		CardType = ECardType::Survivor;
-		ItemID = Other.WeaponID;
+		if (Other.WeaponID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Weapon;
+			ItemID = Other.WeaponID;
+		}
 		return this;
 	}
 
 	FCardDT& opAssign(FAbilityDT Other)
 	{
-		Name = Other.Name;
-		Description = Other.Description;
-		Icon = Other.Icon;
-		CardType = ECardType::Survivor;
-		ItemID = Other.AbilityID;
+		if (Other.AbilityID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Ability;
+			ItemID = Other.AbilityID;
+		}
 		return this;
 	}
 }

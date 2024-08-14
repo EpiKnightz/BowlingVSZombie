@@ -1,4 +1,4 @@
-class UWeaponGun : UWeapon
+class UWeaponShotGun : UWeapon
 {
 	void Setup() override
 	{

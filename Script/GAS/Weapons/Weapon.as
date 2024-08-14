@@ -13,13 +13,26 @@ class UWeapon : UStaticMeshComponent
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage AttackAnim;
 
+	protected UMaterialInstanceDynamic DynamicMat;
+	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
+	protected AActor Target;
+
+	FActorDelegate DOnTargetChosen;
+
 	// APostProcessVolume PPV;
 
+	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+	}
+
+	// Only called from child classes
+	// This is because different weapons have different sockets
 	void Setup()
 	{
 	}
 
-	void SetupChild(FName AttachLocation)
+	protected void SetupInner(FName AttachLocation)
 	{
 		// PPV = Gameplay::GetActorOfClass(APostProcessVolume);
 		auto CompanionSkeleton = USkeletalMeshComponent::Get(Owner);
@@ -27,10 +40,75 @@ class UWeapon : UStaticMeshComponent
 		{
 			AttachTo(CompanionSkeleton, AttachLocation);
 		}
+		DynamicMat = Material::CreateDynamicMaterialInstance(GetMaterial(0));
+		SetMaterial(0, DynamicMat);
+	}
+
+	UFUNCTION()
+	void ResetTransform()
+	{
+		GetOwner().SetActorLocationAndRotation(FVector(0, 0, 50), FRotator(0, 90, 90));
+		GetOwner().SetActorScale3D(FVector::OneVector * 2);
+	}
+
+	void RegisterDragEvents(bool bEnabled = true)
+	{
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		if (bEnabled)
+		{
+			Target = nullptr;
+			ChangeOverlayColor(FLinearColor::Red);
+			SetCollisionProfileName(n"Weapon");
+			OnComponentBeginOverlap.AddUFunction(this, n"OnOverlap");
+			OnComponentEndOverlap.AddUFunction(this, n"OnOverlapEnd");
+			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
+			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+		}
+		else
+		{
+			Pawn.EOnTouchHold.UnbindObject(this);
+			Pawn.EOnTouchReleased.UnbindObject(this);
+			OnComponentBeginOverlap.UnbindObject(this);
+			OnComponentEndOverlap.UnbindObject(this);
+			SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			OnComponentBeginOverlap.Clear();
+			OnComponentEndOverlap.Clear();
+		}
+	}
+
+	UFUNCTION()
+	private void OnOverlap(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult&in SweepResult)
+	{
+		Target = OtherActor;
+		ChangeOverlayColor(FLinearColor::Green);
+	}
+
+	UFUNCTION()
+	private void OnOverlapEnd(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex)
+	{
+		Target = nullptr;
+		ChangeOverlayColor(FLinearColor::Red);
+	}
+
+	UFUNCTION()
+	private void OnDragged(AActor OtherActor, FVector Vector)
+	{
+		GetOwner().SetActorLocation(FVector(Vector.X, Vector.Y, GetOwner().GetActorLocation().Z));
+	}
+
+	UFUNCTION()
+	private void OnDragReleased(AActor OtherActor, FVector Vector)
+	{
+		if (IsValid(Target))
+		{
+			// Replace survivor with this weapon
+			RegisterDragEvents(false);
+			DOnTargetChosen.ExecuteIfBound(Target);
+			GetOwner().DestroyActor();
+		}
 	}
 
 	// TODO: Need to add lots of Muzzle socket to the weapons
-
 	UFUNCTION()
 	void AttackHitCue()
 	{
@@ -61,6 +139,35 @@ class UWeapon : UStaticMeshComponent
 		ShakeStyle = Data.ShakeStyle;
 		WeaponVFX = Data.WeaponVFX;
 		AttackAnim = Data.AttackAnim;
+
+		auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+		if (IsValid(AbilitySys))
+		{
+			Gameplay::GetActorOfClass(AAbilitiesManager)
+				.RegisterAbilities(Data.DefaultAbility.GetSingleTagContainer(), AbilitySys);
+		}
+	}
+
+	UFUNCTION()
+	void ResetOverlayColor()
+	{
+		ChangeOverlayColor(FLinearColor::Transparent, true);
+	}
+
+	UFUNCTION()
+	void RevertOverlayColor()
+	{
+		ChangeOverlayColor(CachedOverlayColor);
+	}
+
+	UFUNCTION()
+	void ChangeOverlayColor(FLinearColor Color, bool bCached = false)
+	{
+		DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
+		if (bCached)
+		{
+			CachedOverlayColor = Color;
+		}
 	}
 
 	UFUNCTION()

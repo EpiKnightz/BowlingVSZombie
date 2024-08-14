@@ -12,7 +12,7 @@ class ASlowZone : AZone
 		if (IsValid(SpeedResponseComponent))
 		{
 			UAdditiveMod DeaccelMod = NewObject(this, UAdditiveMod);
-			DeaccelMod.Setup(ModID, -DeaccelAddend);
+			DeaccelMod.SetupOnce(ModID, -DeaccelAddend);
 			SpeedResponseComponent.DOnChangeAccelModifier.ExecuteIfBound(DeaccelMod);
 		}
 	}

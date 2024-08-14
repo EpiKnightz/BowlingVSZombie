@@ -13,10 +13,16 @@ struct FLevelConfigsDT
 	UDataTable SpawnSequenceDT;
 
 	UPROPERTY()
-	FItemConfigsDT BowlingConfigsDT;
+	FItemPoolConfigDT BowlingPoolConfig;
 
 	UPROPERTY()
-	FItemConfigsDT SurvivorConfigsDT;
+	FItemPoolConfigDT SurvivorPoolConfig;
+
+	UPROPERTY()
+	FItemPoolConfigDT WeaponPoolConfig;
+
+	UPROPERTY()
+	FItemPoolConfigDT AbilitiesPoolConfig;
 
 	// Possible rewards: Power, Survivor, Weapon, Ability
 	UPROPERTY()

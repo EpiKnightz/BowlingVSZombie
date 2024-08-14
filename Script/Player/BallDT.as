@@ -1,6 +1,9 @@
 struct FBallDT
 {
 	UPROPERTY()
+	FGameplayTag BowlingID;
+
+	UPROPERTY()
 	FString Name = "Bowling";
 
 	UPROPERTY()

@@ -1,6 +1,6 @@
 class UMultiShootOnOverlapAbility : UShootOnOverlapAbility
 {
-	float SideShootAngle = 15;
+	float SideShootAngle = 5;
 
 	void OnAnimHitNotify() override
 	{
@@ -9,9 +9,11 @@ class UMultiShootOnOverlapAbility : UShootOnOverlapAbility
 		{
 			FVector Location = AttackResponse.DGetAttackLocation.Execute();
 			FRotator Rotation = AttackResponse.DGetAttackRotation.Execute();
+			SpawnActor(AbilityData.ActorTemplate, Location, Rotation + FRotator(0, SideShootAngle * 2, 0));
 			SpawnActor(AbilityData.ActorTemplate, Location, Rotation + FRotator(0, SideShootAngle, 0));
 			SpawnActor(AbilityData.ActorTemplate, Location, Rotation);
 			SpawnActor(AbilityData.ActorTemplate, Location, Rotation - FRotator(0, SideShootAngle, 0));
+			SpawnActor(AbilityData.ActorTemplate, Location, Rotation - FRotator(0, SideShootAngle * 2, 0));
 		}
 	}
 };

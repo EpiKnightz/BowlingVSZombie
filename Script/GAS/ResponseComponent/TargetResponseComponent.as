@@ -18,6 +18,22 @@ class UTargetResponseComponent : UResponseComponent
 	};
 
 	UFUNCTION()
+	bool IsPierceable(AActor OtherActor)
+	{
+		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(TargetRC)
+			&& (TargetRC.TargetType == ETargetType::Zombie
+				|| TargetRC.TargetType == ETargetType::Survivor))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	UFUNCTION()
 	bool IsSameTeam(AActor OtherActor)
 	{
 		auto TargetRC = UTargetResponseComponent::Get(OtherActor);

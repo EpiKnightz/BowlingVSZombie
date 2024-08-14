@@ -8,6 +8,9 @@ https://opengameart.org/content/light-in-the-dark-stem-set
 https://opengameart.org/content/trick-or-treat
 https://opengameart.org/content/the-crypt
 
+Bowling Sound:
+These files are based on http://www.freesound.org/samplesViewSingle.php?id=82359 (1 and 2) and http://www.freesound.org/samplesViewSingle.php?id=82358 (3) by juskiddink.
+qubodup <qubodup@gmail.com> cut, fadein/out and normalized these files for SuperTuxKart & OpenGameArt.
 
 "One-eyed Maestro" Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 4.0 License

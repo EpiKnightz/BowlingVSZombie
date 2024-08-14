@@ -38,6 +38,8 @@ class ASurvivor : AHumanlite
 	default MovementComp.AutoActivate = true;
 	default MovementComp.Bounciness = 0.8;
 
+	FTagAbilitySystem DRegisterAbilities;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -56,8 +58,12 @@ class ASurvivor : AHumanlite
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.StopLifeTime = 0;
 		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"OnPostAddForce");
-		// MovementResponseComponent.InitForce(FVector::OneVector, 1);
-		//  Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
+
+		auto AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
+		if (IsValid(AbilitiesManager))
+		{
+			DRegisterAbilities.BindUFunction(AbilitiesManager, n"RegisterAbilities");
+		}
 	}
 
 	UFUNCTION()
@@ -69,12 +75,7 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	void SetData(FSurvivorDT Data)
 	{
-		AWeaponsManager WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
-		if (IsValid(WeaponsManager))
-		{
-			WeaponsManager.CreateWeapon(Data.WeaponTag, this, Weapon);
-		}
-
+		ChangeWeapon(Data.WeaponTag);
 		SetMeshes(Data.BodyMesh, Data.HeadMesh, Data.AccessoryMesh);
 
 		SetBodyScale(Data.BodyScale);
@@ -91,8 +92,26 @@ class ASurvivor : AHumanlite
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		Gameplay::GetActorOfClass(AAbilitiesManager)
-			.RegisterAbilities(Data.AbilitiesTags, AbilitySystem);
+		DRegisterAbilities.ExecuteIfBound(Data.AbilitiesTags, AbilitySystem);
+	}
+
+	void ChangeWeapon(FGameplayTag WeaponTag)
+	{
+		if (IsValid(Weapon))
+		{
+			Weapon.ForceDestroyComponent();
+			Weapon = nullptr;
+		}
+		AWeaponsManager WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
+		if (IsValid(WeaponsManager))
+		{
+			WeaponsManager.CreateWeaponFromTag(WeaponTag, this, Weapon);
+		}
+	}
+
+	void AddAbility(FGameplayTag AbilityTag)
+	{
+		DRegisterAbilities.ExecuteIfBound(AbilityTag.GetSingleTagContainer(), AbilitySystem);
 	}
 
 	void ResetTransform()

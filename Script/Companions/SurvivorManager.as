@@ -1,4 +1,4 @@
-const int MAX_RANDOM_RETRY = 3;
+
 
 class ASurvivorManager : AActor
 {
@@ -10,19 +10,34 @@ class ASurvivorManager : AActor
 	UPROPERTY()
 	TSubclassOf<ASurvivor> SurvivorTemplate;
 
-	FItemConfigsDT ItemsConfig;
+	FItemPoolConfigDT ItemPoolConfig;
 
-	private int LastSpawnedID = -1;
+	FSurvivorEvent EOnSurvivorSpawned;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		TArray<FSurvivorDT> SurvivorsArray;
 		SurvivorDataTable.GetAllRows(SurvivorsArray);
-		for (FSurvivorDT Ability : SurvivorsArray)
+		for (FSurvivorDT Survivor : SurvivorsArray)
 		{
-			SurvivorsDataMap.Add(Ability.SurvivorID, Ability);
+			SurvivorsDataMap.Add(Survivor.SurvivorID, Survivor);
 		}
+	}
+
+	UFUNCTION()
+	void AddCard(FCardDT CardData)
+	{
+		if (CardData.CardType == ECardType::Survivor)
+		{
+			ItemPoolConfig.AddUniqueTag(CardData.ItemID);
+		}
+	}
+
+	UFUNCTION()
+	FCardDT GetCardData(FGameplayTag CardID)
+	{
+		return FCardDT(GetSurvivorData(CardID));
 	}
 
 	UFUNCTION()
@@ -41,47 +56,53 @@ class ASurvivorManager : AActor
 	}
 
 	UFUNCTION()
-	bool CreateSurvivor(FGameplayTag SurvivorID, ASurvivor& ActorToSpawned)
+	FSurvivorDT CreateSurvivorFromTag(FGameplayTag SurvivorID, ASurvivor& SpawnedActor)
 	{
 		FSurvivorDT SurvivorData;
 		if (SurvivorsDataMap.Find(SurvivorID, SurvivorData) != false)
 		{
-			ActorToSpawned = SpawnActor(SurvivorTemplate);
-			ActorToSpawned.SetData(SurvivorData);
-			return true;
+			SpawnSurvivor(SpawnedActor, SurvivorData);
 		}
 		else
 		{
+			PrintError("CreateSurvivor: SurvivorID not found");
+		}
+		return SurvivorData;
+	}
+
+	UFUNCTION()
+	bool CreateRandomSurvior(ASurvivor& SpawnedActor)
+	{
+		if (!ItemPoolConfig.IsEmpty())
+		{
+			FSurvivorDT SurvivorData;
+
+			// SurvivorDataTable.FindRow(LevelItemsConfig.ItemIDs[NewSpawnedID], SurvivorData);
+			SurvivorsDataMap.Find(ItemPoolConfig.ItemTags[Math::RandRange(0, ItemPoolConfig.Num() - 1)], SurvivorData);
+
+			if (SurvivorData.SurvivorID.IsValid())
+			{
+				SpawnSurvivor(SpawnedActor, SurvivorData);
+				return true;
+			}
+			else
+			{
+				PrintError("CreateRandomSurvior: SurvivorID not found");
+				return false;
+			}
+		}
+		else
+		{
+			PrintError("CreateRandomSurvior: ItemPoolConfig is empty");
 			return false;
 		}
 	}
 
-	UFUNCTION()
-	bool CreateRandomSurvior(ASurvivor& ActorToSpawned)
+	void SpawnSurvivor(ASurvivor& SpawnedActor, FSurvivorDT& SurvivorData)
 	{
-		FSurvivorDT SurvivorData;
-		int NewSpawnedID = Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1);
-		int CurrentRetry = 0;
-		while (NewSpawnedID == LastSpawnedID
-			   && CurrentRetry < MAX_RANDOM_RETRY
-			   && ItemsConfig.ItemIDs.Num() > 1)
-		{
-			NewSpawnedID = Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1);
-			CurrentRetry++;
-		}
-		SurvivorDataTable.FindRow(ItemsConfig.ItemIDs[NewSpawnedID], SurvivorData);
-		LastSpawnedID = NewSpawnedID;
-		if (SurvivorData.SurvivorID.IsValid())
-		{
-			ActorToSpawned = SpawnActor(SurvivorTemplate);
-			ActorToSpawned.SetData(SurvivorData);
-			return true;
-		}
-		else
-		{
-			PrintError("CreateRandomSurvior: SurvivorID not found");
-			return false;
-		}
+		SpawnedActor = SpawnActor(SurvivorTemplate);
+		SpawnedActor.SetData(SurvivorData);
+		EOnSurvivorSpawned.Broadcast(SpawnedActor);
 	}
 };
 

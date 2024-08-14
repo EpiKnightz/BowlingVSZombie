@@ -9,7 +9,7 @@ class UUIReward : UUserWidget
 	UPROPERTY(BindWidget)
 	UCommonTextBlock RewardDescription;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetRewardData(FCardDT RewardData)
 	{
 		RewardName.SetText(FText::FromString(RewardData.Name));

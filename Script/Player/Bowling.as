@@ -41,6 +41,9 @@ class ABowling : AProjectile
 	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
+	UMultiplierResponseComponent MultiplierResponseComponent;
+
+	UPROPERTY(DefaultComponent)
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Bowling;
 
@@ -53,10 +56,11 @@ class ABowling : AProjectile
 	UPROPERTY()
 	TSubclassOf<UCameraShakeBase> ShakeStyle;
 
+	UPROPERTY(BlueprintReadWrite, Category = SFX)
+	UFMODEvent HitSFX;
+
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
-
-	private int MultiplierCount = 0;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -68,8 +72,7 @@ class ABowling : AProjectile
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", 0);
-		AbilitySystem.RegisterAttrSet(UMultiplierAttrSet);
-		MultiplierCount = 0;
+		AbilitySystem.RegisterAttrSet(UMultiplierPierceAttrSet);
 		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
 		if (!IsValid(MultiplierText))
 		{
@@ -83,9 +86,8 @@ class ABowling : AProjectile
 		MovementResponseComponent.EOnStopCue.AddUFunction(this, n"OnStopCue");
 		MovementResponseComponent.EOnDeaccelTick.AddUFunction(this, n"OnDeaccelTick");
 
-		// This could be specific to each bowling type, like ice ball get multiplier from overlap instead
-		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"AddMultiplier");
-		MovementResponseComponent.EOnPostBounce.AddUFunction(this, n"AddMultiplier");
+		MultiplierResponseComponent.Initialize(AbilitySystem);
+		MultiplierResponseComponent.EOnAddMultiplierCue.AddUFunction(this, n"OnAddMultiplierCue");
 	}
 
 	UFUNCTION()
@@ -93,7 +95,11 @@ class ABowling : AProjectile
 	{
 		ProjectileDataComp.ProjectileData = Data;
 		BowlingMesh.StaticMesh = Data.BowlingMesh;
-		EffectSystem.Asset = Data.StatusVFX;
+		if (IsValid(Data.StatusVFX))
+		{
+			EffectSystem.Asset = Data.StatusVFX;
+			EffectSystem.Activate();
+		}
 
 		RotatingComp.RotationRate = BASE_ROTATION_RATE * Data.BowlingSpeed;
 
@@ -109,22 +115,32 @@ class ABowling : AProjectile
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(DamageResponse))
 			{
+				float Damage = TargetResponseComponent.IsSameTeam(OtherActor) ?
+								   0 :
+								   MultiplierResponseComponent.DCaluclateMultiplier.Execute(ProjectileDataComp.ProjectileData.Atk);
 				// This is because the atk should already been buff/debuff at spawned time.
-				DamageResponse.TakeHit(TargetResponseComponent.IsSameTeam(OtherActor) ?
-										   0 :
-										   CalculateMultiplierAttack());
-				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
-				if (IsValid(StatusResponse))
+				DamageResponse.TakeHit(Damage);
+				if (Damage > 0)
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+					auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+					if (IsValid(StatusResponse))
+					{
+						StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+					}
 				}
 			}
 		}
+		// TODO: Change to other sfx
+		// FMODBlueprint::PlayEvent2D(this, HitSFX, true);
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
+		if (TargetResponseComponent.IsPierceable(OtherActor))
+		{
+			MovementResponseComponent.ActorPierce(OtherActor);
+		}
 		ActorBeginHit(nullptr, OtherActor, nullptr, FVector(0, 0, 0), FHitResult());
 	}
 
@@ -173,24 +189,9 @@ class ABowling : AProjectile
 	}
 
 	UFUNCTION()
-	void AddMultiplier()
+	private void OnAddMultiplierCue(int Value)
 	{
-		MultiplierCount++;
-		MultiplierText.SetMultiplierCountText(MultiplierCount);
-	}
-
-	float32 CalculateMultiplierAttack()
-	{
-		if (MultiplierCount > 0)
-		{
-			float32 multiplier = AbilitySystem.GetValue(n"FirstMultiplier") + (MultiplierCount - 1) * AbilitySystem.GetValue(n"SubsequentMultiplier");
-			Print("" + multiplier);
-			return ProjectileDataComp.ProjectileData.Atk * multiplier;
-		}
-		else
-		{
-			return ProjectileDataComp.ProjectileData.Atk;
-		}
+		MultiplierText.SetMultiplierCountText(Value);
 	}
 
 	UFUNCTION()

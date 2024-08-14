@@ -9,6 +9,7 @@ class UMovementResponseComponent : UResponseComponent
 	FVoidEvent EOnPostAddForce;
 	FHitResultEvent EOnBounceCue;
 	FVoidEvent EOnPostBounce;
+	FVoidEvent EOnPierceCue;
 	FVoidDelegate DOnStopTimeReached;
 	FVoidEvent EOnStopCue;
 	FVoidEvent EOnDeaccelTick;
@@ -121,6 +122,12 @@ class UMovementResponseComponent : UResponseComponent
 
 			EOnPostBounce.Broadcast();
 		}
+	}
+
+	UFUNCTION()
+	void ActorPierce(AActor OtherActor)
+	{
+		EOnPierceCue.Broadcast();
 	}
 
 	UFUNCTION(BlueprintOverride)

@@ -5,6 +5,9 @@ class AWeaponsManager : AActor
 
 	TMap<FGameplayTag, FWeaponDT> WeaponsMap;
 
+	// Only be used in case of random weapon. If created directly, use weaponsMap instead.
+	FItemPoolConfigDT ItemPoolConfig;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -32,31 +35,63 @@ class AWeaponsManager : AActor
 	}
 
 	UFUNCTION()
-	bool CreateWeapon(FGameplayTag WeaponID, AActor Target, UWeapon& WeaponPtr)
+	private void AddCard(FCardDT CardData)
+	{
+		if (CardData.CardType == ECardType::Weapon)
+		{
+			ItemPoolConfig.AddUniqueTag(CardData.ItemID);
+		}
+	}
+
+	UFUNCTION()
+	FWeaponDT CreateRandomWeapon(AActor Target)
+	{
+		UWeapon WeaponPtr;
+		return CreateWeaponFromTag(ItemPoolConfig.GetRandomTag(), Target, WeaponPtr);
+	}
+
+	UFUNCTION()
+	FWeaponDT CreateWeaponFromTag(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr)
 	{
 		FWeaponDT WeaponData;
-		if (WeaponsMap.Find(WeaponID, WeaponData))
+		if (WeaponsMap.Find(WeaponTag, WeaponData))
 		{
-			if (WeaponID.MatchesTag(GameplayTags::Weapon_Rifle))
-			{
-				WeaponPtr = UWeaponGun::GetOrCreate(Target, WeaponID.TagName);
-			}
-			else if (WeaponID.MatchesTag(GameplayTags::Weapon_Pistol))
-			{
-				WeaponPtr = UWeaponPistol::GetOrCreate(Target, WeaponID.TagName);
-			}
-			else if (WeaponID.MatchesTag(GameplayTags::Weapon_Melee_Sword))
-			{
-				WeaponPtr = UWeaponSword::GetOrCreate(Target, WeaponID.TagName);
-			}
-			WeaponPtr.SetData(WeaponData);
-			WeaponPtr.Setup();
-			return true;
+			CreateWeapon(WeaponData, Target, WeaponPtr);
 		}
 		else
 		{
-			PrintError("CreateWeapon: WeaponID not found");
+			PrintError("CreateRandomWeapon: Weapon Tag not found");
 		}
-		return false;
+		return WeaponData;
+	}
+
+	// IMPORTANT: WeaponPtr should be nullptr
+	UFUNCTION()
+	void CreateWeapon(FWeaponDT WeaponData, AActor Target, UWeapon& WeaponPtr)
+	{
+		if (WeaponPtr != nullptr)
+		{
+			PrintError("CreateWeapon: WeaponPtr should be nullptr");
+			return;
+		}
+
+		if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Rifle))
+		{
+			WeaponPtr = UWeaponGun::Create(Target, WeaponData.WeaponID.TagName);
+		}
+		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Pistol))
+		{
+			WeaponPtr = UWeaponPistol::Create(Target, WeaponData.WeaponID.TagName);
+		}
+		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Melee_Sword))
+		{
+			WeaponPtr = UWeaponSword::Create(Target, WeaponData.WeaponID.TagName);
+		}
+		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Shotgun))
+		{
+			WeaponPtr = UWeaponShotGun::Create(Target, WeaponData.WeaponID.TagName);
+		}
+		WeaponPtr.SetData(WeaponData);
+		WeaponPtr.Setup();
 	}
 };

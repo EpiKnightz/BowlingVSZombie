@@ -1,6 +1,7 @@
 delegate void FIntDelegate(int Value);
 delegate int FInt2IntDelegate(int Value);
 delegate float FFloat2FloatDelegate(float Value);
+delegate float32 FFloat2Float32Delegate(float32 Value);
 delegate bool FFloat2BoolDelegate(float Value);
 delegate void FVoidDelegate();
 delegate void FNameDelegate(FName Name);
@@ -20,6 +21,11 @@ delegate FVector FVectorReturnDelegate();
 delegate FVector FName2VectorDelegate(FName Name);
 delegate void FColorDelegate(FLinearColor Value);
 delegate void FColorBoolDelegate(FLinearColor Value, bool Bool);
+delegate bool FSurvivor2BoolDelegate(ASurvivor& Survivor);
+delegate FSurvivorDT FTagSurvivor2DataDelegate(FGameplayTag SurvivorID, ASurvivor& SpawnedActor);
+delegate FWeaponDT FTagWeapon2DataDelegate(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr);
+delegate void FIntCardDelegate(int Value, FCardDT Card);
+delegate void FTagAbilitySystem(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem);
 // delegate void FStringTextDelegate(FString RewardName, FText Description);
 
 event void FVectorEvent(FVector Value);
@@ -37,6 +43,9 @@ event void FNameFloat32Event(FName Name, float32 Value);
 event void FHitResultEvent(FHitResult HitResult);
 event void FGameplayTagEvent(FGameplayTagContainer TagContainer);
 event void FCardDTEvent(FCardDT Value);
+event void FBowlingEvent(ABowling& Bowling);
+event void FZombieEvent(AZombie& Bowling);
+event void FSurvivorEvent(ASurvivor& Bowling);
 
 namespace Utilities
 {

@@ -92,16 +92,14 @@ class UUIZombieGameplay : UUserWidget
 	}
 
 	UFUNCTION(BlueprintEvent)
-	void WinUI()
+	void WinUI(FCardDT RewardData)
 	{
-		// RewardUI.SetVisibility(ESlateVisibility::Visible);
 		//  To be implemented in Blueprint
 	}
 
 	UFUNCTION(BlueprintEvent)
 	void LoseUI()
 	{
-		// RewardUI.SetVisibility(ESlateVisibility::Hidden);
 		//  To be implemented in Blueprint
 	}
 

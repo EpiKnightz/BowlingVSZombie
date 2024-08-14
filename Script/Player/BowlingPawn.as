@@ -80,8 +80,9 @@ class ABowlingPawn : APawn
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable BowlingDataTable;
+	TMap<FGameplayTag, FBallDT> BowlingsMap;
 
-	FItemConfigsDT ItemsConfig;
+	FItemPoolConfigDT ItemPoolConfig;
 
 	UPROPERTY()
 	float BowlingPowerMark = 800;
@@ -123,6 +124,7 @@ class ABowlingPawn : APawn
 	FActorVectorEvent EOnTouchTriggered;
 	FActorVectorEvent EOnTouchHold;
 	FActorVectorEvent EOnTouchReleased;
+	FBowlingEvent EOnBowlingSpawned;
 
 	/////////////////////////////////////////
 	// Setup
@@ -160,6 +162,14 @@ class ABowlingPawn : APawn
 		PredictLineMaterial = Material::CreateDynamicMaterialInstance(PredictLine.GetMaterial(0));
 		PredictLine.SetMaterial(0, PredictLineMaterial);
 		EOnCooldownUpdate.AddUFunction(this, n"SetPredictLineColor");
+
+		// Load bowling data
+		TArray<FBallDT> BowlingsArray;
+		BowlingDataTable.GetAllRows(BowlingsArray);
+		for (FBallDT Bowling : BowlingsArray)
+		{
+			BowlingsMap.Add(Bowling.BowlingID, Bowling);
+		}
 	}
 
 	UFUNCTION()
@@ -225,7 +235,10 @@ class ABowlingPawn : APawn
 				{
 					// Gameplay::SetGlobalTimeDilation(0.15);
 
-					BowlingDataTable.FindRow(ItemsConfig.ItemIDs[Math::RandRange(0, ItemsConfig.ItemIDs.Num() - 1)], CurrentBallData);
+					if (!BowlingsMap.Find(ItemPoolConfig.GetRandomTag(), CurrentBallData))
+					{
+						PrintError("Bowling ID not found in data table");
+					}
 					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
 					AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
 					// Print("Attack " + CurrentBallData.Atk);
@@ -354,6 +367,7 @@ class ABowlingPawn : APawn
 			SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed);
 
 			SpawnedActor.EOnHit.AddUFunction(this, n"OnHit");
+			EOnBowlingSpawned.Broadcast(SpawnedActor);
 
 			FMODBlueprint::PlayEvent2D(this, ThrowSFX, true);
 		}
@@ -516,6 +530,7 @@ class ABowlingPawn : APawn
 	{
 		PlayerController.ClearMappingContext();
 		SetActorRotation(FRotator(0, -180, 0));
+		SetActorLocation(FVector(750, 0, 40));
 		auto FocusTracker = Gameplay::GetActorOfClass(AFocusTracker);
 		FocusTracker.SetActorLocation(GetActorLocation() + FVector(0, 0, 30));
 		FocusTracker.EOnSequenceFinished.AddUFunction(this, n"OnSequenceFinished");

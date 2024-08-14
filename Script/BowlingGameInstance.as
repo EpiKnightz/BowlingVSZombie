@@ -2,7 +2,9 @@ class UBowlingGameInstance : UGameInstance
 {
 	int CurrentLevel = 1;
 
-	TArray<FCardDT> CurrentPowers;
+	// Run data:
+	TArray<FCardDT> CurrentCardInventory;
+	int RunCoinTotal;
 
 	UFUNCTION(BlueprintOverride)
 	void Init()
@@ -15,6 +17,12 @@ class UBowlingGameInstance : UGameInstance
 	UFUNCTION()
 	void AddRewards(FCardDT Reward)
 	{
-		CurrentPowers.Add(Reward);
+		CurrentCardInventory.Add(Reward);
+	}
+
+	UFUNCTION()
+	void AddCoin(int MatchCoin)
+	{
+		RunCoinTotal += MatchCoin;
 	}
 };

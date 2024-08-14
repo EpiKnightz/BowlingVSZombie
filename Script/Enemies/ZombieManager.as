@@ -50,6 +50,7 @@ class AZombieManager : AActor
 	FFloatDelegate DOnProgressChanged;
 	FFTextDelegate DOnWarning;
 	FVoidDelegate DOnClearedAllZombies;
+	FZombieEvent EOnZombieSpawned;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -163,6 +164,7 @@ class AZombieManager : AActor
 		SpawnedActor.DOnZombDie.BindUFunction(GM, n"ScoreChange");
 		SpawnedActor.DOnZombDie.BindUFunction(this, n"UpdateZombieList");
 		SpawnedActor.DOnZombieReach.BindUFunction(GM, n"HPChange");
+		EOnZombieSpawned.Broadcast(SpawnedActor);
 
 		if (multipleSpawnCount > 0)
 		{

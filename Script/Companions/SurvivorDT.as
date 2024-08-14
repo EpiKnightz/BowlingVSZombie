@@ -59,4 +59,9 @@ struct FSurvivorDT
 
 	UPROPERTY()
 	FGameplayTagContainer EffectTags;
+
+	bool IsValid()
+	{
+		return SurvivorID.IsValid();
+	}
 }

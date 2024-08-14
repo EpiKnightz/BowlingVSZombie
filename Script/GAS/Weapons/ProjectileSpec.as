@@ -1,6 +1,6 @@
 
 // This is for data storage only, it shouldn't be a data table
-struct FProjectileData
+struct FProjectileSpec
 {
 	UPROPERTY()
 	float32 Atk = 50;
@@ -11,7 +11,7 @@ struct FProjectileData
 	UPROPERTY(meta = (Categories = "Status"))
 	FGameplayTagContainer EffectTags;
 
-	FProjectileData& opAssign(FBallDT Other)
+	FProjectileSpec& opAssign(FBallDT Other)
 	{
 		Atk = Other.Atk;
 		bIsPiercable = Other.bIsPiercable;
@@ -19,7 +19,7 @@ struct FProjectileData
 		return this;
 	}
 
-	FProjectileData& opAssign(FSurvivorDT Other)
+	FProjectileSpec& opAssign(FSurvivorDT Other)
 	{
 		Atk = Other.Atk;
 		if (Other.EffectTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
@@ -27,18 +27,18 @@ struct FProjectileData
 			bIsPiercable = true;
 		}
 		EffectTags = Other.EffectTags.Filter(
-			GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Negative));
+			GameplayTags::Status_Negative.GetSingleTagContainer());
 		return this;
 	}
 
-	FProjectileData& opAssign(FAbilityDT Other)
+	FProjectileSpec& opAssign(FAbilityDT Other)
 	{
 		if (Other.AbilityTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
 		{
 			bIsPiercable = true;
 		}
 		EffectTags = Other.AbilityTags.Filter(
-			GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Negative));
+			GameplayTags::Status_Negative.GetSingleTagContainer());
 		return this;
 	}
 }

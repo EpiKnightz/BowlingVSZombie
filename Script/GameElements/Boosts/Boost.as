@@ -50,7 +50,7 @@ class ABoost : ACollectable
 		auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 		if (IsValid(StatusResponse))
 		{
-			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Positive_CooldownBoost));
+			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTags::Status_Positive_CooldownBoost.GetSingleTagContainer());
 		}
 	}
 };

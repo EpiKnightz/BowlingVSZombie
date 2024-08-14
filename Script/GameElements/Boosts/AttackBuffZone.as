@@ -18,7 +18,7 @@ class AAttackBuffZone : AZone
 		auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 		if (IsValid(StatusResponse))
 		{
-			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTag::MakeGameplayTagContainerFromTag(GameplayTags::Status_Positive_AttackBoost));
+			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTags::Status_Positive_AttackBoost.GetSingleTagContainer());
 		}
 
 		auto Pawn = Cast<ABowlingPawn>(OtherActor);

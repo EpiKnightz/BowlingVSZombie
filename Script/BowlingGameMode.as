@@ -31,7 +31,6 @@ class ABowlingGameMode : AGameMode
 
 	FIntDelegate DOnUpdateScore;
 	FFloatDelegate DOnUpdateHP;
-	FVoidEvent EOnRewardReceived;
 	FVoidEvent EOnLose;
 	FCardDTEvent EOnRewardCollected;
 
@@ -59,29 +58,31 @@ class ABowlingGameMode : AGameMode
 	AOptionCardManager OptionCardManager;
 	ASurvivorManager SurvivorManager;
 	APowerManager PowerManager;
+	AWeaponsManager WeaponsManager;
+	AAbilitiesManager AbilitiesManager;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		GameInst = Cast<UBowlingGameInstance>(GameInstance);
 		ZombieManager = Gameplay::GetActorOfClass(AZombieManager);
 		BoostManager = Gameplay::GetActorOfClass(ABoostManager);
 		BowlingPawn = Gameplay::GetActorOfClass(ABowlingPawn);
 		OptionCardManager = Gameplay::GetActorOfClass(AOptionCardManager);
 		SurvivorManager = Gameplay::GetActorOfClass(ASurvivorManager);
 		PowerManager = Gameplay::GetActorOfClass(APowerManager);
-		GameInst = Cast<UBowlingGameInstance>(GameInstance);
-		// TODO: Load GameInst.CurrentPowers and apply to the cards.
+		WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
+		AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
-		EOnRewardReceived.AddUFunction(UserWidget, n"WinUI");
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
-		EOnRewardCollected.AddUFunction(UserWidget.RewardUI, n"SetRewardData");
+		EOnRewardCollected.AddUFunction(UserWidget, n"WinUI");
 		EOnRewardCollected.AddUFunction(GameInst, n"AddRewards");
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
@@ -89,20 +90,49 @@ class ABowlingGameMode : AGameMode
 
 		BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
 		BowlingPawn.EOnCooldownUpdate.AddUFunction(UserWidget, n"UpdateCooldownPercent");
+		BowlingPawn.EOnBowlingSpawned.AddUFunction(PowerManager, n"ApplyBowlingPower");
+
 		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 		ZombieManager.DOnClearedAllZombies.BindUFunction(this, n"Win");
+		ZombieManager.EOnZombieSpawned.AddUFunction(PowerManager, n"ApplyZombiePower");
 
-		LevelConfigsDT.FindRow(FName("Item_" + (GameInst.CurrentLevel - 1)), LevelConfigsData);
+		SurvivorManager.EOnSurvivorSpawned.AddUFunction(PowerManager, n"ApplySurvivorPower");
+
+		// /OptionCardManager.DCreateRandomSurvivor.BindUFunction(SurvivorManager, n"CreateRandomSurvior");
+		OptionCardManager.EOnCardAdded.AddUFunction(SurvivorManager, n"AddCard");
+		OptionCardManager.EOnCardAdded.AddUFunction(WeaponsManager, n"AddCard");
+		OptionCardManager.DCreateSurvivorFromTag.BindUFunction(SurvivorManager, n"CreateSurvivorFromTag");
+		OptionCardManager.DCreateWeaponFromTag.BindUFunction(WeaponsManager, n"CreateWeaponFromTag");
+
+		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
+							LevelConfigsDT.Num() - 1 :
+							GameInst.CurrentLevel - 1;
+		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
 		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
 		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		BoostManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		BowlingPawn.ItemsConfig = LevelConfigsData.ItemConfigsDT;
-		SurvivorManager.ItemsConfig = LevelConfigsData.SurvivorConfigsDT;
+		BowlingPawn.ItemPoolConfig = LevelConfigsData.BowlingPoolConfig;
+		if (LevelConfigsData.SurvivorPoolConfig.Num() > 0)
+		{
+			for (auto Item : LevelConfigsData.SurvivorPoolConfig.ItemTags)
+			{
+				OptionCardManager.AddCard(FCardDT(Item, ECardType::Survivor));
+			}
+		}
+		if (LevelConfigsData.WeaponPoolConfig.Num() > 0)
+		{
+			for (auto Item : LevelConfigsData.WeaponPoolConfig.ItemTags)
+			{
+				OptionCardManager.AddCard(FCardDT(Item, ECardType::Weapon));
+			}
+		}
 
-		PauseGame();
+		PopulatePowerAndCards();
+
 		if (LevelConfigsData.Delay > 0)
 		{
+			PauseGame();
 			System::SetTimer(this, n"StartGame", LevelConfigsData.Delay, false);
 		}
 		else
@@ -154,11 +184,39 @@ class ABowlingGameMode : AGameMode
 		GameStatus = EGameStatus::Ongoing;
 		ZombieManager.GameStart();
 		BoostManager.GameStart();
-		if (!LevelConfigsData.SurvivorConfigsDT.ItemIDs.IsEmpty())
+		if (!LevelConfigsData.SurvivorPoolConfig.IsEmpty())
 		{
 			OptionCardManager.GameStart();
 		}
 		BowlingPawn.SetCooldownPercent(1);
+	}
+
+	void PopulatePowerAndCards()
+	{
+		for (FCardDT Power : GameInst.CurrentCardInventory)
+		{
+			switch (Power.CardType)
+			{
+				case ECardType::Power:
+				{
+					// TODO: Power always passive, so we don't need to check it
+					if (Power.ItemID.MatchesTag(GameplayTags::Power_Passive))
+					{
+						PowerManager.AddPower(Power.ItemID);
+					}
+					break;
+				}
+				case ECardType::Survivor:
+				case ECardType::Ability:
+				case ECardType::Weapon:
+				{
+					OptionCardManager.AddCard(Power);
+					break;
+				}
+				default:
+					break;
+			}
+		}
 	}
 
 	void PauseGame()
@@ -181,9 +239,27 @@ class ABowlingGameMode : AGameMode
 		{
 			case EGameStatus::Win:
 			{
-				FCardDT Reward = PowerManager.GetPowerData(n"Item_0");
-				EOnRewardCollected.Broadcast(Reward);
-				EOnRewardReceived.Broadcast();
+				FGameplayTag Reward = LevelConfigsData.GetRandomReward();
+				FCardDT RewardCard;
+				if (Reward.MatchesTag(GameplayTags::Power))
+				{
+					RewardCard = PowerManager.GetPowerData(Reward);
+				}
+				else if (Reward.MatchesTag(GameplayTags::Survivor))
+				{
+					RewardCard = SurvivorManager.GetSurvivorData(Reward);
+				}
+				else if (Reward.MatchesTag(GameplayTags::Weapon))
+				{
+					RewardCard = WeaponsManager.GetWeaponData(Reward);
+				}
+				else if (Reward.MatchesTag(GameplayTags::Ability))
+				{
+					RewardCard = AbilitiesManager.GetAbilityData(Reward);
+				}
+				EOnRewardCollected.Broadcast(RewardCard);
+				// Todo: Move this to event maybe?
+				GameInst.AddCoin(CoinTotal);
 				break;
 			}
 			case EGameStatus::Lose:
@@ -199,7 +275,8 @@ class ABowlingGameMode : AGameMode
 	void ScoreChange(FName ActorName)
 	{
 		Score++;
-		if (Score == 14)
+		// TODO: This is for survival mode only, remove the hardcoded 15.
+		if (Score == 15)
 		{
 			Win();
 		}
