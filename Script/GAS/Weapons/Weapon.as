@@ -13,7 +13,7 @@ class UWeapon : UStaticMeshComponent
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage AttackAnim;
 
-	protected UMaterialInstanceDynamic DynamicMat;
+	protected UColorOverlay ColorOverlay;
 	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 	protected AActor Target;
 
@@ -40,8 +40,10 @@ class UWeapon : UStaticMeshComponent
 		{
 			AttachTo(CompanionSkeleton, AttachLocation);
 		}
-		DynamicMat = Material::CreateDynamicMaterialInstance(GetMaterial(0));
-		SetMaterial(0, DynamicMat);
+
+		ColorOverlay = NewObject(this, UColorOverlay);
+		ColorOverlay.SetupDynamicMaterial(GetMaterial(0));
+		SetMaterial(0, ColorOverlay.DynamicMat);
 	}
 
 	UFUNCTION()
@@ -57,7 +59,7 @@ class UWeapon : UStaticMeshComponent
 		if (bEnabled)
 		{
 			Target = nullptr;
-			ChangeOverlayColor(FLinearColor::Red);
+			ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
 			SetCollisionProfileName(n"Weapon");
 			OnComponentBeginOverlap.AddUFunction(this, n"OnOverlap");
 			OnComponentEndOverlap.AddUFunction(this, n"OnOverlapEnd");
@@ -80,14 +82,14 @@ class UWeapon : UStaticMeshComponent
 	private void OnOverlap(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult&in SweepResult)
 	{
 		Target = OtherActor;
-		ChangeOverlayColor(FLinearColor::Green);
+		ColorOverlay.ChangeOverlayColor(FLinearColor::Green);
 	}
 
 	UFUNCTION()
 	private void OnOverlapEnd(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex)
 	{
 		Target = nullptr;
-		ChangeOverlayColor(FLinearColor::Red);
+		ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
 	}
 
 	UFUNCTION()
@@ -145,28 +147,6 @@ class UWeapon : UStaticMeshComponent
 		{
 			Gameplay::GetActorOfClass(AAbilitiesManager)
 				.RegisterAbilities(Data.DefaultAbility.GetSingleTagContainer(), AbilitySys);
-		}
-	}
-
-	UFUNCTION()
-	void ResetOverlayColor()
-	{
-		ChangeOverlayColor(FLinearColor::Transparent, true);
-	}
-
-	UFUNCTION()
-	void RevertOverlayColor()
-	{
-		ChangeOverlayColor(CachedOverlayColor);
-	}
-
-	UFUNCTION()
-	void ChangeOverlayColor(FLinearColor Color, bool bCached = false)
-	{
-		DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
-		if (bCached)
-		{
-			CachedOverlayColor = Color;
 		}
 	}
 

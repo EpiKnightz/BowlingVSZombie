@@ -130,7 +130,7 @@ class AZombie : AHumanlite
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
 		StatusResponseComponent.Initialize(AbilitySystem);
-		StatusResponseComponent.DChangeOverlayColor.BindUFunction(this, n"ChangeOverlayColor");
+		StatusResponseComponent.DChangeOverlayColor.BindUFunction(ColorOverlay, n"ChangeOverlayColor");
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
@@ -356,9 +356,9 @@ class AZombie : AHumanlite
 		Data.Add(n"MaxHP", DataRow.HP);
 		Data.Add(n"Attack", DataRow.Atk);
 		Data.Add(n"MoveSpeed", DataRow.Speed);
+		Data.Add(n"Accel", DataRow.Accel);
 		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
 		Data.Add(n"Bounciness", DataRow.Bounciness);
-		Data.Add(n"Accel", DataRow.Accel);
 
 		AbilitySystem.ImportData(Data);
 

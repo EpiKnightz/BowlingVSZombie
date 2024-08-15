@@ -20,6 +20,7 @@ class AOptionCardManager : AActor
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
 	FTagWeapon2DataDelegate DCreateWeaponFromTag;
+	FTagAbility2DataDelegate DGetAbilityDataFromTag;
 	FCardDTEvent EOnCardAdded;
 
 	UFUNCTION(BlueprintOverride)
@@ -127,6 +128,6 @@ class AOptionCardManager : AActor
 	{
 		// DCreateWeaponFromTag
 		CurrentID = 0;
-		System::SetTimer(this, n"SpawnCard", 5, false);
+		System::SetTimer(this, n"SpawnCard", 2.5, false);
 	}
 };

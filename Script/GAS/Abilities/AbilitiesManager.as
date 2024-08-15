@@ -59,6 +59,10 @@ class AAbilitiesManager : AActor
 		{
 			AbilitySystem.RegisterAbility(UMultiShootOnOverlapAbility);
 		}
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_GrowOnSetup))
+		{
+			AbilitySystem.RegisterAbility(UGrowOnSetupAbility);
+		}
 		else
 		{
 			PrintError("RegisterSingleAbility: AbilityID not found");

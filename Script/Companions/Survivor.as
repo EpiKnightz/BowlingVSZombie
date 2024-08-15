@@ -69,17 +69,26 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	private void OnPostAddForce()
 	{
-		Print("");
 	}
 
 	UFUNCTION()
-	void SetData(FSurvivorDT Data)
+	void SetData(FSurvivorDT DataRow)
 	{
-		ChangeWeapon(Data.WeaponTag);
-		SetMeshes(Data.BodyMesh, Data.HeadMesh, Data.AccessoryMesh);
+		TMap<FName, float32> Data;
+		Data.Add(n"MaxHP", DataRow.HP);
+		Data.Add(n"Attack", DataRow.Atk);
+		Data.Add(n"MoveSpeed", DataRow.Speed);
+		Data.Add(n"Accel", DataRow.Accel);
+		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
+		Data.Add(n"Bounciness", DataRow.Bounciness);
 
-		SetBodyScale(Data.BodyScale);
-		SetHeadScale(Data.HeadScale);
+		AbilitySystem.ImportData(Data);
+
+		ChangeWeapon(DataRow.WeaponTag);
+		SetMeshes(DataRow.BodyMesh, DataRow.HeadMesh, DataRow.AccessoryMesh);
+
+		SetBodyScale(DataRow.BodyScale);
+		SetHeadScale(DataRow.HeadScale);
 
 		Collider.OnComponentHit.AddUFunction(this, n"OnHit");
 
@@ -92,7 +101,7 @@ class ASurvivor : AHumanlite
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		DRegisterAbilities.ExecuteIfBound(Data.AbilitiesTags, AbilitySystem);
+		DRegisterAbilities.ExecuteIfBound(DataRow.AbilitiesTags, AbilitySystem);
 	}
 
 	void ChangeWeapon(FGameplayTag WeaponTag)
@@ -147,11 +156,11 @@ class ASurvivor : AHumanlite
 			|| Vector.X > SURVIVOR_MAX_X
 			|| Vector.X < SURVIVOR_MIN_X)
 		{
-			ChangeOverlayColor(FLinearColor::Red);
+			ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
 		}
 		else
 		{
-			ChangeOverlayColor(FLinearColor::Green);
+			ColorOverlay.ChangeOverlayColor(FLinearColor::Green);
 		}
 	}
 
@@ -163,7 +172,7 @@ class ASurvivor : AHumanlite
 			Math::Clamp(GetActorLocation().Y, -SURVIVOR_Y_LIMIT, SURVIVOR_Y_LIMIT),
 			60));
 		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		ResetOverlayColor();
+		ColorOverlay.ResetOverlayColor();
 		PopUpAnimation();
 		RegisterDragEvents(false);
 	}

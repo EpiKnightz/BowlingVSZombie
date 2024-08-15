@@ -18,6 +18,7 @@ class AOptionCard : AActor
 	FCardDT CardData;
 
 	FIntCardDelegate DOnCardClicked;
+	FActorDelegate DOnTargetChosen;
 
 	private ATemplateSequenceActor TemplSequActor;
 	private int ID;
@@ -26,12 +27,16 @@ class AOptionCard : AActor
 	FTransform SurvivorTransform;
 	UPROPERTY()
 	FTransform WeaponTransform;
+	UPROPERTY()
+	FTransform AbilityTransform;
 
 	FCardDTEvent EOnCardInit;
 
 	// UPROPERTY()
 	// TSubclassOf<ASurvivor> CompanionClass;
 
+	protected UColorOverlay ColorOverlay;
+	protected AActor Target;
 	private ASurvivor SpawnedSurvivor;
 	private AActor SpawnedWeapon;
 
@@ -48,6 +53,10 @@ class AOptionCard : AActor
 		{
 			EOnCardInit.AddUFunction(CardWidget, n"SetCardData");
 		}
+
+		ColorOverlay = NewObject(this, UColorOverlay);
+		ColorOverlay.SetupDynamicMaterial(CardMesh.GetMaterial(0));
+		CardMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 	}
 
 	// ID can be 0, 1 or 2
@@ -99,6 +108,8 @@ class AOptionCard : AActor
 			}
 			case ECardType::Ability:
 			{
+				CardData = OptionCardManager.DGetAbilityDataFromTag.ExecuteIfBound(iCardData.ItemID);
+				DOnTargetChosen.BindUFunction(OptionCardManager, n"OnTargetChosen");
 				break;
 			}
 			default:
@@ -129,6 +140,7 @@ class AOptionCard : AActor
 					SpawnedSurvivor.ResetTransform();
 					SpawnedSurvivor.RegisterDragEvents();
 					SpawnedSurvivor = nullptr;
+					OnFinished();
 					break;
 				}
 				case ECardType::Weapon:
@@ -140,11 +152,15 @@ class AOptionCard : AActor
 						WeaponPtr.ResetTransform();
 						WeaponPtr.RegisterDragEvents();
 						SpawnedWeapon = nullptr;
+						OnFinished();
 					}
 					break;
 				}
 				case ECardType::Ability:
 				{
+					SetActorLocationAndRotation(AbilityTransform.Location, AbilityTransform.Rotation.Rotator());
+					SetActorRelativeScale3D(AbilityTransform.Scale3D);
+					RegisterDragEvents();
 					break;
 				}
 				default:
@@ -153,6 +169,63 @@ class AOptionCard : AActor
 					break;
 				}
 			}
+		}
+	}
+
+	void RegisterDragEvents(bool bEnabled = true)
+	{
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		if (bEnabled)
+		{
+			Target = nullptr;
+			ColorOverlay.ChangeOverlayColor(FLinearColor(1, 0, 0, -1));
+			Collider.SetCollisionProfileName(n"Weapon");
+			OnActorBeginOverlap.AddUFunction(this, n"OnOverlap");
+			OnActorEndOverlap.AddUFunction(this, n"OnEndOverlap");
+			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
+			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+		}
+		else
+		{
+			Pawn.EOnTouchHold.UnbindObject(this);
+			Pawn.EOnTouchReleased.UnbindObject(this);
+			OnActorBeginOverlap.UnbindObject(this);
+			OnActorEndOverlap.UnbindObject(this);
+			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			OnActorBeginOverlap.Clear();
+			OnActorEndOverlap.Clear();
+		}
+	}
+
+	UFUNCTION()
+	private void OnOverlap(AActor OverlappedActor, AActor OtherActor)
+	{
+		Print("OnOverlap");
+		Target = OtherActor;
+		ColorOverlay.ChangeOverlayColor(FLinearColor(0, 1, 0, -1));
+	}
+
+	UFUNCTION()
+	private void OnEndOverlap(AActor OverlappedActor, AActor OtherActor)
+	{
+		Target = nullptr;
+		ColorOverlay.ChangeOverlayColor(FLinearColor(1, 0, 0, -1));
+	}
+
+	UFUNCTION()
+	private void OnDragged(AActor OtherActor, FVector Vector)
+	{
+		SetActorLocation(FVector(Vector.X, Vector.Y, AbilityTransform.Location.Z));
+	}
+
+	UFUNCTION()
+	private void OnDragReleased(AActor OtherActor, FVector Vector)
+	{
+		if (IsValid(Target))
+		{
+			// Replace survivor with this weapon
+			RegisterDragEvents(false);
+			DOnTargetChosen.ExecuteIfBound(Target);
 			OnFinished();
 		}
 	}

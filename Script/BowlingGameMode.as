@@ -104,6 +104,7 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager.EOnCardAdded.AddUFunction(WeaponsManager, n"AddCard");
 		OptionCardManager.DCreateSurvivorFromTag.BindUFunction(SurvivorManager, n"CreateSurvivorFromTag");
 		OptionCardManager.DCreateWeaponFromTag.BindUFunction(WeaponsManager, n"CreateWeaponFromTag");
+		OptionCardManager.DGetAbilityDataFromTag.BindUFunction(AbilitiesManager, n"GetAbilityData");
 
 		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :
@@ -112,19 +113,26 @@ class ABowlingGameMode : AGameMode
 		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
 		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		BoostManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		BowlingPawn.ItemPoolConfig = LevelConfigsData.BowlingPoolConfig;
-		if (LevelConfigsData.SurvivorPoolConfig.Num() > 0)
+		BowlingPawn.ItemPoolConfig = LevelConfigsData.BowlingsPoolConfig;
+		if (LevelConfigsData.SurvivorsPoolConfig.Num() > 0)
 		{
-			for (auto Item : LevelConfigsData.SurvivorPoolConfig.ItemTags)
+			for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
 			{
 				OptionCardManager.AddCard(FCardDT(Item, ECardType::Survivor));
 			}
 		}
-		if (LevelConfigsData.WeaponPoolConfig.Num() > 0)
+		if (LevelConfigsData.WeaponsPoolConfig.Num() > 0)
 		{
-			for (auto Item : LevelConfigsData.WeaponPoolConfig.ItemTags)
+			for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
 			{
 				OptionCardManager.AddCard(FCardDT(Item, ECardType::Weapon));
+			}
+		}
+		if (LevelConfigsData.AbilitiesPoolConfig.Num() > 0)
+		{
+			for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
+			{
+				OptionCardManager.AddCard(FCardDT(Item, ECardType::Ability));
 			}
 		}
 
@@ -184,7 +192,7 @@ class ABowlingGameMode : AGameMode
 		GameStatus = EGameStatus::Ongoing;
 		ZombieManager.GameStart();
 		BoostManager.GameStart();
-		if (!LevelConfigsData.SurvivorPoolConfig.IsEmpty())
+		if (!LevelConfigsData.SurvivorsPoolConfig.IsEmpty())
 		{
 			OptionCardManager.GameStart();
 		}
@@ -207,8 +215,8 @@ class ABowlingGameMode : AGameMode
 					break;
 				}
 				case ECardType::Survivor:
-				case ECardType::Ability:
 				case ECardType::Weapon:
+				case ECardType::Ability:
 				{
 					OptionCardManager.AddCard(Power);
 					break;

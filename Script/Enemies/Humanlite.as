@@ -35,7 +35,7 @@ class AHumanlite : AActor
 	TArray<UAnimMontage> DeadAnims;
 
 	protected UFCTweenBPActionFloat FloatTween;
-	protected UMaterialInstanceDynamic DynamicMat;
+	protected UColorOverlay ColorOverlay;
 	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 
 	///////////////////////////////////
@@ -45,10 +45,11 @@ class AHumanlite : AActor
 	UFUNCTION(BlueprintOverride)
 	void ConstructionScript()
 	{
-		DynamicMat = Material::CreateDynamicMaterialInstance(BodyMesh.GetMaterial(0));
-		BodyMesh.SetMaterial(0, DynamicMat);
-		HeadMesh.SetMaterial(0, DynamicMat);
-		AccessoryMesh.SetMaterial(0, DynamicMat);
+		ColorOverlay = NewObject(this, UColorOverlay);
+		ColorOverlay.SetupDynamicMaterial(BodyMesh.GetMaterial(0));
+		BodyMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+		HeadMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+		AccessoryMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 	}
 
 	void SetMeshes(USkeletalMesh InBodyMesh, UStaticMesh InHeadMesh, UStaticMesh InAccMesh)
@@ -100,8 +101,8 @@ class AHumanlite : AActor
 	UFUNCTION()
 	void TakeDamageCue()
 	{
-		ChangeOverlayColor(FLinearColor::Red);
-		System::SetTimer(this, n"RevertOverlayColor", 0.25, false);
+		ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
+		System::SetTimer(ColorOverlay, n"RevertOverlayColor", 0.25, false);
 		// AnimateInst.Montage_Play(DamageAnim);
 		//  FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 	}
@@ -111,34 +112,12 @@ class AHumanlite : AActor
 	{
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		System::ClearTimer(this, "RevertOverlayColor");
-		ChangeOverlayColor(FLinearColor::Gray, true);
+		System::ClearTimer(ColorOverlay, "RevertOverlayColor");
+		ColorOverlay.ChangeOverlayColor(FLinearColor::Gray, true);
 
 		int AnimIndex = Math::RandRange(0, DeadAnims.Num() - 1);
 		PlayDeadAnim(AnimIndex);
 	}
 
 	void PlayDeadAnim(int AnimIndex) {}
-
-	UFUNCTION()
-	void ResetOverlayColor()
-	{
-		ChangeOverlayColor(FLinearColor::Transparent, true);
-	}
-
-	UFUNCTION()
-	void RevertOverlayColor()
-	{
-		ChangeOverlayColor(CachedOverlayColor);
-	}
-
-	UFUNCTION()
-	void ChangeOverlayColor(FLinearColor Color, bool bCached = false)
-	{
-		DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
-		if (bCached)
-		{
-			CachedOverlayColor = Color;
-		}
-	}
 };

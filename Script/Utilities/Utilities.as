@@ -24,6 +24,7 @@ delegate void FColorBoolDelegate(FLinearColor Value, bool Bool);
 delegate bool FSurvivor2BoolDelegate(ASurvivor& Survivor);
 delegate FSurvivorDT FTagSurvivor2DataDelegate(FGameplayTag SurvivorID, ASurvivor& SpawnedActor);
 delegate FWeaponDT FTagWeapon2DataDelegate(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr);
+delegate FAbilityDT FTagAbility2DataDelegate(FGameplayTag AbilityTag);
 delegate void FIntCardDelegate(int Value, FCardDT Card);
 delegate void FTagAbilitySystem(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem);
 // delegate void FStringTextDelegate(FString RewardName, FText Description);

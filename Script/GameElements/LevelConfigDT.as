@@ -13,13 +13,13 @@ struct FLevelConfigsDT
 	UDataTable SpawnSequenceDT;
 
 	UPROPERTY()
-	FItemPoolConfigDT BowlingPoolConfig;
+	FItemPoolConfigDT BowlingsPoolConfig;
 
 	UPROPERTY()
-	FItemPoolConfigDT SurvivorPoolConfig;
+	FItemPoolConfigDT SurvivorsPoolConfig;
 
 	UPROPERTY()
-	FItemPoolConfigDT WeaponPoolConfig;
+	FItemPoolConfigDT WeaponsPoolConfig;
 
 	UPROPERTY()
 	FItemPoolConfigDT AbilitiesPoolConfig;
