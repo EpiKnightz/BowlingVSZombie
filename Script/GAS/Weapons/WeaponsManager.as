@@ -75,21 +75,13 @@ class AWeaponsManager : AActor
 			return;
 		}
 
-		if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Rifle))
+		if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range))
 		{
 			WeaponPtr = UWeaponGun::Create(Target, WeaponData.WeaponID.TagName);
 		}
-		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Pistol))
-		{
-			WeaponPtr = UWeaponPistol::Create(Target, WeaponData.WeaponID.TagName);
-		}
-		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Melee_Sword))
+		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Melee))
 		{
 			WeaponPtr = UWeaponSword::Create(Target, WeaponData.WeaponID.TagName);
-		}
-		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range_Shotgun))
-		{
-			WeaponPtr = UWeaponShotGun::Create(Target, WeaponData.WeaponID.TagName);
 		}
 		WeaponPtr.SetData(WeaponData);
 		WeaponPtr.Setup();

@@ -101,7 +101,7 @@ class ASurvivor : AHumanlite
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		DRegisterAbilities.ExecuteIfBound(DataRow.AbilitiesTags, AbilitySystem);
+		AddAbilities(DataRow.AbilitiesTags);
 	}
 
 	void ChangeWeapon(FGameplayTag WeaponTag)
@@ -120,7 +120,12 @@ class ASurvivor : AHumanlite
 
 	void AddAbility(FGameplayTag AbilityTag)
 	{
-		DRegisterAbilities.ExecuteIfBound(AbilityTag.GetSingleTagContainer(), AbilitySystem);
+		AddAbilities(AbilityTag.GetSingleTagContainer());
+	}
+
+	void AddAbilities(FGameplayTagContainer AbilityTags)
+	{
+		DRegisterAbilities.ExecuteIfBound(AbilityTags, AbilitySystem);
 	}
 
 	void ResetTransform()

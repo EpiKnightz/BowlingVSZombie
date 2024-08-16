@@ -43,25 +43,25 @@ class AAbilitiesManager : AActor
 	UFUNCTION()
 	void RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
 	{
-		if (AbilityID.MatchesTag(GameplayTags::Ability_ShootAtTarget))
+		if (AbilityID.MatchesTag(GameplayTags::Ability_Shoot_AtTarget))
 		{
-			AbilitySystem.RegisterAbility(UShootAtTargetAbility);
+			AbilitySystem.RegisterAbility(UShootAtTargetAbility, AbilityID);
 		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_ShootOnOverlap))
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_Shoot))
 		{
-			AbilitySystem.RegisterAbility(UShootOnOverlapAbility);
+			AbilitySystem.RegisterAbility(UShootBulletAbility, AbilityID);
 		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_SlashOnOverlap))
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_Slash))
 		{
-			AbilitySystem.RegisterAbility(USlashOnOverlapAbility);
+			AbilitySystem.RegisterAbility(USlashAreaAbility, AbilityID);
 		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_MultiShootOnOverlap))
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_MultiShoot))
 		{
-			AbilitySystem.RegisterAbility(UMultiShootOnOverlapAbility);
+			AbilitySystem.RegisterAbility(UMultiShootAbility, AbilityID);
 		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_GrowOnSetup))
+		else if (AbilityID.MatchesTag(GameplayTags::Ability_Grow))
 		{
-			AbilitySystem.RegisterAbility(UGrowOnSetupAbility);
+			AbilitySystem.RegisterAbility(UGrowUpAbility, AbilityID);
 		}
 		else
 		{

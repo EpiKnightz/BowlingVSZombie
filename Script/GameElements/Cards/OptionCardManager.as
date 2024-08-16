@@ -128,6 +128,6 @@ class AOptionCardManager : AActor
 	{
 		// DCreateWeaponFromTag
 		CurrentID = 0;
-		System::SetTimer(this, n"SpawnCard", 2.5, false);
+		System::SetTimer(this, n"SpawnCard", 10, false);
 	}
 };

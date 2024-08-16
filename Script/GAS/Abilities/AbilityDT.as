@@ -1,3 +1,12 @@
+enum EAbilityTriggerType
+{
+	OnOverlap,
+	OnOverlapMarkTarget,
+	OnTimeLoop,
+	OnSetup,
+	None,
+}
+
 struct FAbilityDT
 {
 	UPROPERTY()
@@ -11,6 +20,12 @@ struct FAbilityDT
 
 	UPROPERTY()
 	UTexture2D Icon;
+
+	UPROPERTY()
+	EAbilityTriggerType TriggerType = EAbilityTriggerType::None;
+
+	UPROPERTY()
+	float TriggerParam = 0;
 
 	UPROPERTY()
 	TSubclassOf<AActor> ActorTemplate;

@@ -1,83 +1,20 @@
-class UShootAtTargetAbility : UAbility
+class UShootAtTargetAbility : UShootBulletAbility
 {
-	AActor TargetActor;
+	protected AActor TargetActor;
 
-	bool SetupAbilityChild() override
+	void ActivateAbilityChild(AActor OtherActor) override
 	{
-		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-		if (IsValid(AttackResponse))
+		TargetActor = OtherActor;
+
+		if (IsValid(TargetActor)
+			&& IsValid(AttackResponsePtr)
+			&& AttackResponsePtr.DGetSocketLocation.IsBound())
 		{
-			GetAbilityData(GameplayTags::Ability_ShootAtTarget);
-			if (AbilityData.AbilityID.IsValid())
-			{
-				AttackResponse.EOnBeginOverlapEvent.AddUFunction(this, n"TriggerOnOverlap");
-				AttackResponse.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
-
-				//  Allow the bowling to pass through if using this ability
-				auto Collider = UCapsuleComponent::Get(AbilitySystem.GetOwner());
-				if (IsValid(Collider))
-				{
-					Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Overlap);
-				}
-
-				return true;
-			}
+			AbilitySystem.GetOwner().SetActorRotation(FRotator::MakeFromX(TargetActor.GetActorLocation()
+																		  - AttackResponsePtr.DGetSocketLocation.ExecuteIfBound(n"RightHand"))
+													  + FRotator(0, 180, 0));
 		}
-		return false;
-	}
 
-	UFUNCTION()
-	void TriggerOnOverlap(AActor OtherActor)
-	{
-		ABowling pawn = Cast<ABowling>(OtherActor);
-		if (pawn != nullptr)
-		{
-			pawn.EOnHit.AddUFunction(this, n"OnHit");
-		}
-	}
-
-	UFUNCTION()
-	void OnHit(AActor OtherActor)
-	{
-		auto TargetResponse = UTargetResponseComponent::Get(OtherActor);
-		if (IsValid(TargetResponse))
-		{
-			if (TargetResponse.TargetType == ETargetType::Zombie)
-			{
-				auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-				if (IsValid(AttackResponse))
-				{
-					TargetActor = OtherActor;
-					AttackResponse.DPlayAttackAnim.ExecuteIfBound();
-				}
-			}
-		}
-	}
-
-	UFUNCTION()
-	private void OnAnimHitNotify()
-	{
-		if (IsValid(TargetActor))
-		{
-			auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-			if (IsValid(AttackResponse) && AttackResponse.DGetAttackLocation.IsBound() && AttackResponse.DGetAttackRotation.IsBound())
-			{
-				AttackResponse.GetOwner().SetActorRotation(FRotator::MakeFromX(TargetActor.GetActorLocation() - AttackResponse.DGetSocketLocation.ExecuteIfBound(n"RightPistol"))
-														   + FRotator(0, 180, 0));
-				SpawnActor(AbilityData.ActorTemplate, AttackResponse.DGetAttackLocation.Execute(), AttackResponse.DGetAttackRotation.Execute());
-			}
-		}
-	}
-
-	void StopAbility() override
-	{
-		auto AttackResponse = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
-		if (IsValid(AttackResponse))
-		{
-			AttackResponse.EOnBeginOverlapEvent.UnbindObject(this);
-			AttackResponse.EOnAnimHitNotify.UnbindObject(this);
-
-			// What about OnHit function? Guess we'll find out...
-		}
+		Super::ActivateAbilityChild(OtherActor);
 	}
 };
