@@ -9,7 +9,6 @@ class UAttackResponseComponent : UResponseComponent
 	FRotatorReturnDelegate DGetAttackRotation;
 
 	FVoidEvent EOnAnimHitNotify;
-	FVoidEvent EOnAttackHitCue;
 	FVoidDelegate DPlayAttackAnim;
 	FActorEvent EOnBeginOverlapEvent;
 	FName2VectorDelegate DGetSocketLocation;
@@ -52,6 +51,5 @@ class UAttackResponseComponent : UResponseComponent
 	void NotifyAttackHit()
 	{
 		EOnAnimHitNotify.Broadcast();
-		EOnAttackHitCue.Broadcast();
 	}
 };

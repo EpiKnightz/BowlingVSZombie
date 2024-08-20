@@ -32,7 +32,7 @@ class AZombieManager : AActor
 
 	TArray<FSpawnSequenceDT> ZombieSequence;
 	TArray<FName> ZombiePoolID;
-	TArray<FName> SpawnedZombieList;
+	TSet<FName> SpawnedZombieList;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable SpawnSequenceDT;

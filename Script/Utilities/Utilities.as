@@ -1,3 +1,4 @@
+delegate void FBoolDelegate(bool bValue);
 delegate void FIntDelegate(int Value);
 delegate int FInt2IntDelegate(int Value);
 delegate float FFloat2FloatDelegate(float Value);
@@ -30,6 +31,7 @@ delegate void FTagAbilitySystem(FGameplayTagContainer AbilitiesContainer, ULiteA
 // delegate void FStringTextDelegate(FString RewardName, FText Description);
 
 event void FVectorEvent(FVector Value);
+event void FBoolEvent(bool bValue);
 event void FVectorRotatorEvent(FVector Value, FRotator Rotator);
 event void FVectorBoolEvent(FVector Value, bool Bool);
 event void FVoidEvent();

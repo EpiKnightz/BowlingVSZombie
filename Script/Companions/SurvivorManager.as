@@ -6,6 +6,7 @@ class ASurvivorManager : AActor
 	UDataTable SurvivorDataTable;
 
 	TMap<FGameplayTag, FSurvivorDT> SurvivorsDataMap;
+	TSet<FName> SpawnedSurvivorList;
 
 	UPROPERTY()
 	TSubclassOf<ASurvivor> SurvivorTemplate;
@@ -13,6 +14,7 @@ class ASurvivorManager : AActor
 	FItemPoolConfigDT ItemPoolConfig;
 
 	FSurvivorEvent EOnSurvivorSpawned;
+	FBoolEvent EOnGameStateChanged;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -23,6 +25,12 @@ class ASurvivorManager : AActor
 		{
 			SurvivorsDataMap.Add(Survivor.SurvivorID, Survivor);
 		}
+	}
+
+	UFUNCTION()
+	void EndGame()
+	{
+		EOnGameStateChanged.Broadcast(false);
 	}
 
 	UFUNCTION()
@@ -102,10 +110,12 @@ class ASurvivorManager : AActor
 	{
 		SpawnedActor = SpawnActor(SurvivorTemplate);
 		SpawnedActor.SetData(SurvivorData);
+		SpawnedSurvivorList.Add(SpawnedActor.GetName());
+		EOnGameStateChanged.AddUFunction(SpawnedActor, n"EnableAttack");
 		EOnSurvivorSpawned.Broadcast(SpawnedActor);
 	}
 };
 
 // Spawn random survivor at start
-// Fill "noise" bar to 100% -> can spawn again?
+// Fill "Attention" bar to 100% -> can spawn again?
 // Later

@@ -8,16 +8,6 @@ enum EGameStatus
 }
 
 class ABowlingGameMode : AGameMode
-/**
- * BowlingGameMode implements the core gameplay logic for a simple bowling game.
- *
- * It keeps track of the current score and health points, and raises events when they change.
- * It also has logic to determine when the player wins or loses the game.
- *
- * The class contains UPROPERTY declarations for the key gameplay variables,
- * d for the score/HP update events, and UFUNCTIONs that encapsulate
- * the core gameplay logic like increasing score, taking damage, winning and losing.
- */
 {
 	// Set DefaultPawn in blueprints
 	UPROPERTY(BlueprintReadWrite)
@@ -238,6 +228,7 @@ class ABowlingGameMode : AGameMode
 	void EndGame()
 	{
 		OptionCardManager.EndGame();
+		SurvivorManager.EndGame();
 	}
 
 	UFUNCTION()

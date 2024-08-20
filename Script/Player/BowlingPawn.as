@@ -112,6 +112,7 @@ class ABowlingPawn : APawn
 	ETouchTarget CurrentTouchTarget = ETouchTarget::None;
 
 	FVector PressLoc;
+	bool bIsAimable;
 
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
@@ -125,6 +126,7 @@ class ABowlingPawn : APawn
 	FActorVectorEvent EOnTouchHold;
 	FActorVectorEvent EOnTouchReleased;
 	FBowlingEvent EOnBowlingSpawned;
+	FBoolDelegate DSetBowlingAimable;
 
 	/////////////////////////////////////////
 	// Setup
@@ -158,6 +160,8 @@ class ABowlingPawn : APawn
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
 		DOnHideArrow.BindUFunction(this, n"HideGuideArrow");
+		DSetBowlingAimable.BindUFunction(this, n"SetBowlingAimable");
+		SetBowlingAimable(true);
 
 		PredictLineMaterial = Material::CreateDynamicMaterialInstance(PredictLine.GetMaterial(0));
 		PredictLine.SetMaterial(0, PredictLineMaterial);
@@ -219,6 +223,12 @@ class ABowlingPawn : APawn
 		EnhancedInputComponent.BindAction(BackAction, ETriggerEvent::Completed, BackTriggered);
 	}
 
+	UFUNCTION()
+	private void SetBowlingAimable(bool bValue)
+	{
+		bIsAimable = bValue;
+	}
+
 	UFUNCTION(BlueprintCallable)
 	void TouchTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
@@ -229,39 +239,42 @@ class ABowlingPawn : APawn
 		if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
 		{
 			FVector location = GetActorLocation();
-			if (outResult.Actor != this)
+			EOnTouchTriggered.Broadcast(outResult.Actor, outResult.Location);
+			if (bIsAimable)
 			{
-				if (CooldownPercent > 0)
+				if (outResult.Actor != this)
 				{
-					// Gameplay::SetGlobalTimeDilation(0.15);
-
-					if (!BowlingsMap.Find(ItemPoolConfig.GetRandomTag(), CurrentBallData))
+					if (CooldownPercent > 0)
 					{
-						PrintError("Bowling ID not found in data table");
-					}
-					AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
-					AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
-					// Print("Attack " + CurrentBallData.Atk);
-					PredictLine.ClearInstances();
-					CurrentTouchTarget = ETouchTarget::Battlefield;
-					PressLoc = outResult.Location;
-					location.Z = 0;
-					BowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
-					// Print("Touch " + bowlingPowerMultiplier, 100);
-					SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).ZYaw, 0));
-					DrawPredictLine();
+						// Gameplay::SetGlobalTimeDilation(0.15);
 
-					AttackAnim.bEnableAutoBlendOut = false;
-					AnimateInst.Montage_Play(AttackAnim);
-					AnimateInst.Montage_JumpToSection(n"Start", AttackAnim);
+						if (!BowlingsMap.Find(ItemPoolConfig.GetRandomTag(), CurrentBallData))
+						{
+							PrintError("Bowling ID not found in data table");
+						}
+						AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
+						AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
+						// Print("Attack " + CurrentBallData.Atk);
+						PredictLine.ClearInstances();
+						CurrentTouchTarget = ETouchTarget::Battlefield;
+						PressLoc = outResult.Location;
+						location.Z = 0;
+						BowlingPowerMultiplier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
+						// Print("Touch " + bowlingPowerMultiplier, 100);
+						SetActorRotation(FRotator(0, FRotator::MakeFromX(location - PressLoc).ZYaw, 0));
+						DrawPredictLine();
+
+						AttackAnim.bEnableAutoBlendOut = false;
+						AnimateInst.Montage_Play(AttackAnim);
+						AnimateInst.Montage_JumpToSection(n"Start", AttackAnim);
+					}
+				}
+				else
+				{
+					CurrentTouchTarget = ETouchTarget::Player;
+					CalculateMovement(location, outResult.Location);
 				}
 			}
-			else
-			{
-				CurrentTouchTarget = ETouchTarget::Player;
-				CalculateMovement(location, outResult.Location);
-			}
-			EOnTouchTriggered.Broadcast(outResult.Actor, outResult.Location);
 		}
 	}
 
@@ -275,72 +288,74 @@ class ABowlingPawn : APawn
 		if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
 		{
 			FVector location = GetActorLocation();
-			if (CurrentTouchTarget == ETouchTarget::Battlefield)
+			EOnTouchHold.Broadcast(outResult.Actor, outResult.Location);
+			if (bIsAimable)
 			{
-				if (CooldownPercent > 0)
+				if (CurrentTouchTarget == ETouchTarget::Battlefield)
 				{
-					// The further distance between each hold, the faster the game speed.
-					// Gameplay::SetGlobalTimeDilation(Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, PressLoc.DistSquared(outResult.Location) / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime));
-
-					PressLoc = outResult.Location;
-
-					// location.Z = 0;
-					float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
-					float Yaw = FRotator::MakeFromX(location - PressLoc).ZYaw;
-
-					if (!Math::IsNearlyEqual(Yaw, GetActorRotation().ZYaw) || !Math::IsNearlyEqual(BowlingPowerMultiplier, tempModifier))
+					if (CooldownPercent > 0)
 					{
-						BowlingPowerMultiplier = tempModifier;
-						// Print("Hold " + bowlingPowerMultiplier, 100);
-						SetActorRotation(FRotator(0, Yaw, 0));
-						DrawPredictLine();
+						// The further distance between each hold, the faster the game speed.
+						// Gameplay::SetGlobalTimeDilation(Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, PressLoc.DistSquared(outResult.Location) / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime));
+
+						PressLoc = outResult.Location;
+
+						// location.Z = 0;
+						float tempModifier = Math::Clamp(PressLoc.Distance(location) / BowlingPowerMark, 0.2, 1);
+						float Yaw = FRotator::MakeFromX(location - PressLoc).ZYaw;
+
+						if (!Math::IsNearlyEqual(Yaw, GetActorRotation().ZYaw) || !Math::IsNearlyEqual(BowlingPowerMultiplier, tempModifier))
+						{
+							BowlingPowerMultiplier = tempModifier;
+							// Print("Hold " + bowlingPowerMultiplier, 100);
+							SetActorRotation(FRotator(0, Yaw, 0));
+							DrawPredictLine();
+						}
 					}
 				}
+				else if (CurrentTouchTarget == ETouchTarget::Player)
+				{
+					CalculateMovement(location, outResult.Location);
+				}
 			}
-			else if (CurrentTouchTarget == ETouchTarget::Player)
-			{
-				CalculateMovement(location, outResult.Location);
-			}
-			EOnTouchHold.Broadcast(outResult.Actor, outResult.Location);
 		}
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
-		if (CurrentTouchTarget == ETouchTarget::Battlefield)
+		if (bIsAimable)
 		{
-			if (CooldownPercent >= 1 && BowlingPowerMultiplier != 0)
+			if (CurrentTouchTarget == ETouchTarget::Battlefield)
 			{
-				SetCooldownPercent(0);
+				if (CooldownPercent >= 1 && BowlingPowerMultiplier != 0)
+				{
+					SetCooldownPercent(0);
 
-				ClearTween();
-				FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::InQuad);
-				FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
-				FloatTween.Start();
+					ClearTween();
+					FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::InQuad);
+					FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
+					FloatTween.Start();
 
-				AttackAnim.bEnableAutoBlendOut = true;
-				AnimateInst.Montage_Play(AttackAnim);
-				AnimateInst.Montage_JumpToSection(n"Attacking", AttackAnim);
+					AttackAnim.bEnableAutoBlendOut = true;
+					AnimateInst.Montage_Play(AttackAnim);
+					AnimateInst.Montage_JumpToSection(n"Attacking", AttackAnim);
+				}
+				PredictLine.ClearInstances();
+				PressLoc = FVector::ZeroVector;
+				BowlingPowerMultiplier = 0;
 			}
-			PredictLine.ClearInstances();
-			PressLoc = FVector::ZeroVector;
-			BowlingPowerMultiplier = 0;
+			else if (CurrentTouchTarget == ETouchTarget::Player)
+			{
+			}
+			Gameplay::SetGlobalTimeDilation(1);
+			CurrentTouchTarget = ETouchTarget::None;
 		}
-		else if (CurrentTouchTarget == ETouchTarget::Player)
-		{
-		}
-		Gameplay::SetGlobalTimeDilation(1);
-		CurrentTouchTarget = ETouchTarget::None;
-
 		FHitResult outResult;
 		TArray<EObjectTypeQuery> objectTypeArray;
 		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
 		objectTypeArray.Add(EObjectTypeQuery::Pawn);
-		// if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
-		{
-			EOnTouchReleased.Broadcast(outResult.Actor, outResult.Location);
-		}
+		EOnTouchReleased.Broadcast(outResult.Actor, outResult.Location);
 	}
 
 	UFUNCTION()

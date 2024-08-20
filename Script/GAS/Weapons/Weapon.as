@@ -76,6 +76,7 @@ class UWeapon : UStaticMeshComponent
 			OnComponentBeginOverlap.Clear();
 			OnComponentEndOverlap.Clear();
 		}
+		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
 
 	UFUNCTION()
@@ -103,14 +104,13 @@ class UWeapon : UStaticMeshComponent
 	{
 		if (IsValid(Target))
 		{
-			// Replace survivor with this weapon
+			Gameplay::SetGlobalTimeDilation(1);
 			RegisterDragEvents(false);
 			DOnTargetChosen.ExecuteIfBound(Target);
 			GetOwner().DestroyActor();
 		}
 	}
 
-	// TODO: Need to add lots of Muzzle socket to the weapons
 	UFUNCTION()
 	void AttackHitCue()
 	{

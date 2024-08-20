@@ -94,10 +94,8 @@ class ASurvivor : AHumanlite
 
 		AttackResponseComponent.DGetAttackLocation.BindUFunction(this, n"GetAttackLocation");
 		AttackResponseComponent.DGetAttackRotation.BindUFunction(this, n"GetAttackRotation");
-		AttackResponseComponent.EOnAttackHitCue.AddUFunction(Weapon, n"AttackHitCue");
-		AttackResponseComponent.DPlayAttackAnim.BindUFunction(this, n"PlayAttackAnim");
+		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(Weapon, n"AttackHitCue");
 		AttackResponseComponent.DGetSocketLocation.BindUFunction(this, n"GetSocketLocation");
-
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
@@ -128,12 +126,6 @@ class ASurvivor : AHumanlite
 		DRegisterAbilities.ExecuteIfBound(AbilityTags, AbilitySystem);
 	}
 
-	void ResetTransform()
-	{
-		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);
-		ResetTempScale();
-	}
-
 	void RegisterDragEvents(bool bEnabled = true)
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
@@ -150,6 +142,7 @@ class ASurvivor : AHumanlite
 			Pawn.EOnTouchReleased.UnbindObject(this);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
 		}
+		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
 
 	UFUNCTION()
@@ -178,27 +171,24 @@ class ASurvivor : AHumanlite
 			60));
 		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ColorOverlay.ResetOverlayColor();
+		Gameplay::SetGlobalTimeDilation(1);
 		PopUpAnimation();
 		RegisterDragEvents(false);
+		EnableAttack();
+		DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
 	}
 
 	UFUNCTION()
-	void PopUpAnimation()
+	void EnableAttack(bool bEnabled = true)
 	{
-		if (IsValid(FloatTween) && FloatTween.IsValid())
+		if (bEnabled)
 		{
-			FloatTween.Stop();
-			FloatTween.ApplyEasing.Clear();
+			AttackResponseComponent.DPlayAttackAnim.BindUFunction(this, n"PlayAttackAnim");
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(0.1, 1, 0.5f, EFCEase::OutElastic);
-		FloatTween.ApplyEasing.AddUFunction(this, n"SetScaleFloat");
-		FloatTween.Start();
-	}
-
-	UFUNCTION()
-	void SetScaleFloat(float32 Scale)
-	{
-		BodyMesh.SetRelativeScale3D(FVector((Scale)));
+		else
+		{
+			AttackResponseComponent.DPlayAttackAnim.Clear();
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -245,6 +235,31 @@ class ASurvivor : AHumanlite
 		FloatTween.ApplyEasing.AddUFunction(this, n"SetZLocation");
 		FloatTween.OnComplete.AddUFunction(this, n"K2_DestroyActor");
 		FloatTween.Start();
+	}
+
+	UFUNCTION()
+	void PopUpAnimation()
+	{
+		if (IsValid(FloatTween) && FloatTween.IsValid())
+		{
+			FloatTween.Stop();
+			FloatTween.ApplyEasing.Clear();
+		}
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0.1, 1, 0.5f, EFCEase::OutElastic);
+		FloatTween.ApplyEasing.AddUFunction(this, n"SetScaleFloat");
+		FloatTween.Start();
+	}
+
+	UFUNCTION()
+	void SetScaleFloat(float32 Scale)
+	{
+		BodyMesh.SetRelativeScale3D(FVector((Scale)));
+	}
+
+	void ResetTransform()
+	{
+		SetActorLocationAndRotation(FVector(0, 0, 50), FRotator::ZeroRotator);
+		ResetTempScale();
 	}
 
 	UFUNCTION()

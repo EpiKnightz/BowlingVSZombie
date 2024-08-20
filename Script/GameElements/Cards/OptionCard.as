@@ -195,6 +195,7 @@ class AOptionCard : AActor
 			OnActorBeginOverlap.Clear();
 			OnActorEndOverlap.Clear();
 		}
+		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
 
 	UFUNCTION()
@@ -223,7 +224,7 @@ class AOptionCard : AActor
 	{
 		if (IsValid(Target))
 		{
-			// Replace survivor with this weapon
+			Gameplay::SetGlobalTimeDilation(1);
 			RegisterDragEvents(false);
 			DOnTargetChosen.ExecuteIfBound(Target);
 			OnFinished();

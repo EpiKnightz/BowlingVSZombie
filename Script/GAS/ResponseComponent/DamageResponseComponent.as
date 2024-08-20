@@ -11,6 +11,8 @@ class UDamageResponseComponent : UResponseComponent
 	FVoidEvent EOnDamageCue;
 	FVoidEvent EOnDeadCue;
 
+	FVoidEvent EOnEnterTheBattlefield;
+
 	bool bIsDead = false;
 
 	bool InitChild() override
