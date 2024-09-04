@@ -68,9 +68,17 @@ class ABoostManager : AActor
 			{
 				if (SpawnSequence[currentSequenceMilestone].bAllowMultipleSpawns)
 				{
-					multipleSpawnCount = Math::RandRange(SpawnSequence[currentSequenceMilestone].MinSpawnPerMulti, SpawnSequence[currentSequenceMilestone].MaxSpawnPerMulti) - 1;
+					multipleSpawnCount = Math::RandRange(SpawnSequence[currentSequenceMilestone].MinSpawnPerMulti,
+														 SpawnSequence[currentSequenceMilestone].MaxSpawnPerMulti);
 				}
-				SpawnPowerUp();
+				if (SpawnSequence[currentSequenceMilestone].SpawnType == ESpawnType::PowerUp)
+				{
+					SpawnPowerUp();
+				}
+				else if (SpawnSequence[currentSequenceMilestone].SpawnType == ESpawnType::Zone)
+				{
+					SpawnZone();
+				}
 				countdown = Math::RandRange(SpawnSequence[currentSequenceMilestone].MinWaveCooldown, SpawnSequence[currentSequenceMilestone].MaxWaveCooldown);
 			}
 		}
@@ -105,6 +113,18 @@ class ABoostManager : AActor
 	}
 
 	UFUNCTION()
+	void SpawnZone()
+	{
+		SpawnActor(SpawnSequence[currentSequenceMilestone].ZoneTemplate, SpawnSequence[currentSequenceMilestone].ZoneLocation);
+
+		if (multipleSpawnCount > 0)
+		{
+			multipleSpawnCount--;
+			System::SetTimer(this, n"SpawnZone", SpawnSequence[currentSequenceMilestone].MultipleSpawnInterval, false);
+		}
+	}
+
+	UFUNCTION()
 	void GameStart()
 	{
 		SetActorTickEnabled(true);
@@ -112,7 +132,8 @@ class ABoostManager : AActor
 		SpawnSequence.Sort();
 		for (int i = 0; i < SpawnSequence.Num(); i++)
 		{
-			if (SpawnSequence[i].SpawnType != ESpawnType::PowerUp)
+			if (SpawnSequence[i].SpawnType != ESpawnType::PowerUp
+				&& SpawnSequence[i].SpawnType != ESpawnType::Zone)
 			{
 				SpawnSequence.RemoveAt(i);
 				--i;

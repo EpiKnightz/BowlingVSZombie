@@ -1,7 +1,8 @@
 enum ESpawnType
 {
 	Zombie,
-	PowerUp
+	PowerUp,
+	Zone
 }
 
 struct FSpawnSequenceDT
@@ -33,7 +34,13 @@ struct FSpawnSequenceDT
 	UPROPERTY()
 	ESpawnType SpawnType;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "SpawnType == ESpawnType::Zone", EditConditionHides))
+	TSubclassOf<AZone> ZoneTemplate;
+
+	UPROPERTY(meta = (EditCondition = "SpawnType == ESpawnType::Zone", EditConditionHides))
+	FVector ZoneLocation;
+
+	UPROPERTY(meta = (EditCondition = "(SpawnType == ESpawnType::Zombie) || (SpawnType == ESpawnType::PowerUp)", EditConditionHides))
 	TArray<FName> SpawnID;
 
 	int opCmp(FSpawnSequenceDT Other) const

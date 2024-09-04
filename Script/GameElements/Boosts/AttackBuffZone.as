@@ -3,13 +3,20 @@ class AAttackBuffZone : AZone
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent VFXComponent;
 
+	FVoidDelegate DHideGuideArrow;
+
 	private int ModID = 1;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0)).DOnChangeGuideArrowTarget.ExecuteIfBound(GetActorLocation());
-		System::SetTimer(this, n"K2_DestroyActor", 10, false);
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		if (IsValid(Pawn))
+		{
+			Pawn.DOnChangeGuideArrowTarget.ExecuteIfBound(GetActorLocation());
+			DHideGuideArrow.BindUFunction(Pawn, n"HideGuideArrow");
+		}
+		System::SetTimer(this, n"Destroy", 10, false);
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -24,10 +31,17 @@ class AAttackBuffZone : AZone
 		auto Pawn = Cast<ABowlingPawn>(OtherActor);
 		if (IsValid(Pawn))
 		{
-			Pawn.DOnHideArrow.ExecuteIfBound();
-			// TODO: Move guide arrow into a component.
+			// Pawn.DOnHideArrow.ExecuteIfBound();
+			//  TODO: Move guide arrow into a component.
+			System::ClearTimer(this, "Destroy");
+			Destroy();
 		}
-		System::ClearTimer(this, "K2_DestroyActor");
+	}
+
+	UFUNCTION()
+	void Destroy()
+	{
+		DHideGuideArrow.ExecuteIfBound();
 		DestroyActor();
 	}
 };
