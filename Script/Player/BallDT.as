@@ -10,6 +10,9 @@ struct FBallDT
 	FText Description = FText::FromString("BowlingDes");
 
 	UPROPERTY()
+	UTexture2D Icon;
+
+	UPROPERTY()
 	UStaticMesh BowlingMesh;
 
 	UPROPERTY()

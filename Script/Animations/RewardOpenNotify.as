@@ -7,7 +7,6 @@ class URewardOpenNotify : UAnimNotify
 	UFUNCTION(BlueprintOverride)
 	bool Notify(USkeletalMeshComponent MeshComp, UAnimSequenceBase Animation, FAnimNotifyEventReference EventReference) const
 	{
-
 		return true;
 	}
 }

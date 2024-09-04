@@ -14,6 +14,12 @@ class UUIZombieGameplay : UUserWidget
 	UCommonNumericTextBlock ComboText;
 
 	UPROPERTY(BindWidget)
+	UCommonNumericTextBlock ScoreText;
+
+	UPROPERTY(BindWidget)
+	UCommonNumericTextBlock HPText;
+
+	UPROPERTY(BindWidget)
 	UUIReward RewardUI;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
@@ -21,6 +27,15 @@ class UUIZombieGameplay : UUserWidget
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation ComboHighAnim;
+
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation AttentionAnim;
+
+	UPROPERTY(BindWidget)
+	UUserWidget AttentionButton;
+
+	UPROPERTY(BindWidget)
+	UCommonTextBlock AttentionStackText;
 
 	// UPROPERTY(BindWidget)
 	// UCommonNumericTextBlock CoinText;
@@ -34,6 +49,11 @@ class UUIZombieGameplay : UUserWidget
 	UPROPERTY(BindWidget)
 	UProgressBar CooldownBar;
 
+	UPROPERTY(BindWidget)
+	UProgressBar AttentionBar;
+
+	FVoidEvent EOnAttentionClicked;
+
 	UFUNCTION(BlueprintEvent)
 	void UpdateLevelProgress(float NewProgress)
 	{
@@ -42,8 +62,68 @@ class UUIZombieGameplay : UUserWidget
 	}
 
 	UFUNCTION(BlueprintEvent)
-	void UpdateCooldownPercent(float NewPercent){
+	void UpdateCooldownPercent(float NewPercent)
+	{
 		CooldownBar.SetPercent(NewPercent);
+	}
+
+	UFUNCTION(BlueprintEvent)
+	void UpdateAttentionPercent(float NewPercent)
+	{
+		AttentionBar.SetPercent(NewPercent);
+	}
+
+	UFUNCTION()
+	void DisableCardSpawnUI()
+	{
+		AttentionBar.SetVisibility(ESlateVisibility::Hidden);
+		AttentionButton.SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	UFUNCTION()
+	void UpdateAttentionStack(int NewStack)
+	{
+		if (NewStack > 0)
+		{
+			if (!AttentionStackText.IsVisible())
+			{
+				AttentionStackText.SetVisibility(ESlateVisibility::Visible);
+			}
+			AttentionStackText.SetText(FText::FromString("" + NewStack));
+		}
+		else if (AttentionStackText.IsVisible())
+		{
+			AttentionStackText.SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	UFUNCTION()
+	void OnAttentionFull()
+	{
+		if (!AttentionButton.IsVisible())
+		{
+			AttentionButton.SetVisibility(ESlateVisibility::Visible);
+			PlayAnimation(AttentionAnim, 0, 0);
+		}
+	}
+
+	UFUNCTION()
+	void OnAttentionClicked()
+	{
+		AttentionButton.SetVisibility(ESlateVisibility::Hidden);
+		EOnAttentionClicked.Broadcast();
+	}
+
+	UFUNCTION()
+	void OnEndGame()
+	{
+		LevelProgress.SetVisibility(ESlateVisibility::Hidden);
+		ScoreText.SetVisibility(ESlateVisibility::Hidden);
+		HPText.SetVisibility(ESlateVisibility::Hidden);
+		ProgressText.SetVisibility(ESlateVisibility::Hidden);
+		CooldownBar.SetVisibility(ESlateVisibility::Hidden);
+		AttentionBar.SetVisibility(ESlateVisibility::Hidden);
+		AttentionButton.SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	UFUNCTION(BlueprintEvent)

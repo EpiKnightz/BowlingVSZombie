@@ -23,6 +23,7 @@ class ABowlingGameMode : AGameMode
 	FFloatDelegate DOnUpdateHP;
 	FVoidEvent EOnLose;
 	FCardDTEvent EOnRewardCollected;
+	FVoidEvent EOnEndGame;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
@@ -74,6 +75,10 @@ class ABowlingGameMode : AGameMode
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
 		EOnRewardCollected.AddUFunction(UserWidget, n"WinUI");
 		EOnRewardCollected.AddUFunction(GameInst, n"AddRewards");
+		EOnEndGame.AddUFunction(OptionCardManager, n"OnEndGame");
+		EOnEndGame.AddUFunction(SurvivorManager, n"OnEndGame");
+		EOnEndGame.AddUFunction(UserWidget, n"OnEndGame");
+
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
 		DOnUpdateHP.ExecuteIfBound(HP);
@@ -81,11 +86,14 @@ class ABowlingGameMode : AGameMode
 		BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
 		BowlingPawn.EOnCooldownUpdate.AddUFunction(UserWidget, n"UpdateCooldownPercent");
 		BowlingPawn.EOnBowlingSpawned.AddUFunction(PowerManager, n"ApplyBowlingPower");
+		BowlingPawn.DBoostAttentionPercentage.BindUFunction(OptionCardManager, n"BoostAttentionBarPercent");
 
 		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
 		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 		ZombieManager.DOnClearedAllZombies.BindUFunction(this, n"Win");
 		ZombieManager.EOnZombieSpawned.AddUFunction(PowerManager, n"ApplyZombiePower");
+
+		BoostManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 
 		SurvivorManager.EOnSurvivorSpawned.AddUFunction(PowerManager, n"ApplySurvivorPower");
 
@@ -95,6 +103,11 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager.DCreateSurvivorFromTag.BindUFunction(SurvivorManager, n"CreateSurvivorFromTag");
 		OptionCardManager.DCreateWeaponFromTag.BindUFunction(WeaponsManager, n"CreateWeaponFromTag");
 		OptionCardManager.DGetAbilityDataFromTag.BindUFunction(AbilitiesManager, n"GetAbilityData");
+		OptionCardManager.EOnAttentionUpdate.AddUFunction(UserWidget, n"UpdateAttentionPercent");
+		OptionCardManager.EOnAttentionFull.AddUFunction(UserWidget, n"OnAttentionFull");
+		OptionCardManager.EOnAttentionStackUpdate.AddUFunction(UserWidget, n"UpdateAttentionStack");
+		OptionCardManager.EOnDisableCardSpawn.AddUFunction(UserWidget, n"DisableCardSpawnUI");
+		UserWidget.EOnAttentionClicked.AddUFunction(OptionCardManager, n"OnAttentionClicked");
 
 		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :
@@ -182,33 +195,35 @@ class ABowlingGameMode : AGameMode
 		GameStatus = EGameStatus::Ongoing;
 		ZombieManager.GameStart();
 		BoostManager.GameStart();
-		if (!LevelConfigsData.SurvivorsPoolConfig.IsEmpty())
-		{
-			OptionCardManager.GameStart();
-		}
+		OptionCardManager.GameStart();
 		BowlingPawn.SetCooldownPercent(1);
 	}
 
 	void PopulatePowerAndCards()
 	{
-		for (FCardDT Power : GameInst.CurrentCardInventory)
+		for (FCardDT Card : GameInst.CurrentCardInventory)
 		{
-			switch (Power.CardType)
+			switch (Card.CardType)
 			{
 				case ECardType::Power:
 				{
 					// TODO: Power always passive, so we don't need to check it
-					if (Power.ItemID.MatchesTag(GameplayTags::Power_Passive))
+					if (Card.ItemID.MatchesTag(GameplayTags::Power_Passive))
 					{
-						PowerManager.AddPower(Power.ItemID);
+						PowerManager.AddPower(Card.ItemID);
 					}
+					break;
+				}
+				case ECardType::Bowling:
+				{
+					BowlingPawn.AddBowling(Card.ItemID);
 					break;
 				}
 				case ECardType::Survivor:
 				case ECardType::Weapon:
 				case ECardType::Ability:
 				{
-					OptionCardManager.AddCard(Power);
+					OptionCardManager.AddCard(Card);
 					break;
 				}
 				default:
@@ -227,8 +242,7 @@ class ABowlingGameMode : AGameMode
 
 	void EndGame()
 	{
-		OptionCardManager.EndGame();
-		SurvivorManager.EndGame();
+		EOnEndGame.Broadcast();
 	}
 
 	UFUNCTION()

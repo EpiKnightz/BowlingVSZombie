@@ -72,7 +72,7 @@ class ABowling : AProjectile
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", 0);
-		AbilitySystem.RegisterAttrSet(UMultiplierPierceAttrSet);
+		AbilitySystem.RegisterAttrSet(UMultiplierBounceAttrSet);
 		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
 		if (!IsValid(MultiplierText))
 		{

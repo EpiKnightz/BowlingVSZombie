@@ -120,13 +120,14 @@ class ABowlingPawn : APawn
 	UFCTweenBPActionFloat FloatTween;
 	FFloatEvent EOnCooldownUpdate;
 	FVectorDelegate DOnChangeGuideArrowTarget;
-	FVoidDelegate DOnHideArrow;
+	// FVoidDelegate DOnHideArrow;
 
 	FActorVectorEvent EOnTouchTriggered;
 	FActorVectorEvent EOnTouchHold;
 	FActorVectorEvent EOnTouchReleased;
 	FBowlingEvent EOnBowlingSpawned;
 	FBoolDelegate DSetBowlingAimable;
+	FFloatDelegate DBoostAttentionPercentage;
 
 	/////////////////////////////////////////
 	// Setup
@@ -159,7 +160,7 @@ class ABowlingPawn : APawn
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
-		DOnHideArrow.BindUFunction(this, n"HideGuideArrow");
+		// DOnHideArrow.BindUFunction(this, n"HideGuideArrow");
 		DSetBowlingAimable.BindUFunction(this, n"SetBowlingAimable");
 		SetBowlingAimable(true);
 
@@ -193,6 +194,15 @@ class ABowlingPawn : APawn
 					FloatTween.SetTimeMultiplier(FloatTween.GetTimeRemaining() / (Value - FloatTween.GetTimeElapsed()));
 				}
 			}
+		}
+	}
+
+	UFUNCTION()
+	void AddBowling(FGameplayTag BowlingID)
+	{
+		if (BowlingID.MatchesTag(GameplayTags::Bowling))
+		{
+			ItemPoolConfig.AddUniqueTag(BowlingID);
 		}
 	}
 
@@ -527,6 +537,8 @@ class ABowlingPawn : APawn
 		if (IsValid(targetRC) && targetRC.TargetType == ETargetType::Zombie)
 		{
 			OnComboTrigger(1);
+			// TODO: Make this a data
+			DBoostAttentionPercentage.ExecuteIfBound(0.1);
 		}
 	}
 

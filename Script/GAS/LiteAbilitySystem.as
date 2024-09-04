@@ -91,6 +91,14 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	void SetAbilitiesActivatable(bool bActivatable)
+	{
+		// for (auto Ability : AbilityContainer)
+		// {
+		// }
+	}
+
+	UFUNCTION()
 	void AddModifier(FName AttrName, UModifier Modifier)
 	{
 		int i = GetSetIdx(AttrName);

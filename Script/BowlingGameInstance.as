@@ -10,7 +10,7 @@ class UBowlingGameInstance : UGameInstance
 	void Init()
 	{
 #if EDITOR
-		CurrentLevel = 3;
+		CurrentLevel = 2;
 #endif
 	}
 

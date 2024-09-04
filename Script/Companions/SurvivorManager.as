@@ -28,7 +28,7 @@ class ASurvivorManager : AActor
 	}
 
 	UFUNCTION()
-	void EndGame()
+	void OnEndGame()
 	{
 		EOnGameStateChanged.Broadcast(false);
 	}
@@ -115,7 +115,3 @@ class ASurvivorManager : AActor
 		EOnSurvivorSpawned.Broadcast(SpawnedActor);
 	}
 };
-
-// Spawn random survivor at start
-// Fill "Attention" bar to 100% -> can spawn again?
-// Later

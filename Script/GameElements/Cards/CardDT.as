@@ -4,8 +4,11 @@ enum ECardType
 	Power,
 	Survivor,
 	Ability,
-	Weapon
-} struct FCardDT
+	Weapon,
+	Bowling
+}
+
+struct FCardDT
 {
 	UPROPERTY()
 	FString Name = "Bouncer Power";
@@ -49,16 +52,6 @@ enum ECardType
 		}
 	}
 
-	FCardDT& opAssign(FPowerDT Other)
-	{
-		Name = Other.Name;
-		Description = Other.Description;
-		Icon = Other.Icon;
-		CardType = ECardType::Power;
-		ItemID = Other.PowerID;
-		return this;
-	}
-
 	FCardDT& opAssign(FSurvivorDT Other)
 	{
 		if (Other.SurvivorID.IsValid())
@@ -70,6 +63,18 @@ enum ECardType
 			ItemID = Other.SurvivorID;
 		}
 		return this;
+	}
+
+	FCardDT(FWeaponDT Other)
+	{
+		if (Other.WeaponID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Weapon;
+			ItemID = Other.WeaponID;
+		}
 	}
 
 	FCardDT& opAssign(FWeaponDT Other)
@@ -85,6 +90,18 @@ enum ECardType
 		return this;
 	}
 
+	FCardDT(FAbilityDT Other)
+	{
+		if (Other.AbilityID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Ability;
+			ItemID = Other.AbilityID;
+		}
+	}
+
 	FCardDT& opAssign(FAbilityDT Other)
 	{
 		if (Other.AbilityID.IsValid())
@@ -94,6 +111,56 @@ enum ECardType
 			Icon = Other.Icon;
 			CardType = ECardType::Ability;
 			ItemID = Other.AbilityID;
+		}
+		return this;
+	}
+
+	FCardDT(FBallDT Other)
+	{
+		if (Other.BowlingID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Bowling;
+			ItemID = Other.BowlingID;
+		}
+	}
+
+	FCardDT& opAssign(FBallDT Other)
+	{
+		if (Other.BowlingID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Bowling;
+			ItemID = Other.BowlingID;
+		}
+		return this;
+	}
+
+	FCardDT(FPowerDT Other)
+	{
+		if (Other.PowerID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Power;
+			ItemID = Other.PowerID;
+		}
+	}
+
+	FCardDT& opAssign(FPowerDT Other)
+	{
+		if (Other.PowerID.IsValid())
+		{
+			Name = Other.Name;
+			Description = Other.Description;
+			Icon = Other.Icon;
+			CardType = ECardType::Power;
+			ItemID = Other.PowerID;
 		}
 		return this;
 	}

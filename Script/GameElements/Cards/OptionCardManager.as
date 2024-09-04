@@ -6,8 +6,6 @@ class AOptionCardManager : AActor
 	UPROPERTY()
 	TSubclassOf<AOptionCard> CardTemplate;
 
-	TArray<FCardDT> CurrentCardInventory;
-
 	// This is to display the card in the game, from left to right: 0, 1, 2
 	int CurrentID = 0;
 	FCardDT SelectedCardData;
@@ -17,30 +15,48 @@ class AOptionCardManager : AActor
 
 	private int LastSpawnedID = -1;
 	private int SpawnWaveCount = 0;
+	private float AttentionBarPercent = 0;
+	private float AttentionFillRate = 0.05; // Equal to 20s to fill. TODO: Make this a data
+	private int AttentionStack = 0;
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
 	FTagWeapon2DataDelegate DCreateWeaponFromTag;
 	FTagAbility2DataDelegate DGetAbilityDataFromTag;
 	FCardDTEvent EOnCardAdded;
+	FFloatEvent EOnAttentionUpdate;
+	FVoidEvent EOnAttentionFull;
+	FIntEvent EOnAttentionStackUpdate;
+	FVoidEvent EOnDisableCardSpawn;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 		Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+		SetAttentionBarPercent(-1);
 	}
 
 	void GameStart()
 	{
-		System::SetTimer(this, n"SpawnCard", 0.5, false);
+		if (CardInventory.IsEmpty())
+		{
+			EOnDisableCardSpawn.Broadcast();
+			SetActorTickEnabled(false);
+		}
+		else
+		{
+			SetAttentionBarPercent(0);
+		}
 	}
 
 	void GamePause()
 	{}
 
-	void EndGame()
+	UFUNCTION()
+	void OnEndGame()
 	{
 		System::ClearTimer(this, "SpawnCard");
+		SetActorTickEnabled(false);
 	}
 
 	void AddCard(FCardDT Card)
@@ -48,6 +64,57 @@ class AOptionCardManager : AActor
 		CardInventory.Add(CurrentSelectionID, Card);
 		CurrentSelectionID++;
 		EOnCardAdded.Broadcast(Card);
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void Tick(float DeltaSeconds)
+	{
+		if (AttentionBarPercent >= 0 && AttentionBarPercent < 1)
+		{
+			BoostAttentionBarPercent(AttentionFillRate * DeltaSeconds);
+		}
+		else if (AttentionBarPercent >= 1)
+		{
+			EOnAttentionFull.Broadcast();
+			BoostAttentionStack(1);
+			SetAttentionBarPercent(0);
+		}
+	}
+
+	UFUNCTION()
+	void BoostAttentionBarPercent(float Boost)
+	{
+		SetAttentionBarPercent(AttentionBarPercent + Boost);
+	}
+
+	UFUNCTION()
+	void SetAttentionBarPercent(float Percent)
+	{
+		AttentionBarPercent = Percent;
+		EOnAttentionUpdate.Broadcast(AttentionBarPercent);
+	}
+
+	UFUNCTION()
+	void BoostAttentionStack(int Boost)
+	{
+		SetAttentionStack(AttentionStack + Boost);
+	}
+
+	UFUNCTION()
+	void SetAttentionStack(int Value)
+	{
+		AttentionStack = Value;
+		EOnAttentionStackUpdate.Broadcast(AttentionStack);
+	}
+
+	UFUNCTION()
+	void OnAttentionClicked()
+	{
+		if (AttentionStack > 0)
+		{
+			SpawnCard();
+			BoostAttentionStack(-1);
+		}
 	}
 
 	FCardDT GetRandomCard(ECardType ForceCardType = ECardType::None)
@@ -126,8 +193,13 @@ class AOptionCardManager : AActor
 	UFUNCTION()
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
-		// DCreateWeaponFromTag
-		CurrentID = 0;
-		System::SetTimer(this, n"SpawnCard", 10, false);
+		if (CurrentID != 0)
+		{
+			CurrentID = 0;
+			if (AttentionStack > 0)
+			{
+				EOnAttentionFull.Broadcast();
+			}
+		}
 	}
 };
