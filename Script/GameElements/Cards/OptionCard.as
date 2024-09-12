@@ -1,3 +1,10 @@
+enum EDragState
+{
+	None,
+	Dragging,
+	Overlapping
+}
+
 class AOptionCard : AActor
 {
 	UPROPERTY(DefaultComponent, RootComponent)

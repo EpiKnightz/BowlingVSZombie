@@ -12,6 +12,10 @@ class ASurvivor : AHumanlite
 
 	UCustomAnimInst AnimateInst;
 
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent WorldWidget;
+	UUIRankText RankText;
+
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
 
@@ -29,6 +33,9 @@ class ASurvivor : AHumanlite
 	UMovementResponseComponent MovementResponseComponent;
 
 	UPROPERTY(DefaultComponent)
+	URankResponseComponent RankResponseComponent;
+
+	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent MovementComp;
 	default MovementComp.bShouldBounce = true;
 	default MovementComp.ProjectileGravityScale = 0;
@@ -38,7 +45,11 @@ class ASurvivor : AHumanlite
 	default MovementComp.AutoActivate = true;
 	default MovementComp.Bounciness = 0.8;
 
-	FTagAbilitySystem DRegisterAbilities;
+	private EDragState DragState;
+
+	FTagAbilitySystemDelegate DRegisterAbilities;
+	FVoidDelegate DRankUpTarget;
+	FTagInt2SurvivorDataDelegate DGetRankedSurvivorData;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -59,6 +70,17 @@ class ASurvivor : AHumanlite
 		MovementResponseComponent.StopLifeTime = 0;
 		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"OnPostAddForce");
 
+		RankResponseComponent.EOnRankUp.AddUFunction(this, n"OnRankUp");
+		RankText = Cast<UUIRankText>(WorldWidget.GetWidget());
+		if (!IsValid(RankText))
+		{
+			PrintError("RankText is invalid");
+		}
+		else
+		{
+			RankResponseComponent.EOnRankUp.AddUFunction(RankText, n"SetRankText");
+		}
+
 		auto AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 		if (IsValid(AbilitiesManager))
 		{
@@ -74,6 +96,7 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	void SetData(FSurvivorDT DataRow)
 	{
+		TargetResponseComponent.SetID(DataRow.SurvivorID);
 		TMap<FName, float32> Data;
 		Data.Add(n"MaxHP", DataRow.HP);
 		Data.Add(n"Attack", DataRow.Atk);
@@ -126,21 +149,33 @@ class ASurvivor : AHumanlite
 		DRegisterAbilities.ExecuteIfBound(AbilityTags, AbilitySystem);
 	}
 
+	UFUNCTION()
+	void OnRankUp(int NewRank)
+	{
+		PopUpAnimation(1 + 0.15 * (NewRank - 1));
+		SetData(DGetRankedSurvivorData.Execute(TargetResponseComponent.TargetID, NewRank));
+		DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
+	}
+
 	void RegisterDragEvents(bool bEnabled = true)
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 		if (bEnabled)
 		{
+			DragState = EDragState::Dragging;
 			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Overlap);
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
 			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
 		}
 		else
 		{
+			DragState = EDragState::None;
 			Pawn.EOnTouchHold.UnbindObject(this);
 			Pawn.EOnTouchReleased.UnbindObject(this);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Block);
 		}
 		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
@@ -149,33 +184,44 @@ class ASurvivor : AHumanlite
 	private void OnDragged(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(Vector.X, Vector.Y, GetActorLocation().Z));
-		if (Vector.Y > SURVIVOR_Y_LIMIT
-			|| Vector.Y < -SURVIVOR_Y_LIMIT
-			|| Vector.X > SURVIVOR_MAX_X
-			|| Vector.X < SURVIVOR_MIN_X)
+		if (DragState == EDragState::Dragging)
 		{
-			ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
-		}
-		else
-		{
-			ColorOverlay.ChangeOverlayColor(FLinearColor::Green);
+			if (Vector.Y > SURVIVOR_Y_LIMIT
+				|| Vector.Y < -SURVIVOR_Y_LIMIT
+				|| Vector.X > SURVIVOR_MAX_X
+				|| Vector.X < SURVIVOR_MIN_X)
+			{
+				ColorOverlay.ChangeOverlayColor(FLinearColor::Red, true);
+			}
+			else
+			{
+				ColorOverlay.ChangeOverlayColor(FLinearColor::Green, true);
+			}
 		}
 	}
 
 	UFUNCTION()
 	private void OnDragReleased(AActor OtherActor, FVector Vector)
 	{
-		SetActorLocation(FVector(
-			Math::Clamp(GetActorLocation().X, SURVIVOR_MIN_X, SURVIVOR_MAX_X),
-			Math::Clamp(GetActorLocation().Y, -SURVIVOR_Y_LIMIT, SURVIVOR_Y_LIMIT),
-			60));
-		Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		ColorOverlay.ResetOverlayColor();
 		Gameplay::SetGlobalTimeDilation(1);
-		PopUpAnimation();
-		RegisterDragEvents(false);
-		EnableAttack();
-		DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
+		if (!DRankUpTarget.IsBound())
+		{
+			Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			SetActorLocation(FVector(
+				Math::Clamp(GetActorLocation().X, SURVIVOR_MIN_X, SURVIVOR_MAX_X),
+				Math::Clamp(GetActorLocation().Y, -SURVIVOR_Y_LIMIT, SURVIVOR_Y_LIMIT),
+				60));
+			ColorOverlay.ResetOverlayColor();
+			PopUpAnimation();
+			RegisterDragEvents(false);
+			EnableAttack();
+			DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
+		}
+		else
+		{
+			DRankUpTarget.Execute();
+			DestroyActor();
+		}
 	}
 
 	UFUNCTION()
@@ -194,7 +240,43 @@ class ASurvivor : AHumanlite
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
+		UTargetResponseComponent OtherTargetComp = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(OtherTargetComp))
+		{
+			if (OtherTargetComp.TargetID == TargetResponseComponent.TargetID)
+			{
+				URankResponseComponent OtherRankComp = URankResponseComponent::Get(OtherActor);
+				if (IsValid(OtherRankComp))
+				{
+					if (OtherRankComp.IsMaxRank() || RankResponseComponent.IsMaxRank())
+					{
+						ColorOverlay.ChangeOverlayColor(FLinearColor::Red, true);
+					}
+					else
+					{
+						DRankUpTarget.BindUFunction(OtherRankComp, n"RankUp");
+						ColorOverlay.ChangeOverlayColor(FLinearColor::Yellow, true);
+					}
+					DragState = EDragState::Overlapping;
+				}
+			}
+		}
 		OnHit(nullptr, OtherActor, nullptr, FVector::ZeroVector, FHitResult());
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void ActorEndOverlap(AActor OtherActor)
+	{
+		UTargetResponseComponent OtherTargetComp = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(OtherTargetComp))
+		{
+			if (OtherTargetComp.TargetID == TargetResponseComponent.TargetID)
+			{
+				ColorOverlay.ResetOverlayColor();
+				DRankUpTarget.Clear();
+				DragState = EDragState::Dragging;
+			}
+		}
 	}
 
 	UFUNCTION()
@@ -238,14 +320,14 @@ class ASurvivor : AHumanlite
 	}
 
 	UFUNCTION()
-	void PopUpAnimation()
+	void PopUpAnimation(float FinalScale = 1)
 	{
 		if (IsValid(FloatTween) && FloatTween.IsValid())
 		{
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(0.1, 1, 0.5f, EFCEase::OutElastic);
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(0.1, FinalScale, 0.5f, EFCEase::OutElastic);
 		FloatTween.ApplyEasing.AddUFunction(this, n"SetScaleFloat");
 		FloatTween.Start();
 	}

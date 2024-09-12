@@ -10,7 +10,7 @@ class UUIMultiplierText : UUserWidget
 	UWidgetAnimation MultiplierStopAnimation;
 
 	UFUNCTION()
-	void SetMultiplierCountText(float NewMultiplier)
+	void SetMultiplierCountText(int NewMultiplier)
 	{
 		MultiplierText.SetCurrentValue(NewMultiplier);
 		if (NewMultiplier > 0 && !MultiplierText.IsVisible())

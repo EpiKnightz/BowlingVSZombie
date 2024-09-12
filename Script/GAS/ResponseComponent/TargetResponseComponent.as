@@ -1,6 +1,20 @@
 class UTargetResponseComponent : UResponseComponent
 {
 	ETargetType TargetType;
+	FGameplayTag TargetID;
+
+	UFUNCTION()
+	void SetID(FGameplayTag iID)
+	{
+		if (iID.GetCurrentNameOnly().ToString().Contains("Lv"))
+		{
+			TargetID = iID.RequestDirectParent();
+		}
+		else
+		{
+			TargetID = iID;
+		}
+	}
 
 	UFUNCTION()
 	bool IsTargetable(AActor OtherActor)

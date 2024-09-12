@@ -16,7 +16,7 @@ class AOptionCardManager : AActor
 	private int LastSpawnedID = -1;
 	private int SpawnWaveCount = 0;
 	private float AttentionBarPercent = 0;
-	private float AttentionFillRate = 0.05; // Equal to 20s to fill. TODO: Make this a data
+	private float AttentionFillRate = 0.5; // Equal to 20s to fill. TODO: Make this a data
 	private int AttentionStack = 0;
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
@@ -198,7 +198,7 @@ class AOptionCardManager : AActor
 			CurrentID = 0;
 			if (AttentionStack > 0)
 			{
-				EOnAttentionFull.Broadcast();
+				OnAttentionClicked();
 			}
 		}
 	}

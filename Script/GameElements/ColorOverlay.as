@@ -9,6 +9,11 @@ class UColorOverlay
 		DynamicMat = Material::CreateDynamicMaterialInstance(Material);
 	}
 
+	FLinearColor GetCachedOverlayColor()
+	{
+		return CachedOverlayColor;
+	}
+
 	UFUNCTION()
 	void ResetOverlayColor()
 	{
@@ -24,10 +29,17 @@ class UColorOverlay
 	UFUNCTION()
 	void ChangeOverlayColor(FLinearColor Color, bool bCached = false)
 	{
-		DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
 		if (bCached)
 		{
-			CachedOverlayColor = Color;
+			if (CachedOverlayColor != Color)
+			{
+				CachedOverlayColor = Color;
+				DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
+			}
+		}
+		else
+		{
+			DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
 		}
 	}
 };

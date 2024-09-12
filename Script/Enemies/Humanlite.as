@@ -36,7 +36,6 @@ class AHumanlite : AActor
 
 	protected UFCTweenBPActionFloat FloatTween;
 	protected UColorOverlay ColorOverlay;
-	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 
 	///////////////////////////////////
 	// Setup

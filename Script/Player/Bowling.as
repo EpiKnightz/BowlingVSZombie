@@ -73,11 +73,6 @@ class ABowling : AProjectile
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", 0);
 		AbilitySystem.RegisterAttrSet(UMultiplierBounceAttrSet);
-		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
-		if (!IsValid(MultiplierText))
-		{
-			PrintError("MultiplierText is invalid");
-		}
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
@@ -87,7 +82,15 @@ class ABowling : AProjectile
 		MovementResponseComponent.EOnDeaccelTick.AddUFunction(this, n"OnDeaccelTick");
 
 		MultiplierResponseComponent.Initialize(AbilitySystem);
-		MultiplierResponseComponent.EOnAddMultiplierCue.AddUFunction(this, n"OnAddMultiplierCue");
+		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
+		if (!IsValid(MultiplierText))
+		{
+			PrintError("MultiplierText is invalid");
+		}
+		else
+		{
+			MultiplierResponseComponent.EOnAddMultiplierCue.AddUFunction(MultiplierText, n"SetMultiplierCountText");
+		}
 	}
 
 	UFUNCTION()
@@ -186,12 +189,6 @@ class ABowling : AProjectile
 			Gameplay::PlayWorldCameraShake(ShakeStyle, GetActorLocation(), 0, 10000, 0, false);
 		}
 		RotatingComp.RotationRate *= BOUNCE_ROTATION_RATE_MULTIPLIER;
-	}
-
-	UFUNCTION()
-	private void OnAddMultiplierCue(int Value)
-	{
-		MultiplierText.SetMultiplierCountText(Value);
 	}
 
 	UFUNCTION()

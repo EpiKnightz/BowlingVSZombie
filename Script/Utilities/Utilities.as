@@ -27,7 +27,8 @@ delegate FSurvivorDT FTagSurvivor2DataDelegate(FGameplayTag SurvivorID, ASurvivo
 delegate FWeaponDT FTagWeapon2DataDelegate(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr);
 delegate FAbilityDT FTagAbility2DataDelegate(FGameplayTag AbilityTag);
 delegate void FIntCardDelegate(int Value, FCardDT Card);
-delegate void FTagAbilitySystem(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem);
+delegate void FTagAbilitySystemDelegate(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem);
+delegate FSurvivorDT FTagInt2SurvivorDataDelegate(FGameplayTag Tag, int Value);
 // delegate void FStringTextDelegate(FString RewardName, FText Description);
 
 event void FVectorEvent(FVector Value);
