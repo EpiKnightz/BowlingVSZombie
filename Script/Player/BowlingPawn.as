@@ -193,6 +193,7 @@ class ABowlingPawn : APawn
 				{
 					FloatTween.SetTimeMultiplier(FloatTween.GetTimeRemaining() / (Value - FloatTween.GetTimeElapsed()));
 				}
+				AnimateInst.AnimPlayRate = Value / CurrentBallData.Cooldown;
 			}
 		}
 	}
@@ -254,7 +255,7 @@ class ABowlingPawn : APawn
 			{
 				if (outResult.Actor != this)
 				{
-					if (CooldownPercent > 0)
+					if (CooldownPercent > 0 && !AnimateInst.Montage_IsPlaying(AttackAnim))
 					{
 						// Gameplay::SetGlobalTimeDilation(0.15);
 
