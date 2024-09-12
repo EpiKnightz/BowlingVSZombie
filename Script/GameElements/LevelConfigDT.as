@@ -1,7 +1,21 @@
+enum ELevelType
+{
+	Standard,
+	Shop,
+	Rest,
+	Boss,
+}
+
 struct FLevelConfigsDT
 {
 	UPROPERTY()
 	int Level;
+
+	UPROPERTY()
+	FText LevelDescription;
+
+	UPROPERTY()
+	ELevelType LevelType = ELevelType::Standard;
 
 	UPROPERTY()
 	float Delay;
@@ -23,6 +37,9 @@ struct FLevelConfigsDT
 
 	UPROPERTY()
 	FItemPoolConfigDT AbilitiesPoolConfig;
+
+	UPROPERTY()
+	FItemPoolConfigDT PowerPoolConfig;
 
 	// Possible rewards: Power, Survivor, Weapon, Ability
 	UPROPERTY()

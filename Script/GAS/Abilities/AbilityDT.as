@@ -22,6 +22,9 @@ struct FAbilityDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	int Cost = 80;
+
+	UPROPERTY()
 	EAbilityTriggerType TriggerType = EAbilityTriggerType::None;
 
 	UPROPERTY()

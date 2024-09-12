@@ -28,6 +28,12 @@ class ABowlingGameMode : AGameMode
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UUIShop> UIShop;
+
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UUIShop> UIRest;
+
 	UPROPERTY()
 	UDataTable LevelConfigsDT;
 
@@ -58,17 +64,86 @@ class ABowlingGameMode : AGameMode
 	void BeginPlay()
 	{
 		GameInst = Cast<UBowlingGameInstance>(GameInstance);
-		ZombieManager = Gameplay::GetActorOfClass(AZombieManager);
-		BoostManager = Gameplay::GetActorOfClass(ABoostManager);
-		BowlingPawn = Gameplay::GetActorOfClass(ABowlingPawn);
-		OptionCardManager = Gameplay::GetActorOfClass(AOptionCardManager);
 		SurvivorManager = Gameplay::GetActorOfClass(ASurvivorManager);
 		PowerManager = Gameplay::GetActorOfClass(APowerManager);
 		WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
 		AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 
+		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
+							LevelConfigsDT.Num() - 1 :
+							GameInst.CurrentLevel - 1;
+		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
+
+		switch (LevelConfigsData.LevelType)
+		{
+			case ELevelType::Boss:
+				SetupBossGame();
+				break;
+			case ELevelType::Shop:
+				SetupShopGame();
+				break;
+			case ELevelType::Rest:
+				SetupRestGame();
+				break;
+			case ELevelType::Standard:
+			default:
+				SetupStandardGame();
+				break;
+		}
+	}
+
+	void SetupRestGame()
+	{
+		UUIRest UserWidget = Cast<UUIRest>(WidgetBlueprint::CreateWidget(UIRest, Gameplay::GetPlayerController(0)));
+		UserWidget.AddToViewport();
+	}
+
+	void SetupBossGame()
+	{
+	}
+
+	void SetupShopGame()
+	{
+		UUIShop UserWidget = Cast<UUIShop>(WidgetBlueprint::CreateWidget(UIShop, Gameplay::GetPlayerController(0)));
+		UserWidget.AddToViewport();
+
+		UserWidget.EOnShopItemBought.AddUFunction(GameInst, n"OnShopItemBought");
+		UserWidget.DLeaveShop.BindUFunction(this, n"NextLevel");
+		GameInst.EOnCoinChange.AddUFunction(UserWidget, n"InterpolateCoinChanges");
+
+		TArray<FCardDT> ShopItemsData;
+		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
+		{
+			ShopItemsData.Add(FCardDT(SurvivorManager.GetSurvivorData(Item)));
+		}
+		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
+		{
+			ShopItemsData.Add(FCardDT(WeaponsManager.GetWeaponData(Item)));
+		}
+		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
+		{
+			ShopItemsData.Add(FCardDT(AbilitiesManager.GetAbilityData(Item)));
+		}
+		for (auto Item : LevelConfigsData.PowerPoolConfig.ItemTags)
+		{
+			ShopItemsData.Add(FCardDT(PowerManager.GetPowerData(Item)));
+		}
+
+		UserWidget.SetShopData(ShopItemsData);
+		UserWidget.SetInventoryCoin(GameInst.RunCoinTotal);
+	}
+
+	UFUNCTION()
+	void SetupStandardGame()
+	{
+		ZombieManager = Gameplay::GetActorOfClass(AZombieManager);
+		BoostManager = Gameplay::GetActorOfClass(ABoostManager);
+		BowlingPawn = Gameplay::GetActorOfClass(ABowlingPawn);
+		OptionCardManager = Gameplay::GetActorOfClass(AOptionCardManager);
+
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
+
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
@@ -109,34 +184,22 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager.EOnDisableCardSpawn.AddUFunction(UserWidget, n"DisableCardSpawnUI");
 		UserWidget.EOnAttentionClicked.AddUFunction(OptionCardManager, n"OnAttentionClicked");
 
-		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
-							LevelConfigsDT.Num() - 1 :
-							GameInst.CurrentLevel - 1;
-		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
 		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
 		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		BoostManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
 		BowlingPawn.ItemPoolConfig = LevelConfigsData.BowlingsPoolConfig;
-		if (LevelConfigsData.SurvivorsPoolConfig.Num() > 0)
+
+		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
 		{
-			for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
-			{
-				OptionCardManager.AddCard(FCardDT(Item, ECardType::Survivor));
-			}
+			OptionCardManager.AddCard(FCardDT(Item, ECardType::Survivor));
 		}
-		if (LevelConfigsData.WeaponsPoolConfig.Num() > 0)
+		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
 		{
-			for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
-			{
-				OptionCardManager.AddCard(FCardDT(Item, ECardType::Weapon));
-			}
+			OptionCardManager.AddCard(FCardDT(Item, ECardType::Weapon));
 		}
-		if (LevelConfigsData.AbilitiesPoolConfig.Num() > 0)
+		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
 		{
-			for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
-			{
-				OptionCardManager.AddCard(FCardDT(Item, ECardType::Ability));
-			}
+			OptionCardManager.AddCard(FCardDT(Item, ECardType::Ability));
 		}
 
 		PopulatePowerAndCards();
@@ -272,7 +335,7 @@ class ABowlingGameMode : AGameMode
 				}
 				EOnRewardCollected.Broadcast(RewardCard);
 				// Todo: Move this to event maybe?
-				GameInst.AddCoin(CoinTotal);
+				GameInst.ChangeInvCoinAmount(CoinTotal);
 				break;
 			}
 			case EGameStatus::Lose:

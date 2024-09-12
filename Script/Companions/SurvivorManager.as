@@ -64,6 +64,13 @@ class ASurvivorManager : AActor
 	}
 
 	UFUNCTION()
+	FSurvivorDT GetRankedSurvivorData(FGameplayTag SurvivorID, int Rank)
+	{
+		FGameplayTag RankedSurvivorID = FGameplayTag::RequestGameplayTag(FName(SurvivorID.ToString() + ".Lv" + Rank));
+		return GetSurvivorData(RankedSurvivorID);
+	}
+
+	UFUNCTION()
 	FSurvivorDT CreateSurvivorFromTag(FGameplayTag SurvivorID, ASurvivor& SpawnedActor)
 	{
 		FSurvivorDT SurvivorData;
@@ -110,6 +117,7 @@ class ASurvivorManager : AActor
 	{
 		SpawnedActor = SpawnActor(SurvivorTemplate);
 		SpawnedActor.SetData(SurvivorData);
+		SpawnedActor.DGetRankedSurvivorData.BindUFunction(this, n"GetRankedSurvivorData");
 		SpawnedSurvivorList.Add(SpawnedActor.GetName());
 		EOnGameStateChanged.AddUFunction(SpawnedActor, n"EnableAttack");
 		EOnSurvivorSpawned.Broadcast(SpawnedActor);

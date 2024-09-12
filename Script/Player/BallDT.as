@@ -13,6 +13,9 @@ struct FBallDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	int Cost = 120;
+
+	UPROPERTY()
 	UStaticMesh BowlingMesh;
 
 	UPROPERTY()

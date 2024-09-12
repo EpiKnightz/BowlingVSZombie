@@ -15,6 +15,9 @@ struct FSurvivorDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	int Cost = 100;
+
+	UPROPERTY()
 	float32 HP = 100;
 
 	// Atk is amount of power dealing to obstacles

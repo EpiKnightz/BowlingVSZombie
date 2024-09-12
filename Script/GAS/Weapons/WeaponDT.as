@@ -13,6 +13,9 @@ struct FWeaponDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	int Cost = 90;
+
+	UPROPERTY()
 	UStaticMesh WeaponMesh;
 
 	UPROPERTY()

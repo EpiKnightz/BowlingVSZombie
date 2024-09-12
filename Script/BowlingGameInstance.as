@@ -6,11 +6,14 @@ class UBowlingGameInstance : UGameInstance
 	TArray<FCardDT> CurrentCardInventory;
 	int RunCoinTotal;
 
+	FIntEvent EOnCoinChange;
+
 	UFUNCTION(BlueprintOverride)
 	void Init()
 	{
 #if EDITOR
-		CurrentLevel = 2;
+		CurrentLevel = 3;
+		RunCoinTotal = 200;
 #endif
 	}
 
@@ -21,8 +24,16 @@ class UBowlingGameInstance : UGameInstance
 	}
 
 	UFUNCTION()
-	void AddCoin(int MatchCoin)
+	void OnShopItemBought(FCardDT Item)
 	{
-		RunCoinTotal += MatchCoin;
+		CurrentCardInventory.Add(Item);
+		ChangeInvCoinAmount(-Item.Cost);
+	}
+
+	UFUNCTION()
+	void ChangeInvCoinAmount(int CoinChanges)
+	{
+		RunCoinTotal += CoinChanges;
+		EOnCoinChange.Broadcast(RunCoinTotal);
 	}
 };

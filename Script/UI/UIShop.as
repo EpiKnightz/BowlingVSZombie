@@ -1,0 +1,3 @@
+class UUIRest : UUserWidget
+{
+}

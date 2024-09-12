@@ -20,6 +20,9 @@ struct FPowerDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	int Cost = 110;
+
+	UPROPERTY()
 	EPowerTarget PowerTarget;
 
 	UPROPERTY()

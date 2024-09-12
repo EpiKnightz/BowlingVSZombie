@@ -11,6 +11,9 @@ enum ECardType
 struct FCardDT
 {
 	UPROPERTY()
+	FGameplayTag ItemID;
+
+	UPROPERTY()
 	FString Name = "Bouncer Power";
 
 	UPROPERTY()
@@ -20,7 +23,7 @@ struct FCardDT
 	UTexture2D Icon;
 
 	UPROPERTY()
-	FGameplayTag ItemID;
+	int Cost = 0;
 
 	ECardType CardType = ECardType::None;
 
@@ -49,6 +52,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Survivor;
 			ItemID = Other.SurvivorID;
+			Cost = Other.Cost;
 		}
 	}
 
@@ -61,6 +65,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Survivor;
 			ItemID = Other.SurvivorID;
+			Cost = Other.Cost;
 		}
 		return this;
 	}
@@ -74,6 +79,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Weapon;
 			ItemID = Other.WeaponID;
+			Cost = Other.Cost;
 		}
 	}
 
@@ -86,6 +92,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Weapon;
 			ItemID = Other.WeaponID;
+			Cost = Other.Cost;
 		}
 		return this;
 	}
@@ -99,6 +106,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Ability;
 			ItemID = Other.AbilityID;
+			Cost = Other.Cost;
 		}
 	}
 
@@ -111,6 +119,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Ability;
 			ItemID = Other.AbilityID;
+			Cost = Other.Cost;
 		}
 		return this;
 	}
@@ -124,6 +133,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Bowling;
 			ItemID = Other.BowlingID;
+			Cost = Other.Cost;
 		}
 	}
 
@@ -136,6 +146,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Bowling;
 			ItemID = Other.BowlingID;
+			Cost = Other.Cost;
 		}
 		return this;
 	}
@@ -149,6 +160,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Power;
 			ItemID = Other.PowerID;
+			Cost = Other.Cost;
 		}
 	}
 
@@ -161,6 +173,7 @@ struct FCardDT
 			Icon = Other.Icon;
 			CardType = ECardType::Power;
 			ItemID = Other.PowerID;
+			Cost = Other.Cost;
 		}
 		return this;
 	}

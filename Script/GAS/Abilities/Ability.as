@@ -6,7 +6,6 @@ class UAbility : ULiteAbilityBase
 
 	ULiteAbilitySystem AbilitySystem;
 
-	FGameplayTag AbilityID;
 	UTrigger Trigger;
 	FGameplayTagContainer AbilityTags; // Like having status effect chill, pierce, etc
 
@@ -44,8 +43,7 @@ class UAbility : ULiteAbilityBase
 	UFUNCTION()
 	bool GetAbilityData(FGameplayTag InAbilityID)
 	{
-		AbilityID = InAbilityID;
-		AbilityData = AbilitiesManager.GetAbilityData(AbilityID);
+		AbilityData = AbilitiesManager.GetAbilityData(InAbilityID);
 		if (AbilityData.AbilityID.IsValid())
 		{
 			switch (AbilityData.TriggerType)
