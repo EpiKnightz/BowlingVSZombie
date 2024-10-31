@@ -1,0 +1,21 @@
+class UModifierObject : UDataAsset
+{
+	UPROPERTY()
+	FName AttributeName;
+
+	UPROPERTY()
+	bool bForceRecalculation = false;
+
+	protected int ID = 0;
+
+	UFUNCTION()
+	void AddToAbilitySystem(ULiteAbilitySystem& AbilitySystem)
+	{
+	}
+
+	UFUNCTION()
+	void RemoveFromAbilitySystem(ULiteAbilitySystem& AbilitySystem)
+	{
+		AbilitySystem.RemoveModifier(AttributeName, this, ID);
+	}
+};
