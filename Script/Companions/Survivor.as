@@ -220,6 +220,7 @@ class ASurvivor : AHumanlite
 		else
 		{
 			DRankUpTarget.Execute();
+			RegisterDragEvents(false);
 			DestroyActor();
 		}
 	}
