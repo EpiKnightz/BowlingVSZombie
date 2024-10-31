@@ -1,6 +1,9 @@
 class AFocusTracker : AActor
 {
 	FVoidEvent EOnSequenceFinished;
+	FVoidEvent EOnZoomInFinished;
+	FVoidEvent EOnTextIntroStarted;
+	FVoidEvent EOnTextIntroFinished;
 
 	UPROPERTY(DefaultComponent, RootComponent)
 	USceneComponent FocusTarget;
@@ -12,6 +15,24 @@ class AFocusTracker : AActor
 	void OnSequenceFinished()
 	{
 		EOnSequenceFinished.Broadcast();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Script Actor")
+	void OnZoomInFinished()
+	{
+		EOnZoomInFinished.Broadcast();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Script Actor")
+	void OnTextIntroStarted()
+	{
+		EOnTextIntroStarted.Broadcast();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Script Actor")
+	void OnTextIntroFinished()
+	{
+		EOnTextIntroFinished.Broadcast();
 	}
 
 	UFUNCTION()
