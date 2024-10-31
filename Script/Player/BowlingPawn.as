@@ -178,6 +178,21 @@ class ABowlingPawn : APawn
 	}
 
 	UFUNCTION()
+	FBallDT GetBowlingData(FGameplayTag BallID)
+	{
+		FBallDT BallData;
+		if (BowlingsMap.Find(BallID, BallData) != false)
+		{
+			return BallData;
+		}
+		else
+		{
+			PrintError("GetBowlingData: BowlingID not found");
+			return BallData;
+		}
+	}
+
+	UFUNCTION()
 	private void OnPostSetCurrentValue(FName AttrName, float Value)
 	{
 		if (AttrName == n"AttackCooldown")

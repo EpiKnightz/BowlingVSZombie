@@ -83,6 +83,12 @@ class APowerManager : AActor
 		ApplyPower(Zombie.AbilitySystem, ZombiePowers);
 	}
 
+	UFUNCTION()
+	void ApplyBossPower(AZombieBoss& Zombie)
+	{
+		ApplyPower(Zombie.AbilitySystem, ZombiePowers);
+	}
+
 	void ApplyPower(ULiteAbilitySystem& AbilitySystem, TArray<FGameplayTag> PowerList)
 	{
 		for (auto PowerTag : PowerList)

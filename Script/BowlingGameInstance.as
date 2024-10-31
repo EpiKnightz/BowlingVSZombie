@@ -5,6 +5,8 @@ class UBowlingGameInstance : UGameInstance
 	// Run data:
 	TArray<FCardDT> CurrentCardInventory;
 	int RunCoinTotal;
+	float CurrentRunHP;
+	float MaxRunHP = 100;
 
 	FIntEvent EOnCoinChange;
 
@@ -12,21 +14,23 @@ class UBowlingGameInstance : UGameInstance
 	void Init()
 	{
 #if EDITOR
-		CurrentLevel = 3;
-		RunCoinTotal = 200;
+		CurrentLevel = 6;
+		MaxRunHP = 100;
+		CurrentRunHP = 100;
+		// RunCoinTotal = 200;
 #endif
 	}
 
 	UFUNCTION()
-	void AddRewards(FCardDT Reward)
+	void AddCardToInventory(FCardDT Reward)
 	{
-		CurrentCardInventory.Add(Reward);
+		CurrentCardInventory.AddUnique(Reward);
 	}
 
 	UFUNCTION()
 	void OnShopItemBought(FCardDT Item)
 	{
-		CurrentCardInventory.Add(Item);
+		CurrentCardInventory.AddUnique(Item);
 		ChangeInvCoinAmount(-Item.Cost);
 	}
 
@@ -35,5 +39,23 @@ class UBowlingGameInstance : UGameInstance
 	{
 		RunCoinTotal += CoinChanges;
 		EOnCoinChange.Broadcast(RunCoinTotal);
+	}
+
+	UFUNCTION()
+	void SetRunHP(float HPAmount)
+	{
+		CurrentRunHP = Math::Clamp(HPAmount, 0, MaxRunHP);
+	}
+
+	UFUNCTION()
+	void RestoreRunHPPercent(float Percent)
+	{
+		SetRunHP(CurrentRunHP + CurrentRunHP * Percent);
+	}
+
+	UFUNCTION()
+	void RestoreRunHPAmount(float Amount)
+	{
+		SetRunHP(CurrentRunHP + Amount);
 	}
 };

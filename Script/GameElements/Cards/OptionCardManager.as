@@ -16,7 +16,7 @@ class AOptionCardManager : AActor
 	private int LastSpawnedID = -1;
 	private int SpawnWaveCount = 0;
 	private float AttentionBarPercent = 0;
-	private float AttentionFillRate = 0.5; // Equal to 20s to fill. TODO: Make this a data
+	private float AttentionFillRate = 0.05; // Equal to 20s to fill. TODO: Make this a data
 	private int AttentionStack = 0;
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
@@ -26,7 +26,7 @@ class AOptionCardManager : AActor
 	FFloatEvent EOnAttentionUpdate;
 	FVoidEvent EOnAttentionFull;
 	FIntEvent EOnAttentionStackUpdate;
-	FVoidEvent EOnDisableCardSpawn;
+	FBoolEvent EOnDisableCardSpawn;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -40,17 +40,22 @@ class AOptionCardManager : AActor
 	{
 		if (CardInventory.IsEmpty())
 		{
-			EOnDisableCardSpawn.Broadcast();
+			EOnDisableCardSpawn.Broadcast(true);
 			SetActorTickEnabled(false);
 		}
 		else
 		{
+			EOnDisableCardSpawn.Broadcast(false);
 			SetAttentionBarPercent(0);
+			SetActorTickEnabled(true);
 		}
 	}
 
 	void GamePause()
-	{}
+	{
+		SetActorTickEnabled(false);
+		EOnDisableCardSpawn.Broadcast(true);
+	}
 
 	UFUNCTION()
 	void OnEndGame()
