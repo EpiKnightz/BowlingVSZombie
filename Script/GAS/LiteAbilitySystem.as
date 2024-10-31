@@ -51,6 +51,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	FVoidEvent EOnActorTagAdded;
 	FVoidEvent EOnActorTagRemoved;
 	FNameFloatEvent EOnPostSetCurrentValue;
+	FNameFloatEvent EOnPostCalculation;
 	FNameFloatEvent EOnPostSetBaseValue;
 	FNameFloatEvent EOnPostAddModifier;
 	FNameFloatEvent EOnPostRemoveModifier;
@@ -99,16 +100,19 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
-	void AddModifier(FName AttrName, UModifier Modifier)
+	void AddModifier(FName AttrName, UModifier Modifier, bool bRecalculation = true)
 	{
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
 			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
-			float32 NewValue = AbilitySystem::INVALID_VALUE;
-			AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
-			CalculateCurrent(AttrName, NewValue, i);
-			EOnPostAddModifier.Broadcast(AttrName, NewValue);
+			if (bRecalculation)
+			{
+				float32 NewValue = AbilitySystem::INVALID_VALUE;
+				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
+				CalculateCurrent(AttrName, NewValue, i);
+				EOnPostAddModifier.Broadcast(AttrName, NewValue);
+			}
 		}
 	}
 
@@ -260,6 +264,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 				SetValue(AttrName, FinalValue, i);
 			}
 			AttrSetContainer[i].DOnPostCalculation.ExecuteIfBound(AttrName);
+			EOnPostCalculation.Broadcast(AttrName, FinalValue);
 		}
 	}
 
