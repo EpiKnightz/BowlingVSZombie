@@ -14,13 +14,13 @@ class ABowlingGameMode : AGameMode
 	int Score;
 
 	UPROPERTY(BlueprintReadWrite)
-	float HP = 100;
+	float RunHP = 100;
 
 	UPROPERTY(BlueprintReadWrite)
 	int CoinTotal;
 
 	FIntDelegate DOnUpdateScore;
-	FFloatDelegate DOnUpdateHP;
+	FFloatEvent EOnUpdateHP;
 	FVoidEvent EOnLose;
 	FCardDTEvent EOnRewardCollected;
 	FVoidEvent EOnEndGame;
@@ -32,7 +32,7 @@ class ABowlingGameMode : AGameMode
 	TSubclassOf<UUIShop> UIShop;
 
 	UPROPERTY(BlueprintReadWrite)
-	TSubclassOf<UUIShop> UIRest;
+	TSubclassOf<UUIRest> UIRest;
 
 	UPROPERTY()
 	UDataTable LevelConfigsDT;
@@ -47,6 +47,12 @@ class ABowlingGameMode : AGameMode
 	ULevelSequence WinningSequence;
 
 	UPROPERTY()
+	ULevelSequence BossIntroSequence;
+
+	UPROPERTY()
+	ULevelSequence EndBossIntroSequence;
+
+	UPROPERTY()
 	TSubclassOf<ARewardChest> RewardChestBP;
 
 	AZombieManager ZombieManager;
@@ -59,6 +65,7 @@ class ABowlingGameMode : AGameMode
 	AAbilitiesManager AbilitiesManager;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
+	ELevelType LevelType = ELevelType::Standard;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -73,8 +80,10 @@ class ABowlingGameMode : AGameMode
 							LevelConfigsDT.Num() - 1 :
 							GameInst.CurrentLevel - 1;
 		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
+		RunHP = GameInst.CurrentRunHP;
+		LevelType = LevelConfigsData.LevelType;
 
-		switch (LevelConfigsData.LevelType)
+		switch (LevelType)
 		{
 			case ELevelType::Boss:
 				SetupBossGame();
@@ -96,10 +105,23 @@ class ABowlingGameMode : AGameMode
 	{
 		UUIRest UserWidget = Cast<UUIRest>(WidgetBlueprint::CreateWidget(UIRest, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
+
+		UserWidget.DRestoreRunHPPercent.BindUFunction(GameInst, n"RestoreRunHPPercent");
+		UserWidget.DAddCardToInventory.BindUFunction(GameInst, n"AddCardToInventory");
+		UserWidget.DChangeCoinTotal.BindUFunction(GameInst, n"ChangeInvCoinAmount");
+		GameInst.EOnCoinChange.AddUFunction(UserWidget, n"InterpolateCoinChanges");
+		UserWidget.DLeaveRest.BindUFunction(this, n"NextLevel");
+
+		TArray<FCardDT> WishingPoolData;
+		AddCardsToPool(WishingPoolData);
+
+		UserWidget.SetWishingPoolData(WishingPoolData);
+		UserWidget.SetInventoryCoin(GameInst.RunCoinTotal);
 	}
 
 	void SetupBossGame()
 	{
+		SetupStandardGame();
 	}
 
 	void SetupShopGame()
@@ -112,25 +134,30 @@ class ABowlingGameMode : AGameMode
 		GameInst.EOnCoinChange.AddUFunction(UserWidget, n"InterpolateCoinChanges");
 
 		TArray<FCardDT> ShopItemsData;
-		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
-		{
-			ShopItemsData.Add(FCardDT(SurvivorManager.GetSurvivorData(Item)));
-		}
-		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
-		{
-			ShopItemsData.Add(FCardDT(WeaponsManager.GetWeaponData(Item)));
-		}
-		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
-		{
-			ShopItemsData.Add(FCardDT(AbilitiesManager.GetAbilityData(Item)));
-		}
-		for (auto Item : LevelConfigsData.PowerPoolConfig.ItemTags)
-		{
-			ShopItemsData.Add(FCardDT(PowerManager.GetPowerData(Item)));
-		}
+		AddCardsToPool(ShopItemsData);
 
 		UserWidget.SetShopData(ShopItemsData);
 		UserWidget.SetInventoryCoin(GameInst.RunCoinTotal);
+	}
+
+	void AddCardsToPool(TArray<FCardDT>& Pool)
+	{
+		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
+		{
+			Pool.Add(FCardDT(SurvivorManager.GetSurvivorData(Item)));
+		}
+		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
+		{
+			Pool.Add(FCardDT(WeaponsManager.GetWeaponData(Item)));
+		}
+		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
+		{
+			Pool.Add(FCardDT(AbilitiesManager.GetAbilityData(Item)));
+		}
+		for (auto Item : LevelConfigsData.PowerPoolConfig.ItemTags)
+		{
+			Pool.Add(FCardDT(PowerManager.GetPowerData(Item)));
+		}
 	}
 
 	UFUNCTION()
@@ -146,25 +173,27 @@ class ABowlingGameMode : AGameMode
 
 		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
-		DOnUpdateHP.BindUFunction(UserWidget, n"UpdateHP");
+		EOnUpdateHP.AddUFunction(UserWidget, n"UpdateHP");
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
 		EOnRewardCollected.AddUFunction(UserWidget, n"WinUI");
-		EOnRewardCollected.AddUFunction(GameInst, n"AddRewards");
+		EOnRewardCollected.AddUFunction(GameInst, n"AddCardToInventory");
 		EOnEndGame.AddUFunction(OptionCardManager, n"OnEndGame");
 		EOnEndGame.AddUFunction(SurvivorManager, n"OnEndGame");
 		EOnEndGame.AddUFunction(UserWidget, n"OnEndGame");
 
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
-		DOnUpdateHP.ExecuteIfBound(HP);
+		EOnUpdateHP.Broadcast(RunHP);
 
 		BowlingPawn.DOnComboUpdate.BindUFunction(UserWidget, n"UpdateCombo");
 		BowlingPawn.EOnCooldownUpdate.AddUFunction(UserWidget, n"UpdateCooldownPercent");
 		BowlingPawn.EOnBowlingSpawned.AddUFunction(PowerManager, n"ApplyBowlingPower");
 		BowlingPawn.DBoostAttentionPercentage.BindUFunction(OptionCardManager, n"BoostAttentionBarPercent");
 
+		ZombieManager.GameMode = this;
 		ZombieManager.DOnProgressChanged.BindUFunction(UserWidget, n"UpdateLevelProgress");
-		ZombieManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		ZombieManager.DShowWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		ZombieManager.DShowBossMsg.BindUFunction(UserWidget, n"UpdateBossText");
 		ZombieManager.DOnClearedAllZombies.BindUFunction(this, n"Win");
 		ZombieManager.EOnZombieSpawned.AddUFunction(PowerManager, n"ApplyZombiePower");
 
@@ -191,15 +220,21 @@ class ABowlingGameMode : AGameMode
 
 		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
 		{
-			OptionCardManager.AddCard(FCardDT(Item, ECardType::Survivor));
+			FCardDT CardDT(Item, ECardType::Survivor);
+			OptionCardManager.AddCard(CardDT);
+			GameInst.AddCardToInventory(CardDT);
 		}
 		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
 		{
-			OptionCardManager.AddCard(FCardDT(Item, ECardType::Weapon));
+			FCardDT CardDT(Item, ECardType::Weapon);
+			OptionCardManager.AddCard(CardDT);
+			GameInst.AddCardToInventory(CardDT);
 		}
 		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
 		{
-			OptionCardManager.AddCard(FCardDT(Item, ECardType::Ability));
+			FCardDT CardDT(Item, ECardType::Ability);
+			OptionCardManager.AddCard(CardDT);
+			GameInst.AddCardToInventory(CardDT);
 		}
 
 		PopulatePowerAndCards();
@@ -333,9 +368,14 @@ class ABowlingGameMode : AGameMode
 				{
 					RewardCard = AbilitiesManager.GetAbilityData(Reward);
 				}
+				else if (Reward.MatchesTag(GameplayTags::Bowling))
+				{
+					RewardCard = BowlingPawn.GetBowlingData(Reward);
+				}
 				EOnRewardCollected.Broadcast(RewardCard);
 				// Todo: Move this to event maybe?
 				GameInst.ChangeInvCoinAmount(CoinTotal);
+				GameInst.SetRunHP(RunHP);
 				break;
 			}
 			case EGameStatus::Lose:
@@ -351,25 +391,42 @@ class ABowlingGameMode : AGameMode
 	void ScoreChange(FName ActorName)
 	{
 		Score++;
-		// TODO: This is for survival mode only, remove the hardcoded 15.
-		if (Score == 15)
-		{
-			Win();
-		}
+		// // TODO: This is for survival mode only, remove the hardcoded 15.
+		// if (ZombieManager.CurrentLevelProgress >=1 && )
+		// {
+		// 	Win();
+		// }
 		DOnUpdateScore.ExecuteIfBound(Score);
 	}
 
 	UFUNCTION()
 	void HPChange(float Damage, FName ZombieName)
 	{
-		HP -= Damage;
-		if (HP <= 0)
+		RunHP -= Damage;
+		if (RunHP <= 0)
 		{
-			HP = 0;
+			RunHP = 0;
 			Lose();
 		}
-		DOnUpdateHP.ExecuteIfBound(HP);
+		EOnUpdateHP.Broadcast(RunHP);
 		ZombieManager.UpdateZombieList(ZombieName);
+	}
+
+	UFUNCTION()
+	void PlayZoomBossIntro(bool bIsStart)
+	{
+		if (bIsStart)
+		{
+			BowlingPawn.SetCooldownPercent(-1);
+			PlaySequence(BossIntroSequence);
+			PauseGame();
+		}
+		else
+		{
+			PlaySequence(EndBossIntroSequence);
+			BowlingPawn.SetCooldownPercent(1);
+			StartGame();
+		}
 	}
 
 	UFUNCTION()

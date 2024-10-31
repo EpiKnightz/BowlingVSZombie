@@ -1,89 +1,61 @@
-const int SHOP_SIZE = 4;
+const int WISHING_COST_INCREASE = 100;
 
-class UUIShop : UUserWidget
+class UUIRest : UUserWidget
 {
-	UPROPERTY(BindWidget)
-	UCommonRichTextBlock DescTextBox;
-
 	UPROPERTY(BindWidget)
 	UCommonNumericTextBlock InventoryCoinText;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation CoinChangeAnim;
 
-	TArray<UUIShopItem> ShopItems;
-	TArray<FCardDT> ShopData;
-	int CurrentIndex = 0;
+	UPROPERTY()
+	int WishingCoinCost = 100;
 
-	FCardDTEvent EOnShopItemBought;
-	FVoidDelegate DLeaveShop;
-	FIntEvent EOnCoinChanged;
+	UPROPERTY()
+	int RestoreHPAmountCost = 20;
 
-	UFUNCTION(BlueprintOverride)
-	void Construct()
+	UPROPERTY()
+	int RestoreHPPercentCost = 50;
+
+	TArray<FCardDT> WishingPoolData;
+
+	FFloatDelegate DRestoreRunHPPercent;
+	FFloatDelegate DRestoreRunHPAmount;
+	FCardDTDelegate DAddCardToInventory;
+	FIntDelegate DChangeCoinTotal;
+	FVoidDelegate DLeaveRest;
+
+	UFUNCTION()
+	void RestoreRunHPPercent(float HPPercent)
 	{
-		TArray<UWidget> WidgetList;
-		GetAllWidgets(WidgetList);
-		for (int i = 0; i < WidgetList.Num(); i++)
-		{
-			UUIShopItem Item = Cast<UUIShopItem>(WidgetList[i]);
-			if (IsValid(Item))
-			{
-				ShopItems.Add(Item);
-			}
-		}
+		DRestoreRunHPPercent.ExecuteIfBound(HPPercent);
+		DChangeCoinTotal.ExecuteIfBound(-RestoreHPPercentCost);
 	}
 
 	UFUNCTION()
-	void OnLeaveShop()
+	void RestoreRunHPAmount(float HPAmount)
 	{
-		DLeaveShop.ExecuteIfBound();
+		DRestoreRunHPAmount.ExecuteIfBound(HPAmount);
+		DChangeCoinTotal.ExecuteIfBound(-RestoreHPAmountCost);
 	}
 
 	UFUNCTION()
-	void BuyCurrentItem()
+	void Wishing()
 	{
-		if (CurrentIndex > -1)
-		{
-			if (ShopItems[CurrentIndex].bIsBuyable)
-			{
-				ShopItems[CurrentIndex].SetVisibility(ESlateVisibility::Hidden);
-				EOnShopItemBought.Broadcast(ShopData[CurrentIndex]);
-				CurrentIndex = -1;
-			}
-			else
-			{
-				Print("Not enough coins");
-			}
-		}
+		DChangeCoinTotal.ExecuteIfBound(-WishingCoinCost);
+		DAddCardToInventory.ExecuteIfBound(WishingPoolData[Math::RandRange(0, WishingPoolData.Num() - 1)]);
+		WishingCoinCost += WISHING_COST_INCREASE;
 	}
 
 	UFUNCTION()
-	void ItemChosen(int Idx)
+	void Workshop()
 	{
-		if (CurrentIndex != -1)
-		{
-			ShopItems[CurrentIndex].ItemChosen(false);
-		}
-		CurrentIndex = Idx;
-		DescTextBox.SetText(ShopItems[CurrentIndex].GetItemDesc());
-		ShopItems[CurrentIndex].ItemChosen(true);
 	}
 
-	UFUNCTION(BlueprintCallable)
-	void SetShopData(TArray<FCardDT> ItemsData)
+	UFUNCTION()
+	void SetWishingPoolData(TArray<FCardDT> Data)
 	{
-		ShopData = ItemsData;
-		while (ShopData.Num() > SHOP_SIZE)
-		{
-			ShopData.RemoveAt(Math::RandRange(0, ShopData.Num() - 1));
-		}
-		for (int i = 0; i < SHOP_SIZE; i++)
-		{
-			ShopItems[i].SetItemData(ShopData[i]);
-			EOnCoinChanged.AddUFunction(ShopItems[i], n"OnCoinChanged");
-		}
-		ItemChosen(0);
+		WishingPoolData = Data;
 	}
 
 	UFUNCTION()
@@ -91,13 +63,17 @@ class UUIShop : UUserWidget
 	{
 		InventoryCoinText.InterpolateToValue(Coins, 0.25);
 		PlayAnimation(CoinChangeAnim);
-		EOnCoinChanged.Broadcast(Coins);
 	}
 
 	UFUNCTION()
 	void SetInventoryCoin(int Coins)
 	{
 		InventoryCoinText.SetCurrentValue(Coins);
-		EOnCoinChanged.Broadcast(Coins);
+	}
+
+	UFUNCTION()
+	void OnLeaveRest()
+	{
+		DLeaveRest.ExecuteIfBound();
 	}
 }

@@ -11,6 +11,12 @@ class UUIZombieGameplay : UUserWidget
 	UWidgetAnimation WarningAnim;
 
 	UPROPERTY(BindWidget)
+	UCommonTextBlock BossMsg;
+
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation BossMsgAnim;
+
+	UPROPERTY(BindWidget)
 	UCommonNumericTextBlock ComboText;
 
 	UPROPERTY(BindWidget)
@@ -74,10 +80,17 @@ class UUIZombieGameplay : UUserWidget
 	}
 
 	UFUNCTION()
-	void DisableCardSpawnUI()
+	void DisableCardSpawnUI(bool bDisable)
 	{
-		AttentionBar.SetVisibility(ESlateVisibility::Hidden);
-		AttentionButton.SetVisibility(ESlateVisibility::Hidden);
+		if (bDisable)
+		{
+			AttentionBar.SetVisibility(ESlateVisibility::Hidden);
+			AttentionButton.SetVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			AttentionBar.SetVisibility(ESlateVisibility::Visible);
+		}
 	}
 
 	UFUNCTION()
@@ -194,7 +207,22 @@ class UUIZombieGameplay : UUserWidget
 		}
 		else
 		{
-			SetVisibility(ESlateVisibility::Collapsed);
+			SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	UFUNCTION()
+	void UpdateBossText(FText NewBossText)
+	{
+		if (!NewBossText.IsEmpty())
+		{
+			BossMsg.SetText(NewBossText);
+			SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			PlayAnimation(BossMsgAnim);
+		}
+		else
+		{
+			SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
