@@ -39,7 +39,6 @@ class UMultiplierResponseComponent : UResponseComponent
 		if (MultiplierCount > 0)
 		{
 			float32 Multiplier = AbilitySystem.GetValue(FirstMultiAttrName) + (MultiplierCount - 1) * AbilitySystem.GetValue(SubsequentMultiAttrName);
-			Print("" + MultiplierCount);
 			return BaseValue * Multiplier;
 		}
 		else

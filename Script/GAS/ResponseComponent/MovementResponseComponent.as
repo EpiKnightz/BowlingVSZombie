@@ -23,6 +23,7 @@ class UMovementResponseComponent : UResponseComponent
 	private const float WorldDeaccel = -500;
 	private bool bIsAccelable = true;
 	FVector AddedVelocity = FVector::ZeroVector;
+	bool bIsBouncable = true;
 
 	bool InitChild() override
 	{
@@ -39,6 +40,8 @@ class UMovementResponseComponent : UResponseComponent
 		DOnAddForce.BindUFunction(this, n"AddForce");
 
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
+
+		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 
 		ComponentTickInterval = 0.05;
 		return true;
@@ -57,6 +60,19 @@ class UMovementResponseComponent : UResponseComponent
 		MovementComp.Activate();
 	}
 
+	UFUNCTION()
+	void EnableMovement(bool bEnable)
+	{
+		if (bEnable)
+		{
+			MovementComp.Activate();
+		}
+		else
+		{
+			MovementComp.Deactivate();
+		}
+	}
+
 	void SetIsAccelable(bool IsAccelable)
 	{
 		if (IsAccelable)
@@ -68,6 +84,12 @@ class UMovementResponseComponent : UResponseComponent
 			MovementComp.MaxSpeed = 5000;
 		}
 		bIsAccelable = IsAccelable;
+	}
+
+	void SetIsBouncable(bool IsBouncable)
+	{
+		// MovementComp.bShouldBounce = IsBouncable;
+		bIsBouncable = IsBouncable;
 	}
 
 	UFUNCTION()
@@ -96,7 +118,7 @@ class UMovementResponseComponent : UResponseComponent
 	UFUNCTION()
 	private void AddForce(FVector VelocityVector)
 	{
-		if (!VelocityVector.IsZero())
+		if (!VelocityVector.IsZero() && bIsBouncable)
 		{
 			EOnPreAddForceCue.Broadcast(VelocityVector);
 			MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(n"Bounciness");
@@ -112,15 +134,25 @@ class UMovementResponseComponent : UResponseComponent
 		{
 			EOnBounceCue.Broadcast(Hit);
 			auto MovementResponse = UMovementResponseComponent::Get(Hit.GetActor());
-			if (IsValid(MovementResponse))
+			if (IsValid(MovementResponse) && MovementResponse.bIsBouncable)
 			{
 				// This bounciness will be multiplier to the already existing bounciness of Movement Component. (default is 0.8)
+				float Bounciness = AbilitySystem.GetValue(n"Bounciness");
 				MovementComp.Velocity *= AbilitySystem.GetValue(n"Bounciness");
 				MovementResponse.DOnAddForce.ExecuteIfBound(ImpactVelocity);
 				// Print("ActorBounce: " + Hit.GetActor().GetName() + " with " + ImpactVelocity.ToString() + " result in:" + MovementComp.Velocity.ToString(), 100);
 			}
 
 			EOnPostBounce.Broadcast();
+		}
+	}
+
+	UFUNCTION()
+	private void OnPostCalculation(FName AttrName, float Value)
+	{
+		if (AttrName == n"MoveSpeed")
+		{
+			MovementComp.MaxSpeed = Value;
 		}
 	}
 
