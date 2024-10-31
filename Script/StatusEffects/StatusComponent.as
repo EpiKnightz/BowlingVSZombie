@@ -25,15 +25,19 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	bool IsApplicable()
 	{
+		auto TargetResponseComponent = UTargetResponseComponent::Get(GetOwner());
+		if (!IsValid(TargetResponseComponent))
+		{
+			return false;
+		}
 		bool bResult = true;
-
 		switch (StatusData.TargetType)
 		{
 			case ETargetType::Player:
-				bResult = bResult && (GetOwner().IsA(ABowlingPawn));
+				bResult = bResult && TargetResponseComponent.TargetType == ETargetType::Survivor;
 				break;
 			case ETargetType::Zombie:
-				bResult = bResult && (GetOwner().IsA(AZombie));
+				bResult = bResult && TargetResponseComponent.TargetType == ETargetType::Zombie;
 				break;
 			default:
 		}
