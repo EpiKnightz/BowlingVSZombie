@@ -4,6 +4,8 @@ const float ENDSCREEN_Z_LIMIT = -10;
 const float WAIT_TARGET_DEAD_TIME = 1.5;
 const float DAMAGE_DELAY = 0.5;
 const float DEAD_FALL_SPEED = 80;
+const float THROWING_FLY_TIME = 0.6;
+const float MAX_COIN_VALUE = 15;
 
 enum EAttackType
 {
@@ -72,7 +74,7 @@ class AZombie : AHumanlite
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent DeadSFX;
 
-	UPROPERTY(BlueprintReadWrite, Category = SFX)
+	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem DeadVFX;
 
 	// UPROPERTY(BlueprintReadWrite, Category = Stats)
@@ -115,9 +117,7 @@ class AZombie : AHumanlite
 	void BeginPlay()
 	{
 		AnimateInst = Cast<UZombieAnimInst>(BodyMesh.GetAnimInstance());
-
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-		System::SetTimer(this, n"EmergeDone", delayMove, false);
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
@@ -140,6 +140,29 @@ class AZombie : AHumanlite
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		// Temporary
 		MovementResponseComponent.StopLifeTime = 0;
+	}
+
+	UFUNCTION()
+	void SetData(FZombieDT DataRow)
+	{
+		TMap<FName, float32> Data;
+		Data.Add(n"MaxHP", DataRow.HP);
+		Data.Add(n"Attack", DataRow.Atk);
+		Data.Add(n"MoveSpeed", DataRow.Speed);
+		Data.Add(n"Accel", DataRow.Accel);
+		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
+		Data.Add(n"Bounciness", DataRow.Bounciness);
+
+		AbilitySystem.ImportData(Data);
+
+		SetMoveSpeed(DataRow.Speed);
+		delayMove /= AnimateInst.AnimPlayRate;
+		System::SetTimer(this, n"EmergeDone", delayMove, false);
+		System::SetTimer(this, n"InitMovement", delayMove, false);
+
+		SetBodyScale(DataRow.BodyScale);
+		SetHeadScale(DataRow.HeadScale);
+		CoinValue = DataRow.CoinDropAmount;
 	}
 
 	UFUNCTION()
@@ -349,26 +372,6 @@ class AZombie : AHumanlite
 		return false;
 	}
 
-	UFUNCTION()
-	void SetData(FZombieDT DataRow)
-	{
-		TMap<FName, float32> Data;
-		Data.Add(n"MaxHP", DataRow.HP);
-		Data.Add(n"Attack", DataRow.Atk);
-		Data.Add(n"MoveSpeed", DataRow.Speed);
-		Data.Add(n"Accel", DataRow.Accel);
-		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
-		Data.Add(n"Bounciness", DataRow.Bounciness);
-
-		AbilitySystem.ImportData(Data);
-
-		SetMoveSpeed(DataRow.Speed);
-
-		SetBodyScale(DataRow.BodyScale);
-		SetHeadScale(DataRow.HeadScale);
-		CoinValue = DataRow.CoinDropAmount;
-	}
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Visual Cues:
 
@@ -457,8 +460,76 @@ class AZombie : AHumanlite
 		if (AnimateInst.bIsEmergeDone == false)
 		{
 			AnimateInst.bIsEmergeDone = true;
-			MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
 		}
+	}
+
+	UFUNCTION()
+	void InitMovement()
+	{
+		delayMove = 0;
+		SetActorTickEnabled(true);
+		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+	}
+
+	void ThrowToGroundTween(float Length, bool bRandomizeY = false)
+	{
+		System::ClearTimer(this, "EmergeDone");
+		System::ClearTimer(this, "InitMovement");
+
+		FVector OriginalLoc = GetActorLocation();
+		FRotator OriginalRot = GetActorRotation();
+		FRotator TargetRot = FRotator(0, -90, 0);
+
+		if (bRandomizeY)
+		{
+			FVector2D OriginalLocXY = FVector2D(OriginalLoc.X, OriginalLoc.Y);
+			FVector2D TargetLocXY = FVector2D(OriginalLoc.X + Length, Math::RandRange(-400.0, 400.0));
+			UFCTweenBPActionVector2D TweenLocXY = UFCTweenBPActionVector2D::TweenVector2D(OriginalLocXY, TargetLocXY, THROWING_FLY_TIME, EFCEase::Linear);
+			TweenLocXY.ApplyEasing.AddUFunction(this, n"FlyingLocationXY");
+			TweenLocXY.Start();
+		}
+		else
+		{
+			UFCTweenBPActionFloat TweenLocX = UFCTweenBPActionFloat::TweenFloat(OriginalLoc.X, OriginalLoc.X + Length, THROWING_FLY_TIME, EFCEase::Linear);
+			TweenLocX.ApplyEasing.AddUFunction(this, n"FlyingLocationX");
+			TweenLocX.Start();
+		}
+		UFCTweenBPActionFloat TweenLocZ = UFCTweenBPActionFloat::TweenFloat(OriginalLoc.Z, 50 * ActorScale3D.Z, THROWING_FLY_TIME, EFCEase::InBack);
+		TweenLocZ.ApplyEasing.AddUFunction(this, n"FlyingLocationZ");
+		TweenLocZ.OnComplete.AddUFunction(this, n"EmergeDone");
+		TweenLocZ.OnComplete.AddUFunction(this, n"InitMovement");
+		TweenLocZ.Start();
+
+		UFCTweenBPActionRotator TweenRot = UFCTweenBPActionRotator::TweenRotator(OriginalRot, TargetRot, 0.5, EFCEase::OutSine);
+		TweenRot.ApplyEasing.AddUFunction(this, n"FlyingRotation");
+		TweenRot.Start();
+	}
+
+	UFUNCTION()
+	void FlyingLocationX(float32 NewLoc)
+	{
+		FVector Loc = GetActorLocation();
+		SetActorLocation(FVector(NewLoc, Loc.Y, Loc.Z));
+	}
+
+	UFUNCTION()
+	void FlyingLocationXY(FVector2D NewLoc)
+	{
+		FVector Loc = GetActorLocation();
+		SetActorLocation(FVector(NewLoc.X, NewLoc.Y, Loc.Z));
+	}
+
+	UFUNCTION()
+	void FlyingLocationZ(float32 NewLoc)
+	{
+		FVector Loc = GetActorLocation();
+		SetActorLocation(FVector(Loc.X, Loc.Y, NewLoc));
+	}
+
+	UFUNCTION()
+	void FlyingRotation(FRotator NewRot)
+	{
+		SetActorRotation(NewRot);
 	}
 
 	void SetStencilValue(int value)

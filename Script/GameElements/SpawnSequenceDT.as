@@ -11,12 +11,15 @@ struct FSpawnSequenceDT
 	float TimeMark;
 
 	UPROPERTY()
+	bool bDataOnly;
+
+	UPROPERTY(meta = (EditCondition = "!bDataOnly", EditConditionHides))
 	float MinWaveCooldown;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "!bDataOnly", EditConditionHides))
 	float MaxWaveCooldown;
 
-	UPROPERTY()
+	UPROPERTY(meta = (EditCondition = "!bDataOnly", EditConditionHides))
 	bool bAllowMultipleSpawns;
 
 	UPROPERTY(meta = (EditCondition = "bAllowMultipleSpawns", EditConditionHides))

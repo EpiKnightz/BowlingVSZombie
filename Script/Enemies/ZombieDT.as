@@ -9,13 +9,29 @@ enum ESocketType
 	DualWield
 }
 
+enum EZombieType
+{
+	Normal,
+	Elite,
+	Boss
+}
+
 struct FZombieDT
 {
+	UPROPERTY()
+	FGameplayTag ZombieID;
+
 	UPROPERTY()
 	FString Name = "Zombie";
 
 	UPROPERTY()
 	FText Description = FText::FromString("Zombie");
+
+	UPROPERTY()
+	UTexture2D Icon;
+
+	UPROPERTY()
+	EZombieType Type = EZombieType::Normal;
 
 	UPROPERTY()
 	float32 HP = 100;
@@ -37,6 +53,9 @@ struct FZombieDT
 	float32 Bounciness = 0.05;
 
 	UPROPERTY()
+	int CoinDropAmount = 1;
+
+	UPROPERTY(meta = (EditCondition = "Type != EZombieType::Boss", EditConditionHides))
 	FVector HeadScale = FVector::OneVector;
 
 	UPROPERTY()
@@ -45,14 +64,11 @@ struct FZombieDT
 	UPROPERTY()
 	FVector WeaponScale = FVector::OneVector;
 
-	UPROPERTY()
-	int CoinDropAmount = 1;
+	UPROPERTY(meta = (EditCondition = "Type != EZombieType::Boss", EditConditionHides))
+	TArray<UStaticMesh> HeadMeshList;
 
 	UPROPERTY()
 	TArray<USkeletalMesh> BodyMeshList; // List of possible models for the zombie
-
-	UPROPERTY()
-	TArray<UStaticMesh> HeadMeshList;
 
 	UPROPERTY()
 	TArray<UStaticMesh> AccessoryMeshList;
@@ -68,4 +84,16 @@ struct FZombieDT
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UStaticMesh> LeftWeaponList;
+
+	UPROPERTY()
+	int NumberOfPhases = 1;
+
+	UPROPERTY(meta = (EditCondition = "NumberOfPhases>0", EditConditionHides))
+	TArray<UModifierObject> Lv1Modifiers;
+
+	UPROPERTY(meta = (EditCondition = "NumberOfPhases>1", EditConditionHides))
+	TArray<UModifierObject> Lv2Modifiers;
+
+	UPROPERTY(meta = (EditCondition = "NumberOfPhases>2", EditConditionHides))
+	TArray<UModifierObject> Lv3Modifiers;
 };

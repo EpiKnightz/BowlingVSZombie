@@ -2,7 +2,6 @@ namespace ZombieManager
 {
 	const float WARNING_DURATION = 2.5;
 }
-
 class AZombieManager : AActor
 /**
  * ZombieManager class manages spawning zombies.
@@ -20,6 +19,9 @@ class AZombieManager : AActor
 {
 	UPROPERTY()
 	TSubclassOf<AZombie> ZombieTemplate;
+
+	UPROPERTY()
+	TSubclassOf<AZombieBoss> BossTemplate;
 
 	UPROPERTY()
 	FTransform SpawnPosition;
@@ -47,8 +49,11 @@ class AZombieManager : AActor
 	private float currentGameTime;
 	private int multipleSpawnCount = 0;
 
+	ABowlingGameMode GameMode;
+
 	FFloatDelegate DOnProgressChanged;
-	FFTextDelegate DOnWarning;
+	FFTextDelegate DShowWarning;
+	FFTextDelegate DShowBossMsg;
 	FVoidDelegate DOnClearedAllZombies;
 	FZombieEvent EOnZombieSpawned;
 
@@ -81,6 +86,10 @@ class AZombieManager : AActor
 				if (ZombiePoolID.Num() > 0)
 				{
 					currentSequenceMilestone = nextSequenceMilestone;
+					if (currentSequenceMilestone == 0 && GameMode.LevelType == ELevelType::Boss)
+					{
+						SpawnBoss();
+					}
 					countdown = 0;
 					nextSequenceMilestone++;
 				}
@@ -93,7 +102,7 @@ class AZombieManager : AActor
 		// Spawn zombie when countdown is <= 0
 		if (countdown <= 0)
 		{
-			if (ZombiePoolID.Num() > 0)
+			if (ZombiePoolID.Num() > 0 && !ZombieSequence[currentSequenceMilestone].bDataOnly)
 			{
 				if (ZombieSequence[currentSequenceMilestone].bAllowMultipleSpawns)
 				{
@@ -108,6 +117,30 @@ class AZombieManager : AActor
 	}
 
 	UFUNCTION()
+	void SpawnBoss()
+	{
+		// TODO: Double check all other Zombie references
+		if (GameMode.LevelType == ELevelType::Boss)
+		{
+			FZombieDT Row;
+			FName ZombieID = ZombiePoolID[0];
+			ZombieDataTable.FindRow(ZombieID, Row);
+
+			FVector ScaledLocation = FindSpawnLocation();
+			ScaledLocation.Z *= Row.BodyScale.Z;
+			AZombieBoss Boss = SpawnActor(BossTemplate, ScaledLocation, SpawnPosition.Rotator());
+			Boss.SetData(Row);
+
+			Boss.DOnZombDie.BindUFunction(GameMode, n"ScoreChange");
+			Boss.DOnZombDie.BindUFunction(this, n"UpdateZombieList");
+			Boss.DOnZombieReach.BindUFunction(GameMode, n"HPChange");
+			// EOnZombieSpawned.Broadcast(Boss);
+
+			ZombiePoolID = ZombieSequence[nextSequenceMilestone + 1].SpawnID;
+		}
+	}
+
+	UFUNCTION()
 	void SpawnZombie()
 	{
 		/**
@@ -116,22 +149,42 @@ class AZombieManager : AActor
 		 * based on the data table values. Randomly selects a zombie
 		 * model from the available options in the data table row.
 		 */
+
+		ConstructZombie(FindSpawnLocation());
+
+		if (multipleSpawnCount > 0)
+		{
+			multipleSpawnCount--;
+			System::SetTimer(this, n"SpawnZombie", ZombieSequence[currentSequenceMilestone].MultipleSpawnInterval, false);
+		}
+	}
+
+	UFUNCTION()
+	void NextWave()
+	{
+		if (nextSequenceMilestone < ZombieSequence.Num())
+		{
+			ZombieSequence[nextSequenceMilestone].TimeMark = currentGameTime;
+		}
+	}
+
+	AZombie ConstructZombie(FVector Location)
+	{
 		FZombieDT Row;
 		FName ZombieID = ZombiePoolID[Math::RandRange(0, ZombiePoolID.Num() - 1)];
 		ZombieDataTable.FindRow(ZombieID, Row);
 
-		FVector SpawnLocation = SpawnPosition.Location;
-		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
-		SpawnLocation.Z *= Row.BodyScale.Z;
+		FVector ScaledLocation = Location;
+		ScaledLocation.Z *= Row.BodyScale.Z;
 
-		AZombie SpawnedActor = Cast<AZombie>(SpawnActor(ZombieTemplate, SpawnLocation, SpawnPosition.Rotator()));
-		SpawnedActor.SetData(Row);
+		AZombie SpawnedActor = SpawnActor(ZombieTemplate, ScaledLocation, SpawnPosition.Rotator());
 
 		USkeletalMesh BodyMesh = Row.BodyMeshList.Num() > 0 ? Row.BodyMeshList[Math::RandRange(0, Row.BodyMeshList.Num() - 1)] : nullptr;
 		UStaticMesh HeadMesh = Row.HeadMeshList.Num() > 0 ? Row.HeadMeshList[Math::RandRange(0, Row.HeadMeshList.Num() - 1)] : nullptr;
 		UStaticMesh AccessoryMesh = Row.AccessoryMeshList.Num() > 0 ? Row.AccessoryMeshList[Math::RandRange(0, Row.AccessoryMeshList.Num() - 1)] : nullptr;
 
 		SpawnedActor.SetMeshes(BodyMesh, HeadMesh, AccessoryMesh);
+		SpawnedActor.SetData(Row);
 
 		// Set weapon
 		UStaticMesh RightHand = nullptr, LeftHand = nullptr;
@@ -160,49 +213,54 @@ class AZombieManager : AActor
 		SpawnedActor.SetWeapon(RightHand, LeftHand, Row.RightSocketType == ESocketType::DualWield, EAttackType::Punch);
 		SpawnedZombieList.Add(SpawnedActor.GetName());
 
-		ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
-		SpawnedActor.DOnZombDie.BindUFunction(GM, n"ScoreChange");
+		SpawnedActor.DOnZombDie.BindUFunction(GameMode, n"ScoreChange");
 		SpawnedActor.DOnZombDie.BindUFunction(this, n"UpdateZombieList");
-		SpawnedActor.DOnZombieReach.BindUFunction(GM, n"HPChange");
+		SpawnedActor.DOnZombieReach.BindUFunction(GameMode, n"HPChange");
 		EOnZombieSpawned.Broadcast(SpawnedActor);
 
-		if (multipleSpawnCount > 0)
-		{
-			multipleSpawnCount--;
-			System::SetTimer(this, n"SpawnZombie", ZombieSequence[currentSequenceMilestone].MultipleSpawnInterval, false);
-		}
+		return SpawnedActor;
+	}
+
+	FVector FindSpawnLocation()
+	{
+		FVector SpawnLocation = SpawnPosition.Location;
+		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
+		return SpawnLocation;
 	}
 
 	UFUNCTION()
 	void GameStart()
 	{
 		SetActorTickEnabled(true);
-		SpawnSequenceDT.GetAllRows(ZombieSequence);
-		ZombieSequence.Sort();
-		endTimer = ZombieSequence.Last().TimeMark;
-		for (int i = 0; i < ZombieSequence.Num(); i++)
+		if (ZombieSequence.IsEmpty())
 		{
-			if (ZombieSequence[i].SpawnType != ESpawnType::Zombie)
+			SpawnSequenceDT.GetAllRows(ZombieSequence);
+			ZombieSequence.Sort();
+			endTimer = ZombieSequence.Last().TimeMark;
+			for (int i = 0; i < ZombieSequence.Num(); i++)
 			{
-				ZombieSequence.RemoveAt(i);
-				--i;
-				continue;
+				if (ZombieSequence[i].SpawnType != ESpawnType::Zombie)
+				{
+					ZombieSequence.RemoveAt(i);
+					--i;
+					continue;
+				}
 			}
-		}
-		for (int i = 0; i < ZombieSequence.Num(); i++)
-		{
-			if (!ZombieSequence[i].WaveWarning.IsEmpty())
+			for (int i = 0; i < ZombieSequence.Num(); i++)
 			{
-				float delay = Math::Clamp(ZombieSequence[i].TimeMark - ZombieManager::WARNING_DURATION, 0, 999);
-				if (delay == 0)
+				if (!ZombieSequence[i].WaveWarning.IsEmpty())
 				{
-					ShowWarning();
+					float delay = Math::Clamp(ZombieSequence[i].TimeMark - ZombieManager::WARNING_DURATION, 0, 999);
+					if (delay == 0)
+					{
+						ShowWarning();
+					}
+					else
+					{
+						System::SetTimer(this, n"ShowWarning", delay, false);
+					}
+					break;
 				}
-				else
-				{
-					System::SetTimer(this, n"ShowWarning", delay, false);
-				}
-				break;
 			}
 		}
 	}
@@ -235,14 +293,17 @@ class AZombieManager : AActor
 
 	void UpdateProgress()
 	{
-		if (CurrentLevelProgress < 1)
+		if (GameMode.LevelType == ELevelType::Standard)
 		{
-			CurrentLevelProgress = currentGameTime / endTimer;
-			if (CurrentLevelProgress > 1)
+			if (CurrentLevelProgress < 1)
 			{
-				CurrentLevelProgress = 1;
+				CurrentLevelProgress = currentGameTime / endTimer;
+				if (CurrentLevelProgress > 1)
+				{
+					CurrentLevelProgress = 1;
+				}
+				DOnProgressChanged.ExecuteIfBound(CurrentLevelProgress);
 			}
-			DOnProgressChanged.ExecuteIfBound(CurrentLevelProgress);
 		}
 	}
 
@@ -251,18 +312,25 @@ class AZombieManager : AActor
 	{
 		if (nextSequenceMilestone < ZombieSequence.Num() && !ZombieSequence[nextSequenceMilestone].WaveWarning.IsEmpty())
 		{
-			DOnWarning.ExecuteIfBound(ZombieSequence[nextSequenceMilestone].WaveWarning);
+			if (ZombieSequence[nextSequenceMilestone].bDataOnly)
+			{
+				DShowBossMsg.ExecuteIfBound(ZombieSequence[nextSequenceMilestone].WaveWarning);
+			}
+			else
+			{
+				DShowWarning.ExecuteIfBound(ZombieSequence[nextSequenceMilestone].WaveWarning);
+			}
 		}
 		else
 		{
-			DOnWarning.ExecuteIfBound(FText());
+			DShowWarning.ExecuteIfBound(FText());
 		}
 		for (int i = nextSequenceMilestone + 1; i < ZombieSequence.Num(); i++)
 		{
 			if (!ZombieSequence[i].WaveWarning.IsEmpty())
 			{
 				System::SetTimer(this, n"ShowWarning", Math::Clamp(ZombieSequence[i].TimeMark - ZombieManager::WARNING_DURATION - currentGameTime, 0.01, 999), false);
-				break;
+				break; // Get out of the loop
 			}
 		}
 	}
