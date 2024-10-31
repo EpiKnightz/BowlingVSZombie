@@ -245,3 +245,19 @@ Epic Spectrum - Tension
 Epic Spectrum - Ascend
 Epic Spectrum - Growing Older
 Epic Spectrum - Wayfarer
+
+Boss design:
+Phase 1:
+- Spawn
+- Move Left or Right
+- Immune to knockback
+- No weapon
+- Speriodically spawn a zombie to attack
+Phase 2:
+- Trigger at 50% HP
+- Roar, buff sth (heal? buff all other zombies? increase attack)
+- Zombie spawn as normal
+- Add new weapon (club?)
+Phase 3:
+- Trigger at 15% HP
+- Gain new attack (Jump attack?)
