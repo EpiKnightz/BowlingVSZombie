@@ -231,4 +231,10 @@ class UUIZombieGameplay : UUserWidget
 	{
 		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).NextLevel();
 	}
+
+	UFUNCTION(BlueprintCallable)
+	void OnRetryClicked()
+	{
+		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).RestartGame();
+	}
 }
