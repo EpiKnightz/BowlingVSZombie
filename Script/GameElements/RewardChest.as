@@ -1,4 +1,4 @@
-class ARewardChest : ACollectable
+class ARewardChest : ACollectible
 {
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	USkeletalMeshComponent RewardBody;
@@ -25,7 +25,7 @@ class ARewardChest : ACollectable
 
 	void SetTarget(USceneComponent NewTarget) override
 	{
-		ACollectable::SetTarget(NewTarget);
+		ACollectible::SetTarget(NewTarget);
 	}
 
 	void OnCollectibleCollected(AActor OtherActor) override

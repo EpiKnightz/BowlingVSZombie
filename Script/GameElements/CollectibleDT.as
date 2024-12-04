@@ -1,6 +1,9 @@
 struct FCollectibleDT
 {
 	UPROPERTY()
+	FGameplayTag CollectibleID;
+
+	UPROPERTY()
 	FString Name = "SpeedBuff";
 
 	UPROPERTY()
@@ -19,5 +22,5 @@ struct FCollectibleDT
 	FLinearColor BoxColor;
 
 	UPROPERTY()
-	TArray<FName> EffectID;
+	TArray<FGameplayTag> EffectID;
 };

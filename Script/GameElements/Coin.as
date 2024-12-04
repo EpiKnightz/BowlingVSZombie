@@ -15,7 +15,7 @@ const float GOLD_COIN_VALUE = 12;
 const float EPIC_COIN_VALUE = 60;
 const float MYTHIC_COIN_VALUE = 300;
 
-class ACoin : ACollectable
+class ACoin : ACollectible
 {
 	default DropComponent.StartHeight = 150;
 	default DropComponent.DropDuration = 2;
@@ -34,7 +34,7 @@ class ACoin : ACollectable
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		ACollectable::BeginPlay();
+		ACollectible::BeginPlay();
 		ABowlingGameMode GM = Cast<ABowlingGameMode>(Gameplay::GetGameMode());
 		DOnCoinGet.BindUFunction(GM, n"CoinGetHandler");
 		DOnCoinCombo.BindUFunction(Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0)), n"CoinComboHandler");
@@ -100,7 +100,7 @@ class ACoin : ACollectable
 
 	void OnCollectibleOverlap(AActor OtherActor) override
 	{
-		ACollectable::OnCollectibleOverlap(OtherActor);
+		ACollectible::OnCollectibleOverlap(OtherActor);
 		DOnCoinCombo.ExecuteIfBound(CoinData.CoinValue);
 	}
 

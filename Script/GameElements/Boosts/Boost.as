@@ -1,4 +1,4 @@
-class ABoost : ACollectable
+class ABoost : ACollectible
 {
 	UPROPERTY(DefaultComponent)
 	UNiagaraComponent PowerBox;

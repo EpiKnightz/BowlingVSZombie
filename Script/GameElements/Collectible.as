@@ -1,4 +1,4 @@
-class ACollectable : AActor
+class ACollectible : AActor
 {
 	UPROPERTY(RootComponent, DefaultComponent)
 	USphereComponent Collider;
