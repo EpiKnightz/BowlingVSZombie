@@ -1,9 +1,13 @@
 
+namespace ProjectileSpec
+{
+	const float32 UNINIT_VALUE = -99999;
+}
 // This is for data storage only, it shouldn't be a data table
 struct FProjectileSpec
 {
 	UPROPERTY()
-	float32 Atk = 50;
+	float32 Atk = ProjectileSpec::UNINIT_VALUE;
 
 	UPROPERTY()
 	bool bIsPiercable = false;

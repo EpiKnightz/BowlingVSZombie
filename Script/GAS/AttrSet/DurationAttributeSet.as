@@ -1,4 +1,4 @@
-class UDurationAttributeSet : ULiteAttrSet
+class UDurationAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadOnly, Category = "Duration Attribute")
 	FAngelscriptGameplayAttributeData Duration;
@@ -6,7 +6,7 @@ class UDurationAttributeSet : ULiteAttrSet
 	UPROPERTY(BlueprintReadOnly, Category = "Interval Attribute")
 	FAngelscriptGameplayAttributeData Interval;
 
-	UDurationAttributeSet()
+	UDurationAttrSet()
 	{
 		Duration.Initialize(1);
 		Interval.Initialize(1);

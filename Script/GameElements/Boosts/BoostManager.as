@@ -16,12 +16,14 @@ class ABoostManager : AActor
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable PowerUpDataTable;
+	TMap<FGameplayTag, FCollectibleDT> PowerUpDataMap;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable EffectDataTable;
 
 	TArray<FSpawnSequenceDT> SpawnSequence;
-	TArray<FName> PowerUpPoolID;
+	TArray<FGameplayTag> PowerUpTagPool;
+	AStatusManager StatusManager;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable SpawnSequenceDT;
@@ -37,7 +39,18 @@ class ABoostManager : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		TArray<FCollectibleDT> PowerUpArray;
+		PowerUpDataTable.GetAllRows(PowerUpArray);
+		for (FCollectibleDT PowerUp : PowerUpArray)
+		{
+			PowerUpDataMap.Add(PowerUp.CollectibleID, PowerUp);
+		}
 		ActorTickEnabled = false;
+	}
+
+	void Setup(AStatusManager iStatusManager)
+	{
+		StatusManager = iStatusManager;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -49,8 +62,8 @@ class ABoostManager : AActor
 		{
 			if (currentGameTime >= SpawnSequence[nextSequenceMilestone].TimeMark)
 			{
-				PowerUpPoolID = SpawnSequence[nextSequenceMilestone].SpawnID;
-				if (PowerUpPoolID.Num() > 0)
+				PowerUpTagPool = SpawnSequence[nextSequenceMilestone].SpawnTag;
+				if (PowerUpTagPool.Num() > 0)
 				{
 					currentSequenceMilestone = nextSequenceMilestone;
 					countdown = 0;
@@ -64,7 +77,7 @@ class ABoostManager : AActor
 		}
 		if (countdown <= 0)
 		{
-			if (PowerUpPoolID.Num() > 0)
+			if (PowerUpTagPool.Num() > 0)
 			{
 				if (SpawnSequence[currentSequenceMilestone].bAllowMultipleSpawns)
 				{
@@ -85,16 +98,30 @@ class ABoostManager : AActor
 	}
 
 	UFUNCTION()
+	FCollectibleDT GetPowerUpData(FGameplayTag PowerUpTag)
+	{
+		FCollectibleDT PowerUp;
+		if (PowerUpDataMap.Find(PowerUpTag, PowerUp) != false)
+		{
+			return PowerUp;
+		}
+		else
+		{
+			PrintError("GetPowerUpData: PowerUpID " + PowerUpTag + " not found");
+			return PowerUp;
+		}
+	}
+
+	UFUNCTION()
 	void SpawnPowerUp()
 	{
-		FCollectibleDT Row;
-		FName PowerUpID = PowerUpPoolID[Math::RandRange(0, PowerUpPoolID.Num() - 1)];
-		PowerUpDataTable.FindRow(PowerUpID, Row);
+		FCollectibleDT Row = GetPowerUpData(PowerUpTagPool[Math::RandRange(0, PowerUpTagPool.Num() - 1)]);
 
 		FStatusDT EffectRow;
 		if (!Row.EffectID.IsEmpty())
 		{
-			EffectDataTable.FindRow(Row.EffectID[0], EffectRow);
+			//  To-do: Currently only support 1 effect per powerup
+			EffectRow = StatusManager.GetStatusData(Row.EffectID[0]);
 		}
 
 		FVector SpawnLocation = SpawnPosition.Location;

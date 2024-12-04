@@ -16,6 +16,7 @@ class UWeapon : UStaticMeshComponent
 	protected UColorOverlay ColorOverlay;
 	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 	protected AActor Target;
+	// bool bIsRightHand = true;
 
 	FActorDelegate DOnTargetChosen;
 
@@ -28,17 +29,18 @@ class UWeapon : UStaticMeshComponent
 
 	// Only called from child classes
 	// This is because different weapons have different sockets
-	void Setup()
+	void Setup(bool RightHand = true)
 	{
 	}
 
-	protected void SetupInner(FName AttachLocation)
+	protected void SetupInner(FString AttachLocation, bool bIsRightHand = true)
 	{
 		// PPV = Gameplay::GetActorOfClass(APostProcessVolume);
 		auto CompanionSkeleton = USkeletalMeshComponent::Get(Owner);
+		FName HandName = bIsRightHand ? FName("Right" + AttachLocation) : FName("Left" + AttachLocation);
 		if (IsValid(CompanionSkeleton))
 		{
-			AttachTo(CompanionSkeleton, AttachLocation);
+			AttachTo(CompanionSkeleton, HandName);
 		}
 
 		ColorOverlay = NewObject(this, UColorOverlay);

@@ -32,6 +32,25 @@ class AStatusManager : AActor
 	}
 
 	UFUNCTION()
+	FStatusDT GetStatusData(FGameplayTag StatusTag)
+	{
+		FStatusDT StatusData;
+		if (PositiveEffectMap.Find(StatusTag, StatusData) != false)
+		{
+			return StatusData;
+		}
+		else if (NegativeEffectMap.Find(StatusTag, StatusData) != false)
+		{
+			return StatusData;
+		}
+		else
+		{
+			PrintError("GetStatusData: StatusID " + StatusTag + " not found");
+			return StatusData;
+		}
+	}
+
+	UFUNCTION()
 	bool ApplyStatusEffects(FGameplayTagContainer EffectTags, AActor Target)
 	{
 

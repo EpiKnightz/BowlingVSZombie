@@ -38,6 +38,18 @@ class UZombieAnimInst : UCustomAnimInst
 		return (AnimMoveSpeed > 0 && AnimMoveSpeed <= BASE_WALK_SPEED);
 	}
 
+	bool IsMirroredHand()
+	{
+		if (AtkType == EAttackType::Staff)
+		{
+			return !bIsMirror;
+		}
+		else
+		{
+			return bIsMirror;
+		}
+	}
+
 	// Move function into varible so the animation blueprint can run on fast path
 	void SetMoveSpeed(float iSpeed)
 	{

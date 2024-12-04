@@ -36,6 +36,7 @@ class AHumanlite : AActor
 
 	protected UFCTweenBPActionFloat FloatTween;
 	protected UColorOverlay ColorOverlay;
+	protected FLinearColor DamageColor = FLinearColor::Red;
 
 	///////////////////////////////////
 	// Setup
@@ -97,10 +98,15 @@ class AHumanlite : AActor
 	// Visual Cues
 	////////////////////////////////////
 
+	void ChangeDamagedColor(FLinearColor Color)
+	{
+		DamageColor = Color;
+	}
+
 	UFUNCTION()
 	void TakeDamageCue()
 	{
-		ColorOverlay.ChangeOverlayColor(FLinearColor::Red);
+		ColorOverlay.ChangeOverlayColor(DamageColor);
 		System::SetTimer(ColorOverlay, n"RevertOverlayColor", 0.25, false);
 		// AnimateInst.Montage_Play(DamageAnim);
 		//  FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
@@ -112,7 +118,7 @@ class AHumanlite : AActor
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		System::ClearTimer(ColorOverlay, "RevertOverlayColor");
-		ColorOverlay.ChangeOverlayColor(FLinearColor::Gray, true);
+		ColorOverlay.ChangeOverlayColor(FLinearColor(0.2, 0.2, 0.2), true);
 
 		int AnimIndex = Math::RandRange(0, DeadAnims.Num() - 1);
 		PlayDeadAnim(AnimIndex);

@@ -14,7 +14,7 @@ class UBowlingGameInstance : UGameInstance
 	void Init()
 	{
 #if EDITOR
-		CurrentLevel = 6;
+		CurrentLevel = 3;
 		MaxRunHP = 100;
 		CurrentRunHP = 100;
 		// RunCoinTotal = 200;

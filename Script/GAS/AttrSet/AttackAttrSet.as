@@ -8,10 +8,14 @@ class UAttackAttrSet : ULiteAttrSet
 	UPROPERTY(BlueprintReadWrite, Category = "Attack Attribute")
 	FAngelscriptGameplayAttributeData AttackCooldown;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Attack Attribute")
+	FAngelscriptGameplayAttributeData AttackRange;
+
 	UAttackAttrSet()
 	{
 		Attack.Initialize(10);
 		AttackCooldown.Initialize(1);
+		AttackRange.Initialize(50); // <=100 = Melee, >100 = Ranged
 		DOnPostAttrChange.BindUFunction(this, n"PostAttrChange");
 	}
 

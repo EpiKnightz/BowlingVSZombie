@@ -22,8 +22,6 @@ class ABullet : AProjectile
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent FiredSFX;
 
-	// float Attack = 10;
-
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
@@ -40,10 +38,17 @@ class ABullet : AProjectile
 	UFUNCTION()
 	private void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
+		CheckForCollision(OtherActor);
+		OnBulletImpact();
+	}
+
+	void CheckForCollision(AActor OtherActor)
+	{
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
-			if (IsValid(DamageResponse))
+			if (IsValid(DamageResponse)
+				&& ProjectileDataComp.ProjectileData.Atk != ProjectileSpec::UNINIT_VALUE)
 			{
 				// This is because the atk should already been buff/debuff at spawned
 				DamageResponse.TakeHit(ProjectileDataComp.ProjectileData.Atk);
@@ -52,25 +57,39 @@ class ABullet : AProjectile
 				{
 					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
 				}
+				OnBulletImpact();
 			}
 		}
+	}
+
+	// UFUNCTION(BlueprintOverride)
+	// void Tick(float DeltaSeconds)
+	// {
+	// 	FVector loc = GetActorLocation();
+	// 	if (loc.Z <= -10 || loc.X < -1600)
+	// 	{
+	// 		DestroyActor();
+	// 	}
+	// }
+
+	void OnBulletImpact()
+	{
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
 		DestroyActor();
 	}
 
 	UFUNCTION(BlueprintOverride)
-	void Tick(float DeltaSeconds)
-	{
-		FVector loc = GetActorLocation();
-		if (loc.Z <= -10 || loc.X < -1600)
-		{
-			DestroyActor();
-		}
-	}
-
-	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		ActorBeginHit(nullptr, OtherActor, nullptr, FVector(), FHitResult());
+		CheckForCollision(OtherActor);
+	}
+
+	void SetHoming(USceneComponent Target)
+	{
+		if (IsValid(Target))
+		{
+			MovementComp.bIsHomingProjectile = true;
+			MovementComp.SetHomingTargetComponent(Target);
+		}
 	}
 }

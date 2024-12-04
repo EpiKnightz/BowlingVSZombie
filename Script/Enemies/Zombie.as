@@ -6,15 +6,19 @@ const float DAMAGE_DELAY = 0.5;
 const float DEAD_FALL_SPEED = 80;
 const float THROWING_FLY_TIME = 0.6;
 const float MAX_COIN_VALUE = 15;
+const float RANGE_COLLIDER_SIZE = 30;
 
 enum EAttackType
 {
 	Punch,
-	OneHand,
-	DualWield,
-	Shield,
+	Melee,
+	MeleeAndShield,
+	GunAndShield,
 	Pistol,
-	Gun
+	Gun,
+	DualWieldMelee,
+	DualWieldGun,
+	Staff,
 }
 
 class AZombie : AHumanlite
@@ -22,6 +26,13 @@ class AZombie : AHumanlite
 	// UPROPERTY(RootComponent, DefaultComponent)
 	// UCapsuleComponent Collider;
 	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
+
+	UPROPERTY(DefaultComponent)
+	UBoxComponent RangeCollider;
+
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent WorldWidget;
+	UUIHPBar HPBarWidget;
 
 	// UPROPERTY(DefaultComponent)
 	// USkeletalMeshComponent BodyMesh;
@@ -51,20 +62,14 @@ class AZombie : AHumanlite
 	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Zombie;
 
+	UPROPERTY(DefaultComponent)
+	UPhaseResponseComponent PhaseResponseComponent;
+
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem SmackVFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage DamageAnim;
-
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimMontage> NoWpnAttackAnim;
-
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimMontage> WeaponAttackAnim;
-
-	UPROPERTY(BlueprintReadWrite, Category = Animation)
-	TArray<UAnimMontage> ShieldAttackAnim;
 
 	TArray<UAnimMontage> AttackAnim;
 
@@ -77,10 +82,7 @@ class AZombie : AHumanlite
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem DeadVFX;
 
-	// UPROPERTY(BlueprintReadWrite, Category = Stats)
-	// EAttackType AtkType = EAttackType::Punch;
-	UPROPERTY(BlueprintReadWrite, Category = Stats)
-	float CoinValue;
+	float CoinValue = 0;
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ZombieStatusTable;
@@ -89,7 +91,7 @@ class AZombie : AHumanlite
 	TSubclassOf<ACoin> CoinTemplate;
 
 	UZombieAnimInst AnimateInst;
-	FNameDelegate DOnZombDie;
+	FNameEvent EOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
 	float delayMove = 2.f;
@@ -123,10 +125,12 @@ class AZombie : AHumanlite
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
+		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 
 		DamageResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
+		DamageResponseComponent.EOnHealCue.AddUFunction(this, n"HealCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
 		StatusResponseComponent.Initialize(AbilitySystem);
@@ -134,12 +138,18 @@ class AZombie : AHumanlite
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
+		AttackResponseComponent.EOnAnimEndNotify.AddUFunction(this, n"OnAttackEndNotify");
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		// Temporary
 		MovementResponseComponent.StopLifeTime = 0;
+
+		TargetResponseComponent.Initialize(AbilitySystem);
+		PhaseResponseComponent.Initialize(AbilitySystem);
+
+		HPBarWidget = Cast<UUIHPBar>(WorldWidget.GetWidget());
 	}
 
 	UFUNCTION()
@@ -148,10 +158,16 @@ class AZombie : AHumanlite
 		TMap<FName, float32> Data;
 		Data.Add(n"MaxHP", DataRow.HP);
 		Data.Add(n"Attack", DataRow.Atk);
+		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
+		Data.Add(n"AttackRange", DataRow.AttackRange);
 		Data.Add(n"MoveSpeed", DataRow.Speed);
 		Data.Add(n"Accel", DataRow.Accel);
-		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
 		Data.Add(n"Bounciness", DataRow.Bounciness);
+
+		PhaseResponseComponent.SetupPhaseData(DataRow.NumberOfPhases,
+											  DataRow.Lv1Modifiers,
+											  DataRow.Lv2Modifiers,
+											  DataRow.Lv3Modifiers);
 
 		AbilitySystem.ImportData(Data);
 
@@ -162,6 +178,17 @@ class AZombie : AHumanlite
 
 		SetBodyScale(DataRow.BodyScale);
 		SetHeadScale(DataRow.HeadScale);
+		ChangeAttackType(DataRow.AttackType, DataRow.ProjectileTemplate);
+		if (!IsMelee())
+		{
+			RangeCollider.SetBoxExtent(FVector(8 * DataRow.WeaponScale.X,
+											   DataRow.AttackRange,
+											   RANGE_COLLIDER_SIZE));
+		}
+		if (DataRow.AttackType == EAttackType::Staff)
+		{
+			System::SetTimer(this, n"PeriodicCheck", DataRow.AttackCooldown, true);
+		}
 		CoinValue = DataRow.CoinDropAmount;
 	}
 
@@ -175,6 +202,17 @@ class AZombie : AHumanlite
 		if (AttrName == n"AttackCooldown")
 		{
 			SetAttackCooldown(Value);
+		}
+	}
+
+	UFUNCTION()
+	private void OnPostCalculation(FName AttrName, float Value)
+	{
+		if ((AttrName == n"Damage" || AttrName == n"HP") && Value > 0)
+		{
+			float HPPercentage = AbilitySystem.GetValue(n"HP") / AbilitySystem.GetValue(n"MaxHP");
+			PhaseResponseComponent.CheckForRankUp(HPPercentage);
+			HPBarWidget.SetHPBar(HPPercentage);
 		}
 	}
 
@@ -203,6 +241,8 @@ class AZombie : AHumanlite
 					// Start Attacking was called if there is a new target
 					if (!CheckForNewTarget())
 					{
+						StopAttacking();
+						RemoveTarget();
 						RestartMove();
 					}
 				}
@@ -226,27 +266,126 @@ class AZombie : AHumanlite
 		}
 	}
 
-	void SetWeapon(UStaticMesh RightHand, UStaticMesh LeftHand, bool bCanDualWield, EAttackType iAtkType)
+	void ChangeAttackType(EAttackType iAtkType, TSubclassOf<AActor> iProjectileTemplate = nullptr)
 	{
 		AnimateInst.AtkType = iAtkType;
-		RightHandWp.StaticMesh = RightHand;
-		LeftHandWp.StaticMesh = LeftHand;
-		if (RightHand != nullptr || LeftHand != nullptr)
+		if (!IsMelee())
 		{
-			AttackAnim = WeaponAttackAnim;
-			AnimateInst.bIsMirror = bCanDualWield ? Math::RandBool() : (LeftHand != nullptr && AnimateInst.AtkType != EAttackType::Shield);
+			auto RangeAttackComp = URangeAttackComponent::GetOrCreate(this);
+			RangeAttackComp.Initialize(AbilitySystem);
+			RangeAttackComp.SetProjectileTemplate(iProjectileTemplate);
+			RangeCollider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 		else
 		{
-			AttackAnim = NoWpnAttackAnim;
-			AnimateInst.bIsMirror = Math::RandBool();
+			RangeCollider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
+
+	void SetWeapon(UStaticMesh MainHand, UStaticMesh OffHand, EAttackType iAtkType, TArray<UAnimMontage> AtkAnims)
+	{
+		ChangeAttackType(iAtkType);
+
+		AnimateInst.bIsMirror = Math::RandBool();
+		RangeCollider.SetRelativeLocation(FVector(AnimateInst.bIsMirror ? RANGE_COLLIDER_SIZE : -RANGE_COLLIDER_SIZE,
+												  AbilitySystem.GetValue(n"AttackRange"),
+												  0));
+		ReplaceAnimation(AtkAnims);
+
+		if (iAtkType == EAttackType::Punch)
+		{
+			return;
 		}
 
-		if (AnimateInst.AtkType == EAttackType::Shield)
+		GetMainHand().StaticMesh = MainHand;
+		GetOffHand().StaticMesh = OffHand;
+		FString MainSocket = AnimateInst.IsMirroredHand() ? "Left" : "Right";
+		FString OffSocket = AnimateInst.IsMirroredHand() ? "Right" : "Left";
+		switch (iAtkType)
 		{
-			LeftHandWp.AttachTo(BodyMesh, n"LeftShield");
-			AttackAnim = ShieldAttackAnim;
+			case EAttackType::Melee:
+			case EAttackType::Staff:
+			{
+				MainSocket += "Hand";
+				break;
+			}
+			case EAttackType::MeleeAndShield:
+			{
+				MainSocket += "Hand";
+				OffSocket += "Shield";
+				break;
+			}
+			case EAttackType::Gun:
+			{
+				MainSocket += "Gun";
+				break;
+			}
+			case EAttackType::DualWieldGun:
+			{
+				MainSocket += "Gun";
+				OffSocket += "Gun";
+				break;
+			}
+			default:
+			{
+				Print("Attack type not coded yet");
+				break;
+			}
 		}
+
+		GetMainHand().AttachTo(BodyMesh, FName(MainSocket));
+		GetOffHand().AttachTo(BodyMesh, FName(OffSocket));
+	}
+
+	void RemoveWeapon(bool bRemoveMainHand = true)
+	{
+		if (bRemoveMainHand)
+		{
+			GetMainHand().StaticMesh = nullptr;
+		}
+		else
+		{
+			GetOffHand().StaticMesh = nullptr;
+		}
+	}
+
+	bool SetTarget(AActor iTarget)
+	{
+		Target = UDamageResponseComponent::Get(iTarget);
+		if (IsValid(Target))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	UStaticMeshComponent GetMainHand()
+	{
+		return AnimateInst.IsMirroredHand() ? LeftHandWp : RightHandWp;
+	}
+
+	UStaticMeshComponent GetOffHand()
+	{
+		return AnimateInst.IsMirroredHand() ? RightHandWp : LeftHandWp;
+	}
+
+	// void ChangeColorOverlayTarget(UMaterialInstanceDynamic& MatInstance, bool bIsMainHand = true)
+	// {
+	// 	if (bIsMainHand == AnimateInst.bIsMirror)
+	// 	{
+	// 		MatInstance = Material::CreateDynamicMaterialInstance(LeftHandWp.GetMaterial(0));
+	// 		LeftHandWp.SetMaterial(0, MatInstance);
+	// 	}
+	// 	else
+	// 	{
+	// 		MatInstance = Material::CreateDynamicMaterialInstance(RightHandWp.GetMaterial(0));
+	// 		RightHandWp.SetMaterial(0, MatInstance);
+	// 	}
+	// }
+
+	void ReplaceAnimation(TArray<UAnimMontage> NewAnim)
+	{
+		AttackAnim = NewAnim;
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -258,11 +397,16 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	bool OverlapActor(AActor OtherActor)
 	{
-		if (TargetResponseComponent.IsTargetable(OtherActor))
+		if (TargetResponseComponent.IsTargetable(OtherActor, AnimateInst.AtkType == EAttackType::Staff))
 		{
 			Target = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(Target) && !bIsAttacking)
 			{
+				if (AnimateInst.AtkType == EAttackType::Staff && !Target.IsDamaged())
+				{
+					RemoveTarget();
+					return false;
+				}
 				StartAttacking();
 				Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
 				Target.EOnDeadCue.AddUFunction(this, n"RemoveTargetWhenDead");
@@ -302,6 +446,9 @@ class AZombie : AHumanlite
 		AnimateInst.OnMontageEnded.Clear();
 		if (AttackAnim.Num() > 0)
 		{
+			SetActorRotation(FRotator::MakeFromX(Target.GetOwner().GetActorLocation()
+												 - GetActorLocation())
+							 + FRotator(0, -90, 0));
 			int random = Math::RandRange(0, AttackAnim.Num() - 1);
 			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
 		}
@@ -317,8 +464,53 @@ class AZombie : AHumanlite
 	{
 		if (IsValid(Target))
 		{
-			Target.TakeHit(AbilitySystem.GetValue(n"Attack"));
+			SetActorRotation(FRotator::MakeFromX(Target.GetOwner().GetActorLocation()
+												 - GetActorLocation())
+							 + FRotator(0, -90, 0));
+			if (IsMelee())
+			{
+				Target.TakeHit(AbilitySystem.GetValue(n"Attack"));
+			}
+			else
+			{
+				if (AnimateInst.AtkType == EAttackType::Staff)
+				{
+					auto SceneComp = USceneComponent::Get(Target.GetOwner());
+					URangeAttackComponent::Get(this).SpawnBullet(GetAttackLocation(), GetActorRotation(), SceneComp);
+				}
+				else
+				{
+					URangeAttackComponent::Get(this).SpawnBullet(GetAttackLocation(), GetActorRotation());
+				}
+			}
 		}
+	}
+
+	UFUNCTION()
+	private void OnAttackEndNotify()
+	{
+		if (!CheckForNewTarget())
+		{
+			StopAttacking();
+			RemoveTarget();
+			RestartMove();
+		}
+	}
+
+	UFUNCTION()
+	FVector GetAttackLocation()
+	{
+		FVector Result = GetMainHand().GetSocketLocation(n"Muzzle");
+		return Result;
+	}
+
+	UFUNCTION()
+	FRotator GetAttackRotation()
+	{
+		FRotator Result = BodyMesh.GetWorldRotation();
+		Result.XRoll = 0;
+		Result.YPitch = 0;
+		return Result;
 	}
 
 	UFUNCTION()
@@ -352,22 +544,70 @@ class AZombie : AHumanlite
 		return false;
 	}
 
+	bool IsMelee()
+	{
+		return (AnimateInst.AtkType == EAttackType::Melee
+				|| AnimateInst.AtkType == EAttackType::MeleeAndShield
+				|| AnimateInst.AtkType == EAttackType::Punch
+				|| AnimateInst.AtkType == EAttackType::DualWieldMelee);
+	}
+
+	UFUNCTION()
+	void PeriodicCheck()
+	{
+		if (DamageResponseComponent.CheckIsAlive())
+		{
+			CheckForNewTarget();
+		}
+	}
+
 	UFUNCTION()
 	bool CheckForNewTarget()
 	{
 		TArray<AActor> OverlappingActors;
-		Collider.GetOverlappingActors(OverlappingActors, AObstacle);
-		if (OverlappingActors.Num() > 0)
+		if (CheckForTargetType(OverlappingActors, AObstacle))
 		{
 			return OverlapActor(OverlappingActors[0]);
 		}
+		else if (CheckForTargetType(OverlappingActors, ASurvivor))
+		{
+			return OverlapActor(OverlappingActors[0]);
+		}
+		return false;
+	}
+
+	bool CheckForTargetType(TArray<AActor>& OverlappingActors, TSubclassOf<AActor> ClassFilter)
+	{
+		if (IsMelee())
+		{
+			Collider.GetOverlappingActors(OverlappingActors, ClassFilter);
+		}
+		else if (AnimateInst.AtkType == EAttackType::Staff)
+		{
+			FindNearestTarget(OverlappingActors, EObjectTypeQuery::Enemy);
+		}
 		else
 		{
-			Collider.GetOverlappingActors(OverlappingActors, ASurvivor);
-			if (OverlappingActors.Num() > 0)
-			{
-				return OverlapActor(OverlappingActors[0]);
-			}
+			RangeCollider.GetOverlappingActors(OverlappingActors, ClassFilter);
+		}
+		return OverlappingActors.Num() > 0;
+	}
+
+	bool FindNearestTarget(TArray<AActor>& OverlappingActors, EObjectTypeQuery iTargetType)
+	{
+		TArray<EObjectTypeQuery> traceObjectTypes;
+		traceObjectTypes.Add(iTargetType);
+		TArray<AActor> ignoreActors;
+		ignoreActors.Add(this);
+		TArray<AActor> outActors;
+		System::SphereOverlapActors(GetActorLocation(), AbilitySystem.GetValue(n"AttackRange") * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
+
+		float32 Distance = -1;
+		AActor NearestTarget = Gameplay::FindNearestActor(GetActorLocation(), outActors, Distance);
+		if (IsValid(NearestTarget))
+		{
+			OverlappingActors.Add(NearestTarget);
+			return true;
 		}
 		return false;
 	}
@@ -390,6 +630,12 @@ class AZombie : AHumanlite
 		InterruptAttacking();
 	}
 
+	UFUNCTION()
+	private void HealCue()
+	{
+		Print("HealCue");
+	}
+
 	// void TakeDamageCue() override
 	// {
 	// 	Super::TakeDamageCue();
@@ -401,7 +647,7 @@ class AZombie : AHumanlite
 		StatusResponseComponent.DChangeOverlayColor.Clear();
 
 		MovementComp.StopSimulating(FHitResult());
-		DOnZombDie.ExecuteIfBound(GetName());
+		EOnZombDie.Broadcast(GetName());
 
 		Niagara::SpawnSystemAtLocation(DeadVFX, GetActorLocation() + FVector(0, 0, 220)); // TODO: Change this with HeadMesh Location, also need to consider the scale
 		FMODBlueprint::PlayEventAtLocation(this, DeadSFX, GetActorTransform(), true);
@@ -434,6 +680,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	void RestartMove()
 	{
+		ResetRotation();
 		MovementResponseComponent.SetIsAccelable(true);
 		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
 		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
@@ -530,6 +777,11 @@ class AZombie : AHumanlite
 	void FlyingRotation(FRotator NewRot)
 	{
 		SetActorRotation(NewRot);
+	}
+
+	void ResetRotation()
+	{
+		SetActorRotation(FRotator(0, -90, 0));
 	}
 
 	void SetStencilValue(int value)

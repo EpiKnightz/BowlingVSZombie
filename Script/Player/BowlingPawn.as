@@ -596,4 +596,9 @@ class ABowlingPawn : APawn
 		FloatTween.Start();
 		Gameplay::GetActorOfClass(ARewardChest).SetTarget(FocusTracker.ExtraTarget);
 	}
+
+	int GetComboCounter()
+	{
+		return ComboCounter;
+	}
 }

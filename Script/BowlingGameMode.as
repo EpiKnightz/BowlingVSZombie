@@ -63,6 +63,7 @@ class ABowlingGameMode : AGameMode
 	APowerManager PowerManager;
 	AWeaponsManager WeaponsManager;
 	AAbilitiesManager AbilitiesManager;
+	AStatusManager StatusManager;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
 	ELevelType LevelType = ELevelType::Standard;
@@ -167,6 +168,7 @@ class ABowlingGameMode : AGameMode
 		BoostManager = Gameplay::GetActorOfClass(ABoostManager);
 		BowlingPawn = Gameplay::GetActorOfClass(ABowlingPawn);
 		OptionCardManager = Gameplay::GetActorOfClass(AOptionCardManager);
+		StatusManager = Gameplay::GetActorOfClass(AStatusManager);
 
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
@@ -198,6 +200,7 @@ class ABowlingGameMode : AGameMode
 		ZombieManager.EOnZombieSpawned.AddUFunction(PowerManager, n"ApplyZombiePower");
 
 		BoostManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
+		BoostManager.Setup(StatusManager);
 
 		SurvivorManager.EOnSurvivorSpawned.AddUFunction(PowerManager, n"ApplySurvivorPower");
 
@@ -390,7 +393,7 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION()
 	void ScoreChange(FName ActorName)
 	{
-		Score++;
+		Score += Math::Max(BowlingPawn.GetComboCounter(), 1);
 		// // TODO: This is for survival mode only, remove the hardcoded 15.
 		// if (ZombieManager.CurrentLevelProgress >=1 && )
 		// {

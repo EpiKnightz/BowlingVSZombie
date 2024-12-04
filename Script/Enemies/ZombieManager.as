@@ -31,9 +31,10 @@ class AZombieManager : AActor
 
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable ZombieDataTable;
+	TMap<FGameplayTag, FZombieDT> ZombieDataMap;
 
 	TArray<FSpawnSequenceDT> ZombieSequence;
-	TArray<FName> ZombiePoolID;
+	TArray<FGameplayTag> ZombieTagPool;
 	TSet<FName> SpawnedZombieList;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -60,7 +61,28 @@ class AZombieManager : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		TArray<FZombieDT> ZombieArray;
+		ZombieDataTable.GetAllRows(ZombieArray);
+		for (FZombieDT Zombie : ZombieArray)
+		{
+			ZombieDataMap.Add(Zombie.ZombieID, Zombie);
+		}
 		ActorTickEnabled = false;
+	}
+
+	UFUNCTION()
+	FZombieDT GetZombieData(FGameplayTag ZombieID)
+	{
+		FZombieDT Zombie;
+		if (ZombieDataMap.Find(ZombieID, Zombie) != false)
+		{
+			return Zombie;
+		}
+		else
+		{
+			PrintError("GetZombieData: ZombieID " + ZombieID + " not found");
+			return Zombie;
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -70,7 +92,7 @@ class AZombieManager : AActor
 		currentGameTime += DeltaSeconds;
 		if (currentGameTime >= endTimer)
 		{
-			if (ZombieSequence.Last().SpawnID.Num() == 1 && ZombieSequence.Last().SpawnID[0] == "End")
+			if (ZombieSequence.Last().SpawnTag.Num() == 1 && ZombieSequence.Last().SpawnTag[0] == GameplayTags::Zombie_End)
 			{
 				GameEnd();
 				return;
@@ -82,8 +104,8 @@ class AZombieManager : AActor
 			if (currentGameTime >= ZombieSequence[nextSequenceMilestone].TimeMark)
 			{
 				// Print(ZombieSequence[0].ZombieID[0].ToString());
-				ZombiePoolID = ZombieSequence[nextSequenceMilestone].SpawnID;
-				if (ZombiePoolID.Num() > 0)
+				ZombieTagPool = ZombieSequence[nextSequenceMilestone].SpawnTag;
+				if (ZombieTagPool.Num() > 0)
 				{
 					currentSequenceMilestone = nextSequenceMilestone;
 					if (currentSequenceMilestone == 0 && GameMode.LevelType == ELevelType::Boss)
@@ -102,7 +124,7 @@ class AZombieManager : AActor
 		// Spawn zombie when countdown is <= 0
 		if (countdown <= 0)
 		{
-			if (ZombiePoolID.Num() > 0 && !ZombieSequence[currentSequenceMilestone].bDataOnly)
+			if (ZombieTagPool.Num() > 0 && !ZombieSequence[currentSequenceMilestone].bDataOnly)
 			{
 				if (ZombieSequence[currentSequenceMilestone].bAllowMultipleSpawns)
 				{
@@ -122,9 +144,7 @@ class AZombieManager : AActor
 		// TODO: Double check all other Zombie references
 		if (GameMode.LevelType == ELevelType::Boss)
 		{
-			FZombieDT Row;
-			FName ZombieID = ZombiePoolID[0];
-			ZombieDataTable.FindRow(ZombieID, Row);
+			FZombieDT Row = GetZombieData(ZombieTagPool[0]);
 
 			FVector ScaledLocation = FindSpawnLocation();
 			ScaledLocation.Z *= Row.BodyScale.Z;
@@ -136,7 +156,7 @@ class AZombieManager : AActor
 			Boss.DOnZombieReach.BindUFunction(GameMode, n"HPChange");
 			// EOnZombieSpawned.Broadcast(Boss);
 
-			ZombiePoolID = ZombieSequence[nextSequenceMilestone + 1].SpawnID;
+			ZombieTagPool = ZombieSequence[nextSequenceMilestone + 1].SpawnTag;
 		}
 	}
 
@@ -170,9 +190,7 @@ class AZombieManager : AActor
 
 	AZombie ConstructZombie(FVector Location)
 	{
-		FZombieDT Row;
-		FName ZombieID = ZombiePoolID[Math::RandRange(0, ZombiePoolID.Num() - 1)];
-		ZombieDataTable.FindRow(ZombieID, Row);
+		FZombieDT Row = GetZombieData(ZombieTagPool[Math::RandRange(0, ZombieTagPool.Num() - 1)]);
 
 		FVector ScaledLocation = Location;
 		ScaledLocation.Z *= Row.BodyScale.Z;
@@ -187,34 +205,22 @@ class AZombieManager : AActor
 		SpawnedActor.SetData(Row);
 
 		// Set weapon
-		UStaticMesh RightHand = nullptr, LeftHand = nullptr;
-		if (Row.RightSocketType == Row.LeftSocketType && Row.RightSocketType == ESocketType::Hand)
+		// Default main hand is right hand. Randomly switch to left
+		UStaticMesh MainHand = nullptr, OffHand = nullptr;
+		if (!Row.RightWeaponList.IsEmpty())
 		{
-			if (Math::RandBool())
-			{
-				RightHand = Row.RightWeaponList[Math::RandRange(0, Row.RightWeaponList.Num() - 1)];
-			}
-			else
-			{
-				LeftHand = Row.LeftWeaponList[Math::RandRange(0, Row.LeftWeaponList.Num() - 1)];
-			}
+			MainHand = Row.RightWeaponList[Math::RandRange(0, Row.RightWeaponList.Num() - 1)];
 		}
-		else
+		if (!Row.LeftWeaponList.IsEmpty())
 		{
-			if (Row.RightSocketType != ESocketType::None)
-			{
-				RightHand = Row.RightWeaponList[Math::RandRange(0, Row.RightWeaponList.Num() - 1)];
-			}
-			if (Row.LeftSocketType != ESocketType::None)
-			{
-				LeftHand = Row.LeftWeaponList[Math::RandRange(0, Row.LeftWeaponList.Num() - 1)];
-			}
+			OffHand = Row.LeftWeaponList[Math::RandRange(0, Row.LeftWeaponList.Num() - 1)];
 		}
-		SpawnedActor.SetWeapon(RightHand, LeftHand, Row.RightSocketType == ESocketType::DualWield, EAttackType::Punch);
+
+		SpawnedActor.SetWeapon(MainHand, OffHand, Row.AttackType, Row.AttackAnim);
 		SpawnedZombieList.Add(SpawnedActor.GetName());
 
-		SpawnedActor.DOnZombDie.BindUFunction(GameMode, n"ScoreChange");
-		SpawnedActor.DOnZombDie.BindUFunction(this, n"UpdateZombieList");
+		SpawnedActor.EOnZombDie.AddUFunction(GameMode, n"ScoreChange");
+		SpawnedActor.EOnZombDie.AddUFunction(this, n"UpdateZombieList");
 		SpawnedActor.DOnZombieReach.BindUFunction(GameMode, n"HPChange");
 		EOnZombieSpawned.Broadcast(SpawnedActor);
 

@@ -43,8 +43,11 @@ struct FSpawnSequenceDT
 	UPROPERTY(meta = (EditCondition = "SpawnType == ESpawnType::Zone", EditConditionHides))
 	FVector ZoneLocation;
 
+	// UPROPERTY(meta = (EditCondition = "(SpawnType == ESpawnType::Zombie) || (SpawnType == ESpawnType::PowerUp)", EditConditionHides))
+	// TArray<FName> SpawnID;
+
 	UPROPERTY(meta = (EditCondition = "(SpawnType == ESpawnType::Zombie) || (SpawnType == ESpawnType::PowerUp)", EditConditionHides))
-	TArray<FName> SpawnID;
+	TArray<FGameplayTag> SpawnTag;
 
 	int opCmp(FSpawnSequenceDT Other) const
 	{

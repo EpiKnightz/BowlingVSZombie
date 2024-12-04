@@ -9,6 +9,7 @@ class UDamageResponseComponent : UResponseComponent
 
 	FVoidEvent EOnHitCue;
 	FVoidEvent EOnDamageCue;
+	FVoidEvent EOnHealCue;
 	FVoidEvent EOnDeadCue;
 
 	FVoidEvent EOnEnterTheBattlefield;
@@ -31,7 +32,10 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			EOnHitCue.Broadcast();
+			if (Damage > 0)
+			{
+				EOnHitCue.Broadcast();
+			}
 
 			if (Damage > 0)
 			{
@@ -39,6 +43,10 @@ class UDamageResponseComponent : UResponseComponent
 				// should not apply status here. Only return true value if the damage is taken.
 				// AbilitySystem.ApplyStatusEffects(StatusEffect);
 				return true;
+			}
+			else if (Damage < 0)
+			{
+				TakeHeal(-Damage);
 			}
 		}
 		return false;
@@ -61,6 +69,19 @@ class UDamageResponseComponent : UResponseComponent
 				HandleDeadLogic();
 				return false;
 			}
+		}
+		return false;
+	}
+
+	UFUNCTION()
+	bool TakeHeal(float Heal)
+	{
+		if (!bIsDead)
+		{
+			float NewHP = AbilitySystem.GetValue(n"HP") + Heal;
+			AbilitySystem.SetBaseValue(n"HP", NewHP);
+			EOnHealCue.Broadcast();
+			return true;
 		}
 		return false;
 	}
@@ -104,6 +125,13 @@ class UDamageResponseComponent : UResponseComponent
 		{
 			return true;
 		}
+	}
+
+	UFUNCTION()
+	bool IsDamaged()
+	{
+		float HP = AbilitySystem.GetValue(n"HP");
+		return (HP > 0 && HP < AbilitySystem.GetValue(n"MaxHP"));
 	}
 
 	UFUNCTION()

@@ -1,5 +1,6 @@
 class UTargetResponseComponent : UResponseComponent
 {
+	UPROPERTY()
 	ETargetType TargetType;
 	FGameplayTag TargetID;
 
@@ -17,13 +18,13 @@ class UTargetResponseComponent : UResponseComponent
 	}
 
 	UFUNCTION()
-	bool IsTargetable(AActor OtherActor)
+	bool IsTargetable(AActor OtherActor, bool bTargetAlly = false)
 	{
 		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
 		// If the target is untargetable, or the target type matches the target type of the response component, return false.
 		if (!IsValid(TargetRC)
 			|| TargetRC.TargetType == ETargetType::Untargetable
-			|| TargetRC.TargetType == TargetType
+			|| (!bTargetAlly && TargetRC.TargetType == TargetType)
 			|| TargetRC.TargetType == ETargetType::Player)
 		{
 			return false;

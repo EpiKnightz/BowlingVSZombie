@@ -70,9 +70,6 @@ class AZombieBoss : AActor
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem GroundImpactVFX;
 
-	// UPROPERTY(BlueprintReadWrite, Category = Stats)
-	// EAttackType AtkType = EAttackType::Punch;
-	// UPROPERTY(BlueprintReadWrite, Category = Stats)
 	protected float CoinValue;
 	protected TArray<UModifierObject> Lv1Modifiers;
 	protected TArray<UModifierObject> Lv2Modifiers;
@@ -116,9 +113,6 @@ class AZombieBoss : AActor
 	protected UColorOverlay ColorOverlay;
 	AZombieManager ZombieManager;
 	AZombie SpawnedZombie;
-
-	UPROPERTY()
-	int NumberOfPhases = 3;
 
 	UPROPERTY()
 	UModifierObject ImmuneMod;
@@ -215,8 +209,6 @@ class AZombieBoss : AActor
 		Data.Add(n"Accel", DataRow.Accel);
 		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
 		Data.Add(n"Bounciness", DataRow.Bounciness);
-
-		NumberOfPhases = DataRow.NumberOfPhases;
 
 		AbilitySystem.ImportData(Data);
 
@@ -457,7 +449,7 @@ class AZombieBoss : AActor
 			{
 				AttackResponseComponent.EOnAnimHitNotify.Clear();
 				AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnTripleAttackHitNotify");
-				for (int i = 0; i < Lv2Modifiers.Num(); i++)
+				for (int i = 0; i < Lv2Modifiers.Num(); i++) // Need check null
 				{
 					Lv2Modifiers[i].AddToAbilitySystem(AbilitySystem);
 				}
