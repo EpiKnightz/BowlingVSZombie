@@ -23,6 +23,15 @@ struct FStatusDT
 	FGameplayTag EffectTag;
 
 	UPROPERTY()
+	FText Name;
+
+	UPROPERTY(meta = (MultiLine = true))
+	FText Description;
+
+	UPROPERTY(EditAnywhere, Category = Appearance)
+	UTexture2D Icon;
+
+	UPROPERTY()
 	ETargetType TargetType = ETargetType::Zombie;
 
 	UPROPERTY()
