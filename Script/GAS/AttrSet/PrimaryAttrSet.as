@@ -14,10 +14,9 @@ class UPrimaryAttrSet : ULiteAttrSet
 		MaxHP.Initialize(100);
 		HP.Initialize(MaxHP.GetCurrentValue());
 		Damage.Initialize(0);
-		InitDelegates();
 	}
 
-	UFUNCTION(BlueprintOverride)
+	UFUNCTION(BlueprintOverride, Meta = (BlueprintThreadSafe))
 	void InitDelegates()
 	{
 		DOnPreAttrChange.BindUFunction(this, n"PreAttrChange");
@@ -32,6 +31,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 		{
 			HP.Initialize(NewValue);
 		}
+		InitDelegates();
 	}
 
 	UFUNCTION(BlueprintOverride)

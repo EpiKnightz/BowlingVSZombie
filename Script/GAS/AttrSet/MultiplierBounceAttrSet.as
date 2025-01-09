@@ -11,10 +11,15 @@ class UMultiplierBounceAttrSet : ULiteAttrSet
 	{
 		FirstBounceMultiplier.Initialize(1.1);
 		SubsequentBounceMultiplier.Initialize(0.1);
-		InitDelegates();
 	}
 
 	UFUNCTION(BlueprintOverride)
+	void PostInitialize(FName AttrName, float NewValue)
+	{
+		InitDelegates();
+	}
+
+	UFUNCTION(BlueprintOverride, Meta = (BlueprintThreadSafe))
 	void InitDelegates()
 	{
 		AActor OuterActor = Cast<AActor>(GetOuter());
