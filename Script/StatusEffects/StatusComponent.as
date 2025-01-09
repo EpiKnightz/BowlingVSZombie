@@ -16,11 +16,15 @@ class UStatusComponent : UActorComponent
 	int InitTimes = 0;
 
 	private UNiagaraComponent StatusEffectComp;
+	// private UUIStatusBar StatusBar;
 
 	default SetComponentTickEnabled(false);
 
-	// FVoidDelegate OnInit;
-	// FVoidDelegate OnEnd;
+	FVoidEvent EOnInitStatusEffect;
+	FVoidEvent EOnEndStatusEffect;
+	FFloatEvent EOnDurationChanged;
+	FIntEvent EOnStackChanged;
+	FTexture2DDelegate DAddStatusUI;
 
 	UFUNCTION()
 	bool IsApplicable()
@@ -60,10 +64,11 @@ class UStatusComponent : UActorComponent
 			Activate();
 			if (InitTimes == 0)
 			{
-				CurrentDuration = StatusData.Duration;
+				SetCurrentDuration(StatusData.Duration);
 			}
 			Stacking();
 			DoInitChildren();
+			EOnInitStatusEffect.Broadcast();
 			// auto DamageResponseComponent = UDamageResponseComponent::Get(GetOwner());
 			// if (IsValid(DamageResponseComponent))
 			// {
@@ -91,13 +96,15 @@ class UStatusComponent : UActorComponent
 				break;
 			case EStackingRule::Stackable:
 				InitTimes++;
+				EOnStackChanged.Broadcast(InitTimes);
 				break;
 			case EStackingRule::Refreshable:
-				CurrentDuration = StatusData.Duration;
+				SetCurrentDuration(StatusData.Duration);
 				break;
 			case EStackingRule::StackAndRefreshable:
-				CurrentDuration = StatusData.Duration;
+				SetCurrentDuration(StatusData.Duration);
 				InitTimes++;
+				EOnStackChanged.Broadcast(InitTimes);
 				break;
 		}
 	}
@@ -125,6 +132,7 @@ class UStatusComponent : UActorComponent
 		InitTimes = 0;
 		// OnEnd.ExecuteIfBound();
 		StatusEndCue();
+		EOnEndStatusEffect.Broadcast();
 		StatusData = FStatusDT();
 		Deactivate();
 		// ForceDestroyComponent(); //Warning: This could have unintended consequences.
@@ -144,15 +152,17 @@ class UStatusComponent : UActorComponent
 		return float32(outValue);
 	}
 
+	// Some class can't use this because the GameplaysTag::<> is not initiatiated before the editor loaded
+	// Use FindAttrValue instead
 	UFUNCTION()
-	float GetAttrValue(FGameplayTag Tag)
+	float32 GetAttrValue(FGameplayTag Tag)
 	{
 		float outValue = AbilitySystem::INVALID_VALUE;
 		if (!StatusData.AffectedAttributes.Find(Tag, outValue))
 		{
 			PrintError("Attribute not found: " + Tag.GetTagName());
 		}
-		return outValue;
+		return float32(outValue);
 	}
 
 	UFUNCTION()
@@ -171,6 +181,10 @@ class UStatusComponent : UActorComponent
 		}
 		StatusEffectComp.SetCastShadow(true);
 		StatusEffectComp.SetActive(true);
+		if (InitTimes == 0)
+		{
+			DAddStatusUI.ExecuteIfBound(this, StatusData.Icon);
+		}
 	}
 
 	UFUNCTION()
@@ -188,5 +202,11 @@ class UStatusComponent : UActorComponent
 				Niagara::SpawnSystemAtLocation(StatusData.StatusEndVFX, GetOwner().GetActorLocation(), GetOwner().GetActorRotation(), GetOwner().GetActorScale3D()).SetCastShadow(true);
 			}
 		}
+	}
+
+	void SetCurrentDuration(float iDuration)
+	{
+		CurrentDuration = iDuration;
+		EOnDurationChanged.Broadcast(iDuration);
 	}
 }

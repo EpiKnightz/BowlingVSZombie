@@ -26,7 +26,7 @@ class UUIHPBar : UUserWidget
 			HPBar.SetVisibility(ESlateVisibility::Visible);
 			PlayAnimation(RankChangeAnimation);
 		}
-		System::SetTimer(this, n"FadeHPBar", 3, false);
+		System::SetTimer(this, n"FadeHPBar", 2.5, false);
 	}
 
 	UFUNCTION()

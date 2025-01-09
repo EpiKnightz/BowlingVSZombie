@@ -4,30 +4,18 @@ class AStatusManager : AActor
 	USceneComponent Root;
 
 	UPROPERTY(BlueprintReadWrite)
-	UDataTable NegativeEffectDT;
+	UDataTable EffectDataTable;
 
-	TMap<FGameplayTag, FStatusDT> NegativeEffectMap;
-
-	UPROPERTY(BlueprintReadWrite)
-	UDataTable PositiveEffectDT;
-
-	TMap<FGameplayTag, FStatusDT> PositiveEffectMap;
+	TMap<FGameplayTag, FStatusDT> EffectMap;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		TArray<FStatusDT> NegativeEffectArray;
-		NegativeEffectDT.GetAllRows(NegativeEffectArray);
-		for (FStatusDT Status : NegativeEffectArray)
+		TArray<FStatusDT> StatusEffectArray;
+		EffectDataTable.GetAllRows(StatusEffectArray);
+		for (FStatusDT Status : StatusEffectArray)
 		{
-			NegativeEffectMap.Add(Status.EffectTag, Status);
-		}
-
-		TArray<FStatusDT> PositiveEffectArray;
-		PositiveEffectDT.GetAllRows(PositiveEffectArray);
-		for (FStatusDT Status : PositiveEffectArray)
-		{
-			PositiveEffectMap.Add(Status.EffectTag, Status);
+			EffectMap.Add(Status.EffectTag, Status);
 		}
 	}
 
@@ -35,11 +23,7 @@ class AStatusManager : AActor
 	FStatusDT GetStatusData(FGameplayTag StatusTag)
 	{
 		FStatusDT StatusData;
-		if (PositiveEffectMap.Find(StatusTag, StatusData) != false)
-		{
-			return StatusData;
-		}
-		else if (NegativeEffectMap.Find(StatusTag, StatusData) != false)
+		if (EffectMap.Find(StatusTag, StatusData) != false)
 		{
 			return StatusData;
 		}
@@ -53,15 +37,26 @@ class AStatusManager : AActor
 	UFUNCTION()
 	bool ApplyStatusEffects(FGameplayTagContainer EffectTags, AActor Target)
 	{
+		if (EffectTags.IsEmpty() || !IsValid(Target))
+		{
+			return false;
+		}
 
 		auto DamageResponseComponent = UDamageResponseComponent::Get(Target);
+		UUIStatusBar StatusBar;
+
+		UWidgetComponent WidgetComponent = UWidgetComponent::Get(GetOwner(), n"StatusWorldWidget");
+		if (IsValid(WidgetComponent))
+		{
+			StatusBar = Cast<UUIStatusBar>(WidgetComponent.GetWidget());
+		}
 
 		if (IsValid(DamageResponseComponent) && !DamageResponseComponent.bIsDead && !EffectTags.IsEmpty())
 		{
 			int errorCount = 0;
 			for (FGameplayTag SingleEffect : EffectTags.GameplayTags)
 			{
-				if (!ApplySingleEffect(SingleEffect, Target, DamageResponseComponent))
+				if (!ApplySingleEffect(SingleEffect, Target, DamageResponseComponent, StatusBar))
 				{
 					PrintError("Can't find effect with tag: " + SingleEffect.ToString());
 					errorCount++;
@@ -76,14 +71,14 @@ class AStatusManager : AActor
 	}
 
 	UFUNCTION()
-	bool ApplySingleEffect(FGameplayTag EffectTag, AActor Target, UDamageResponseComponent DRC)
+	bool ApplySingleEffect(FGameplayTag EffectTag, AActor Target, UDamageResponseComponent DRC, UUIStatusBar StatusBar)
 	{
 		UStatusComponent statusComp;
 		FStatusDT EffectData;
 
 		if (EffectTag.MatchesTag(GameplayTags::Status_Negative))
 		{
-			if (NegativeEffectMap.Find(EffectTag, EffectData))
+			if (EffectMap.Find(EffectTag, EffectData))
 			{
 				if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Burn))
 				{
@@ -109,7 +104,7 @@ class AStatusManager : AActor
 		}
 		else if (EffectTag.MatchesTag(GameplayTags::Status_Positive))
 		{
-			if (PositiveEffectMap.Find(EffectTag, EffectData))
+			if (EffectMap.Find(EffectTag, EffectData))
 			{
 				if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_CooldownBoost))
 				{
@@ -127,6 +122,10 @@ class AStatusManager : AActor
 		}
 		if (IsValid(statusComp))
 		{
+			if (IsValid(StatusBar))
+			{
+				statusComp.DAddStatusUI.BindUFunction(StatusBar, n"AddStatus");
+			}
 			statusComp.Init(EffectData);
 			DRC.EOnDeadCue.AddUFunction(statusComp, n"EndStatusEffect");
 			return true;

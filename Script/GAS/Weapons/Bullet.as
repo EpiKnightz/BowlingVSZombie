@@ -29,10 +29,10 @@ class ABullet : AProjectile
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 	}
 
-	UFUNCTION()
-	void SetData(FSurvivorDT SurvivorData)
+	UFUNCTION() // Currently unused anywhere
+	void SetData(FWeaponDT WeaponData)
 	{
-		ProjectileDataComp.ProjectileData = SurvivorData;
+		ProjectileDataComp.ProjectileData = WeaponData;
 	}
 
 	UFUNCTION()
