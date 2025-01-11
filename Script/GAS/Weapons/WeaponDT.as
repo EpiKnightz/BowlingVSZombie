@@ -16,6 +16,9 @@ struct FWeaponDT
 	int Cost = 90;
 
 	UPROPERTY()
+	float32 Attack = 20;
+
+	UPROPERTY()
 	UStaticMesh WeaponMesh;
 
 	UPROPERTY()
@@ -29,7 +32,10 @@ struct FWeaponDT
 	UAnimMontage AttackAnim;
 
 	UPROPERTY()
-	FGameplayTag DefaultAbility;
+	FGameplayTag DefaultAttackAbility;
+
+	UPROPERTY()
+	FGameplayTagContainer EffectTags;
 
 	bool IsValid()
 	{

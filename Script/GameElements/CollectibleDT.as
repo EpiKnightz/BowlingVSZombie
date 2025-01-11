@@ -22,5 +22,5 @@ struct FCollectibleDT
 	FLinearColor BoxColor;
 
 	UPROPERTY()
-	TArray<FGameplayTag> EffectID;
+	TArray<UCollectEffect> CollectEffects;
 };

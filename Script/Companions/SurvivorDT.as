@@ -20,9 +20,8 @@ struct FSurvivorDT
 	UPROPERTY()
 	float32 HP = 100;
 
-	// Atk is amount of power dealing to obstacles
-	UPROPERTY()
-	float32 Atk = 10;
+	// UPROPERTY()
+	// float32 Atk = 10;
 
 	UPROPERTY()
 	float32 Speed = 0;

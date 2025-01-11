@@ -46,7 +46,7 @@ struct FSpawnSequenceDT
 	// UPROPERTY(meta = (EditCondition = "(SpawnType == ESpawnType::Zombie) || (SpawnType == ESpawnType::PowerUp)", EditConditionHides))
 	// TArray<FName> SpawnID;
 
-	UPROPERTY(meta = (EditCondition = "(SpawnType == ESpawnType::Zombie) || (SpawnType == ESpawnType::PowerUp)", EditConditionHides))
+	UPROPERTY()
 	TArray<FGameplayTag> SpawnTag;
 
 	int opCmp(FSpawnSequenceDT Other) const
