@@ -9,21 +9,23 @@ class UKeywordDecorator : ULinkRTBDecorator
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIKeywordDescription> KeywordPopup;
 
-	// AUIManager UIManager;
+	AUIManager UIManager;
 
 	UFUNCTION(BlueprintOverride)
 	void ClickEvent(FString idLink)
 	{
-		// if (!IsValid(UIManager))
-		// {
-		// 	UIManager = Gameplay::GetActorOfClass(AUIManager);
-		// }
+		if (!IsValid(UIManager))
+		{
+			UIManager = Gameplay::GetActorOfClass(AUIManager);
+		}
 		APlayerController PlayerController = Gameplay::GetPlayerController(0);
 		auto UserWidget = Cast<UUIKeywordDescription>(WidgetBlueprint::CreateWidget(KeywordPopup, PlayerController));
-		UserWidget.SetDesiredSizeInViewport(FVector2D(300, 300));
 		float32 MouseX = 0, MouseY = 0;
 		PlayerController.GetMousePosition(MouseX, MouseY);
-		UserWidget.SetPositionInViewport(FVector2D(MouseX, MouseY));
+		int SizeX = 0, SizeY = 0;
+		PlayerController.GetViewportSize(SizeX, SizeY);
+		UserWidget.Setup(MouseX, MouseY, SizeX, SizeY);
+		UserWidget.DGetNameFromTag.BindUFunction(UIManager, n"GetKeywordName");
 
 		FStatusDT StatusRow;
 		if (EffectDataTable.FindRow(FName(idLink), StatusRow))
@@ -95,5 +97,35 @@ class UKeywordDecorator : ULinkRTBDecorator
 				return nullptr;
 			}
 		}
+	}
+
+	UFUNCTION(BlueprintOverride)
+	int CheckTextStyle(FString idLink)
+	{
+		// FStatusDT StatusRow;
+		// if (EffectDataTable.FindRow(FName(idLink), StatusRow))
+		// {
+		// 	return ELinkStyle::EffectStyle;
+		// }
+		// else
+		// {
+		// 	FKeywordDT KeywordRow;
+		// 	if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+		// 	{
+		// 		return ELinkStyle::KeywordStyle;
+		// 	}
+		// 	else
+		// 	{
+		// 		PrintError("GetStyle Keyword not found: " + idLink);
+		// 		return ELinkStyle::Default;
+		// 	}
+		// }
+		return -1;
+	}
+
+	UFUNCTION(BlueprintOverride)
+	int CheckButtonStyle(FString idLink)
+	{
+		return -1;
 	}
 }

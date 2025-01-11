@@ -31,9 +31,10 @@ delegate void FTagAbilitySystemDelegate(FGameplayTagContainer AbilitiesContainer
 delegate FSurvivorDT FTagInt2SurvivorDataDelegate(FGameplayTag Tag, int Value);
 delegate void FCardDTDelegate(FCardDT Value);
 delegate void FTexture2DDelegate(UStatusComponent StatComp, UTexture2D Icon);
-delegate bool FClass2BoolDelegate(UClass iClass);
-delegate void FClassDelegate(UClass iClass);
-delegate void FWidgetDelegate(UUserWidget WidgetClass);
+delegate FName FGameplayTag2FNameDelegate(FGameplayTag KeywordTag);
+// delegate bool FClass2BoolDelegate(UClass iClass);
+// delegate void FClassDelegate(UClass iClass);
+// delegate void FWidgetDelegate(UUserWidget WidgetClass);
 // delegate void FStringTextDelegate(FString RewardName, FText Description);
 
 event void FVectorEvent(FVector Value);

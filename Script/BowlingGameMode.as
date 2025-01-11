@@ -64,6 +64,7 @@ class ABowlingGameMode : AGameMode
 	AWeaponsManager WeaponsManager;
 	AAbilitiesManager AbilitiesManager;
 	AStatusManager StatusManager;
+	AUIManager UIManager;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
 	ELevelType LevelType = ELevelType::Standard;
@@ -76,6 +77,7 @@ class ABowlingGameMode : AGameMode
 		PowerManager = Gameplay::GetActorOfClass(APowerManager);
 		WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
 		AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
+		UIManager = Gameplay::GetActorOfClass(AUIManager);
 
 		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :

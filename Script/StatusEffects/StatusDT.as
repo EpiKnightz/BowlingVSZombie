@@ -28,6 +28,9 @@ struct FStatusDT
 	UPROPERTY(meta = (MultiLine = true))
 	FText Description;
 
+	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
+
 	UPROPERTY(EditAnywhere, Category = Appearance)
 	UTexture2D Icon;
 

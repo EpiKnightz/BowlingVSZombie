@@ -6,6 +6,9 @@ struct FKeywordDT
 	UPROPERTY(meta = (MultiLine = true))
 	FText Description;
 
+	UPROPERTY()
+	FGameplayTag KeywordTag;
+
 	UPROPERTY(EditAnywhere, Category = Appearance)
 	UTexture2D Icon;
 
