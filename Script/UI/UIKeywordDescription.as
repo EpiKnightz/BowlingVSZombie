@@ -12,21 +12,17 @@ class UUIKeywordDescription : UUserWidget
 	UPROPERTY(BindWidget)
 	UImage Icon;
 
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation IntroAnim;
+
 	FGameplayTag2FNameDelegate DGetNameFromTag;
-
-	// int ZOrder = 0;
-
-	// FClassDelegate DCheckAndRemoveWidgetsOfClass;
-	//  FClass2BoolDelegate DCheckFocusOfClass;
-	//  FWidgetDelegate DAddFocusWidget;
-	//  FWidgetDelegate DRemoveFocusWidget;
 
 	void Setup(float32 MouseX, float32 MouseY, int ViewportSizeX, int ViewportSizeY)
 	{
-		// SetDesiredSizeInViewport(FVector2D(400, 350));
 		SetPositionInViewport(FVector2D(MouseX, MouseY));
 		SetAlignmentInViewport(FVector2D(MouseX >= (ViewportSizeX / 2.0) ? 1 : 0,
 										 MouseY >= (ViewportSizeY / 2.0) ? 1 : 0));
+		PlayAnimation(IntroAnim);
 	}
 
 	UFUNCTION()
@@ -96,7 +92,7 @@ class UUIKeywordDescription : UUserWidget
 	void SetEffectDescription(FStatusDT Keyword)
 	{
 		KeywordName.SetText(Keyword.Name);
-		Description.SetText(FText::Format(Keyword.Description, 0));
+		Description.SetText(AddExtraInfos(Keyword));
 		Keytag.SetText(EffectToTag(Keyword));
 		if (IsValid(Keyword.Icon))
 		{
@@ -109,54 +105,31 @@ class UUIKeywordDescription : UUserWidget
 		}
 	}
 
-	// UFUNCTION(BlueprintOverride)
-	// void OnAddedToFocusPath(FFocusEvent InFocusEvent)
-	// {
-	// 	Print("OnAddedToFocusPath");
-	// 	DAddFocusWidget.ExecuteIfBound(this);
-	// }
-
-	// UFUNCTION(BlueprintOverride)
-	// void OnFocusLost(FFocusEvent InFocusEvent)
-	// {
-	// 	FLatentActionInfo LatentInfo;
-	// 	LatentInfo.CallbackTarget = this;
-	// 	LatentInfo.ExecutionFunction = n"CheckAndRemoveFromViewPort";
-	// 	LatentInfo.Linkage = 0;
-	// 	LatentInfo.UUID = 1;
-
-	// 	System::Delay(0.1, LatentInfo);
-	// 	if (!Icon.IsVisible())
-	// 	{
-	// 	RemoveFromParent();
-	// 	}
-	// }
-
-	// UFUNCTION()
-	// void CheckAndRemoveFromViewPort()
-	// {
-	// 	DCheckAndRemoveWidgetsOfClass.ExecuteIfBound(UUIKeywordDescription);
-	// }
-
-	// UFUNCTION(BlueprintOverride)
-	// FEventReply OnFocusReceived(FGeometry MyGeometry, FFocusEvent InFocusEvent)
-	// {
-	// 	SetViewportOrder(ZOrder);
-	// 	ZOrder++;
-	// 	return FEventReply();
-	// }
+	FText AddExtraInfos(FStatusDT Keyword)
+	{
+		FString ResultString;
+		FString KeyName = Keyword.Name.ToString();
+		KeyName.RemoveSpacesInline();
+		if (Keyword.Duration > 0)
+		{
+			ResultString += "Duration: <attr eff=\"" + KeyName + "\" id=\"Duration\"/>\n";
+		}
+		if (Keyword.StackingRule == EStackingRule::Stackable
+			|| Keyword.StackingRule == EStackingRule::StackAndRefreshable)
+		{
+			ResultString += "Max Stack: <attr eff=\"" + KeyName + "\" id=\"Stack\"/>";
+		}
+		if (!ResultString.IsEmpty())
+		{
+			ResultString = "\n\n" + ResultString;
+		}
+		ResultString = Keyword.Description.ToString() + ResultString;
+		return FText::FromString(ResultString);
+	}
 
 	UFUNCTION(BlueprintOverride)
 	void OnRemovedFromFocusPath(FFocusEvent InFocusEvent)
 	{
-		// Print("OnRemovedFromFocusPath");
 		RemoveFromParent();
 	}
-
-	// UFUNCTION(BlueprintOverride)
-	// FEventReply OnMouseButtonUp(FGeometry MyGeometry, FPointerEvent MouseEvent)
-	// {
-	// 	Print("OnMouseButtonUp");
-	// 	return FEventReply();
-	// }
 }

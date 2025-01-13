@@ -6,6 +6,6 @@ class UUIGuideArrow : UUserWidget
 	UFUNCTION(BlueprintOverride)
 	void Construct()
 	{
-		PlayAnimation(ArrowAnim, 0, 0, EUMGSequencePlayMode::Forward, 1);
+		PlayAnimation(ArrowAnim);
 	}
 }
