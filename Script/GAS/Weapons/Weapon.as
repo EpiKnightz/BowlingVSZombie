@@ -148,7 +148,8 @@ class UWeapon : UStaticMeshComponent
 		if (IsValid(AbilitySys))
 		{
 			Gameplay::GetActorOfClass(AAbilitiesManager)
-				.RegisterAbilities(Data.DefaultAbility.GetSingleTagContainer(), AbilitySys);
+				.RegisterAbilities(Data.DefaultAttackAbility.GetSingleTagContainer(), AbilitySys);
+			AbilitySys.SetBaseValue(n"Attack", Data.Attack);
 		}
 	}
 

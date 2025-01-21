@@ -23,10 +23,22 @@ struct FProjectileSpec
 		return this;
 	}
 
-	FProjectileSpec& opAssign(FSurvivorDT Other)
+	// FProjectileSpec& opAssign(FSurvivorDT Other)
+	// {
+	// 	Atk = Other.Atk;
+	// 	if (Other.EffectTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
+	// 	{
+	// 		bIsPiercable = true;
+	// 	}
+	// 	EffectTags = Other.EffectTags.Filter(
+	// 		GameplayTags::Status_Negative.GetSingleTagContainer());
+	// 	return this;
+	// }
+
+	FProjectileSpec& opAssign(FWeaponDT Other)
 	{
-		Atk = Other.Atk;
-		if (Other.EffectTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
+		Atk = Other.Attack;
+		if (Other.EffectTags.HasTagExact(GameplayTags::Effect_Piercing))
 		{
 			bIsPiercable = true;
 		}
@@ -37,7 +49,7 @@ struct FProjectileSpec
 
 	FProjectileSpec& opAssign(FAbilityDT Other)
 	{
-		if (Other.AbilityTags.HasTagExact(GameplayTags::Ability_Effect_Piercing))
+		if (Other.AbilityTags.HasTagExact(GameplayTags::Effect_Piercing))
 		{
 			bIsPiercable = true;
 		}

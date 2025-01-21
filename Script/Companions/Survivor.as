@@ -54,6 +54,8 @@ class ASurvivor : AHumanlite
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		Super::BeginPlay();
+
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
@@ -99,7 +101,6 @@ class ASurvivor : AHumanlite
 		TargetResponseComponent.SetID(DataRow.SurvivorID);
 		TMap<FName, float32> Data;
 		Data.Add(n"MaxHP", DataRow.HP);
-		Data.Add(n"Attack", DataRow.Atk);
 		Data.Add(n"MoveSpeed", DataRow.Speed);
 		Data.Add(n"Accel", DataRow.Accel);
 		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
@@ -165,6 +166,7 @@ class ASurvivor : AHumanlite
 			DragState = EDragState::Dragging;
 			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Ignore);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Overlap);
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
 			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
@@ -175,6 +177,7 @@ class ASurvivor : AHumanlite
 			Pawn.EOnTouchHold.UnbindObject(this);
 			Pawn.EOnTouchReleased.UnbindObject(this);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Block);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Block);
 		}
 		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);

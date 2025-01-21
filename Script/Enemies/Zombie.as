@@ -30,13 +30,6 @@ class AZombie : AHumanlite
 	UPROPERTY(DefaultComponent)
 	UBoxComponent RangeCollider;
 
-	UPROPERTY(DefaultComponent, Attach = Collider)
-	UWidgetComponent WorldWidget;
-	UUIHPBar HPBarWidget;
-
-	// UPROPERTY(DefaultComponent)
-	// USkeletalMeshComponent BodyMesh;
-
 	UPROPERTY(DefaultComponent, Attach = BodyMesh, AttachSocket = RightHand)
 	UStaticMeshComponent RightHandWp;
 
@@ -118,6 +111,8 @@ class AZombie : AHumanlite
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
+		Super::BeginPlay();
+
 		AnimateInst = Cast<UZombieAnimInst>(BodyMesh.GetAnimInstance());
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
@@ -148,8 +143,6 @@ class AZombie : AHumanlite
 
 		TargetResponseComponent.Initialize(AbilitySystem);
 		PhaseResponseComponent.Initialize(AbilitySystem);
-
-		HPBarWidget = Cast<UUIHPBar>(WorldWidget.GetWidget());
 	}
 
 	UFUNCTION()
@@ -305,6 +298,7 @@ class AZombie : AHumanlite
 		{
 			case EAttackType::Melee:
 			case EAttackType::Staff:
+			case EAttackType::DualWieldMelee:
 			{
 				MainSocket += "Hand";
 				break;
