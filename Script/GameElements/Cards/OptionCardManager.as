@@ -16,7 +16,7 @@ class AOptionCardManager : AActor
 	private int LastSpawnedID = -1;
 	private int SpawnWaveCount = 0;
 	private float AttentionBarPercent = 0;
-	private float AttentionFillRate = 0.05; // Equal to 20s to fill. TODO: Make this a data
+	private float AttentionFillRate = 0.5; // Equal to 20s to fill. TODO: Make this a data
 	private int AttentionStack = 0;
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
@@ -31,8 +31,6 @@ class AOptionCardManager : AActor
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
-		Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
 		SetAttentionBarPercent(-1);
 	}
 
@@ -117,8 +115,8 @@ class AOptionCardManager : AActor
 	{
 		if (AttentionStack > 0)
 		{
-			SpawnCard();
 			BoostAttentionStack(-1);
+			SpawnCard();
 		}
 	}
 
@@ -143,6 +141,8 @@ class AOptionCardManager : AActor
 	UFUNCTION()
 	void SpawnCard()
 	{
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		Pawn.DSetBowlingAimable.ExecuteIfBound(false);
 		Gameplay::SetGlobalTimeDilation(TIME_SCALE_WHEN_SPAWNED_CARD);
 		AOptionCard Card = SpawnActor(CardTemplate);
 		Card.DOnCardClicked.BindUFunction(this, n"OnCardClicked");
@@ -196,7 +196,7 @@ class AOptionCardManager : AActor
 	}
 
 	UFUNCTION()
-	private void OnDragReleased(AActor OtherActor, FVector Vector)
+	private void OnAnyDragReleased()
 	{
 		if (CurrentID != 0)
 		{

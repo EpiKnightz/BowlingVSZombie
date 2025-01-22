@@ -63,6 +63,10 @@ class ABowlingPawn : APawn
 	UInputAction BackAction;
 
 	UPROPERTY(BlueprintReadOnly, Category = Input)
+	float HoldThreshold = 0.5;
+	bool bIsHoldTriggered = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = Input)
 	float CooldownPercent;
 
 	UPROPERTY(DefaultComponent)
@@ -123,8 +127,10 @@ class ABowlingPawn : APawn
 	// FVoidDelegate DOnHideArrow;
 
 	FActorVectorEvent EOnTouchTriggered;
+	FActorVectorEvent EOnHoldTriggered;
 	FActorVectorEvent EOnTouchHold;
 	FActorVectorEvent EOnTouchReleased;
+	FActorVectorEvent EOnHoldReleased;
 	FBowlingEvent EOnBowlingSpawned;
 	FBoolDelegate DSetBowlingAimable;
 	FFloatDelegate DBoostAttentionPercentage;
@@ -258,6 +264,8 @@ class ABowlingPawn : APawn
 	UFUNCTION(BlueprintCallable)
 	void TouchTriggered(FInputActionValue ActionValue, float32 ElapsedTime, float32 TriggeredTime, const UInputAction SourceAction)
 	{
+		bIsHoldTriggered = false;
+
 		FHitResult outResult;
 		TArray<EObjectTypeQuery> objectTypeArray;
 		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
@@ -314,7 +322,16 @@ class ABowlingPawn : APawn
 		if (PlayerController.GetHitResultUnderFingerForObjects(ETouchIndex::Touch1, objectTypeArray, false, outResult))
 		{
 			FVector location = GetActorLocation();
-			EOnTouchHold.Broadcast(outResult.Actor, outResult.Location);
+			if (ElapsedTime >= HoldThreshold)
+			{
+				if (!bIsHoldTriggered)
+				{
+					bIsHoldTriggered = true;
+					EOnHoldTriggered.Broadcast(outResult.Actor, outResult.Location);
+				}
+				EOnTouchHold.Broadcast(outResult.Actor, outResult.Location);
+			}
+
 			if (bIsAimable)
 			{
 				if (CurrentTouchTarget == ETouchTarget::Battlefield)
@@ -382,6 +399,10 @@ class ABowlingPawn : APawn
 		objectTypeArray.Add(EObjectTypeQuery::ReceiveInput);
 		objectTypeArray.Add(EObjectTypeQuery::Pawn);
 		EOnTouchReleased.Broadcast(outResult.Actor, outResult.Location);
+		if (bIsHoldTriggered)
+		{
+			EOnHoldReleased.Broadcast(outResult.Actor, outResult.Location);
+		}
 	}
 
 	UFUNCTION()

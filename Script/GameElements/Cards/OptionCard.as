@@ -26,6 +26,7 @@ class AOptionCard : AActor
 
 	FIntCardDelegate DOnCardClicked;
 	FActorDelegate DOnTargetChosen;
+	FVoidEvent EOnDragReleased;
 
 	private ATemplateSequenceActor TemplSequActor;
 	private int ID;
@@ -51,7 +52,7 @@ class AOptionCard : AActor
 	void BeginPlay()
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
-		Pawn.EOnTouchTriggered.AddUFunction(this, n"OnTouchTriggered");
+		Pawn.EOnHoldTriggered.AddUFunction(this, n"OnHoldTriggered");
 
 		TemplSequActor = NewObject(this, ATemplateSequenceActor);
 
@@ -84,6 +85,7 @@ class AOptionCard : AActor
 					// TODO move this into a component to avoid casting
 					SpawnedSurvivor.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 					SpawnedSurvivor.SetTempScale(SurvivorTransform.Scale3D);
+					SpawnedSurvivor.EOnDragReleased.AddUFunction(OptionCardManager, n"OnAnyDragReleased");
 				}
 				break;
 			}
@@ -110,6 +112,7 @@ class AOptionCard : AActor
 					SpawnedWeapon.SetActorLocationAndRotation(WeaponTransform.Location, NewRotation);
 					SpawnedWeapon.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 					WeaponPtr.DOnTargetChosen.BindUFunction(OptionCardManager, n"OnTargetChosen");
+					WeaponPtr.EOnDragReleased.AddUFunction(OptionCardManager, n"OnAnyDragReleased");
 				}
 				break;
 			}
@@ -117,6 +120,7 @@ class AOptionCard : AActor
 			{
 				CardData = OptionCardManager.DGetAbilityDataFromTag.ExecuteIfBound(iCardData.ItemID);
 				DOnTargetChosen.BindUFunction(OptionCardManager, n"OnTargetChosen");
+				EOnDragReleased.AddUFunction(OptionCardManager, n"OnAnyDragReleased");
 				break;
 			}
 			default:
@@ -134,7 +138,7 @@ class AOptionCard : AActor
 	}
 
 	UFUNCTION()
-	void OnTouchTriggered(AActor OtherActor, FVector Location)
+	void OnHoldTriggered(AActor OtherActor, FVector Location)
 	{
 		if (OtherActor == this)
 		{
@@ -182,6 +186,7 @@ class AOptionCard : AActor
 	void RegisterDragEvents(bool bEnabled = true)
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 		if (bEnabled)
 		{
 			Target = nullptr;
@@ -190,19 +195,17 @@ class AOptionCard : AActor
 			OnActorBeginOverlap.AddUFunction(this, n"OnOverlap");
 			OnActorEndOverlap.AddUFunction(this, n"OnEndOverlap");
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
-			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
 		}
 		else
 		{
 			Pawn.EOnTouchHold.UnbindObject(this);
-			Pawn.EOnTouchReleased.UnbindObject(this);
+			Pawn.EOnHoldReleased.UnbindObject(this);
 			OnActorBeginOverlap.UnbindObject(this);
 			OnActorEndOverlap.UnbindObject(this);
 			Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			OnActorBeginOverlap.Clear();
 			OnActorEndOverlap.Clear();
 		}
-		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
 
 	UFUNCTION()
@@ -224,6 +227,8 @@ class AOptionCard : AActor
 	private void OnDragged(AActor OtherActor, FVector Vector)
 	{
 		SetActorLocation(FVector(Vector.X, Vector.Y, AbilityTransform.Location.Z));
+		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		Pawn.EOnHoldReleased.AddUFunction(this, n"OnDragReleased");
 	}
 
 	UFUNCTION()
@@ -234,6 +239,7 @@ class AOptionCard : AActor
 			Gameplay::SetGlobalTimeDilation(1);
 			RegisterDragEvents(false);
 			DOnTargetChosen.ExecuteIfBound(Target);
+			EOnDragReleased.Broadcast();
 			OnFinished();
 		}
 	}
@@ -259,4 +265,64 @@ class AOptionCard : AActor
 		}
 		DestroyActor();
 	}
+
+	// UFUNCTION()
+	// void ApplyTiltEffect(float DeltaSeconds)
+	// {
+	// 	FRotator NewRotation = CardMesh.GetRelativeRotation();
+	// 	NewRotation = Math::RInterpTo(NewRotation, CalculateTiltEffect(), DeltaSeconds, 10);
+	// 	CardMesh.SetRelativeRotation(NewRotation);
+	// }
+
+	// FRotator CalculateTiltEffect()
+	// {
+	// 	APlayerController PlayerController = Gameplay::GetPlayerController(0);
+	// 	FHitResult HitResult;
+	// 	if (PlayerController.GetHitResultUnderCursorByChannel(ETraceTypeQuery::Visibility, false, HitResult))
+	// 	{
+	// 		FVector ImpactPoint;
+	// 		ImpactPoint = HitResult.ImpactPoint;
+	// 		float InitialPitch = FRotator::MakeFromX(ImpactPoint - CardMesh.GetWorldLocation()).YPitch;
+	// 		float FinalPitch = InitialPitch / 8;
+	// 		bool CurrentSide = CardMesh.GetWorldLocation().Y > ImpactPoint.Y;
+	// 		bool bCalculateYaw = true;
+	// 		float FinalYaw, FinalRoll;
+	// 		float MaxYaw, MinYaw;
+	// 		if (bCalculateYaw)
+	// 		{
+	// 			if (InitialPitch > 0)
+	// 			{
+	// 				if (CurrentSide)
+	// 				{
+	// 					FinalYaw = MaxYaw;
+	// 				}
+	// 				else
+	// 				{
+	// 					FinalYaw = MinYaw;
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				if (CurrentSide)
+	// 				{
+	// 					FinalYaw = MinYaw;
+	// 				}
+	// 				else
+	// 				{
+	// 					FinalYaw = MaxYaw;
+	// 				}
+	// 			}
+	// 		}
+	// 		// FVector::ZeroVector.dist
+
+	// 		if (CurrentSide)
+	// 		{
+	// 		}
+	// 		return FRotator::ZeroRotator;
+	// 	}
+	// 	else
+	// 	{
+	// 		return FRotator::ZeroRotator;
+	// 	}
+	// }
 };

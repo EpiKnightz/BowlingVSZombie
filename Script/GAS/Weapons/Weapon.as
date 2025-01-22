@@ -19,6 +19,7 @@ class UWeapon : UStaticMeshComponent
 	// bool bIsRightHand = true;
 
 	FActorDelegate DOnTargetChosen;
+	FVoidEvent EOnDragReleased;
 
 	// APostProcessVolume PPV;
 
@@ -66,12 +67,12 @@ class UWeapon : UStaticMeshComponent
 			OnComponentBeginOverlap.AddUFunction(this, n"OnOverlap");
 			OnComponentEndOverlap.AddUFunction(this, n"OnOverlapEnd");
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
-			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+			Pawn.EOnHoldReleased.AddUFunction(this, n"OnDragReleased");
 		}
 		else
 		{
 			Pawn.EOnTouchHold.UnbindObject(this);
-			Pawn.EOnTouchReleased.UnbindObject(this);
+			Pawn.EOnHoldReleased.UnbindObject(this);
 			OnComponentBeginOverlap.UnbindObject(this);
 			OnComponentEndOverlap.UnbindObject(this);
 			SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -109,6 +110,7 @@ class UWeapon : UStaticMeshComponent
 			Gameplay::SetGlobalTimeDilation(1);
 			RegisterDragEvents(false);
 			DOnTargetChosen.ExecuteIfBound(Target);
+			EOnDragReleased.Broadcast();
 			GetOwner().DestroyActor();
 		}
 	}

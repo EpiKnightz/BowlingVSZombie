@@ -50,6 +50,7 @@ class ASurvivor : AHumanlite
 	FTagAbilitySystemDelegate DRegisterAbilities;
 	FVoidDelegate DRankUpTarget;
 	FTagInt2SurvivorDataDelegate DGetRankedSurvivorData;
+	FVoidEvent EOnDragReleased;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -161,6 +162,7 @@ class ASurvivor : AHumanlite
 	void RegisterDragEvents(bool bEnabled = true)
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
+		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 		if (bEnabled)
 		{
 			DragState = EDragState::Dragging;
@@ -169,18 +171,17 @@ class ASurvivor : AHumanlite
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Ignore);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Overlap);
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
-			Pawn.EOnTouchReleased.AddUFunction(this, n"OnDragReleased");
+			Pawn.EOnHoldReleased.AddUFunction(this, n"OnDragReleased");
 		}
 		else
 		{
 			DragState = EDragState::None;
 			Pawn.EOnTouchHold.UnbindObject(this);
-			Pawn.EOnTouchReleased.UnbindObject(this);
+			Pawn.EOnHoldReleased.UnbindObject(this);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Block);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Block);
 		}
-		Pawn.DSetBowlingAimable.ExecuteIfBound(!bEnabled);
 	}
 
 	UFUNCTION()
@@ -226,6 +227,7 @@ class ASurvivor : AHumanlite
 			RegisterDragEvents(false);
 			DestroyActor();
 		}
+		EOnDragReleased.Broadcast();
 	}
 
 	UFUNCTION()
