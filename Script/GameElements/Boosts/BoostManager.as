@@ -117,12 +117,12 @@ class ABoostManager : AActor
 	{
 		FCollectibleDT Row = GetPowerUpData(PowerUpTagPool[Math::RandRange(0, PowerUpTagPool.Num() - 1)]);
 
-		FStatusDT EffectRow;
-		if (!Row.EffectID.IsEmpty())
-		{
-			//  To-do: Currently only support 1 effect per powerup
-			EffectRow = StatusManager.GetStatusData(Row.EffectID[0]);
-		}
+		// FStatusDT EffectRow;
+		// if (!Row.EffectID.IsEmpty())
+		//{
+		//   To-do: Currently only support 1 effect per powerup
+		//	EffectRow = StatusManager.GetStatusData(Row.EffectID[0]);
+		//}
 
 		FVector SpawnLocation = SpawnPosition.Location;
 		SpawnLocation.Y = Math::RandRange(-SpawnSize, SpawnSize);
@@ -130,7 +130,7 @@ class ABoostManager : AActor
 
 		ABoost SpawnedActor = Cast<ABoost>(SpawnActor(PowerUpTemplate, SpawnLocation, SpawnPosition.Rotator()));
 		// SpawnedActor.Mesh.SetStaticMesh(Row.PowerUpModel);
-		SpawnedActor.InitData(Row, EffectRow);
+		SpawnedActor.InitData(Row);
 
 		if (multipleSpawnCount > 0)
 		{

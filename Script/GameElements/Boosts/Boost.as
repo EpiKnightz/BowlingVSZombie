@@ -12,7 +12,7 @@ class ABoost : ACollectible
 	UMaterialInstanceDynamic DynamicMat;
 
 	FCollectibleDT PowerUpData;
-	FStatusDT StatusData;
+	// FStatusDT StatusData;
 
 	UFUNCTION(BlueprintOverride, BlueprintCallable)
 	void ConstructionScript()
@@ -30,10 +30,10 @@ class ABoost : ACollectible
 	}
 
 	UFUNCTION()
-	void InitData(FCollectibleDT iPUData, FStatusDT iData)
+	void InitData(FCollectibleDT iPUData)
 	{
 		PowerUpData = iPUData;
-		StatusData = iData;
+		// StatusData = iData;
 		UpdateBoxData();
 	}
 
@@ -47,10 +47,15 @@ class ABoost : ACollectible
 	void OnCollectibleCollected(AActor OtherActor) override
 	{
 		// Need to use the data here.
-		auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
-		if (IsValid(StatusResponse))
+		// auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
+		// if (IsValid(StatusResponse))
+		// {
+		// 	StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTags::Status_Positive_CooldownBoost.GetSingleTagContainer());
+		// }
+
+		for (UCollectEffect Effect : PowerUpData.CollectEffects)
 		{
-			StatusResponse.DOnApplyStatus.ExecuteIfBound(GameplayTags::Status_Positive_CooldownBoost.GetSingleTagContainer());
+			Effect.OnCollectibleCollected(OtherActor);
 		}
 	}
 };
