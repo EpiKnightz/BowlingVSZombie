@@ -45,7 +45,7 @@ class AStatusManager : AActor
 		auto DamageResponseComponent = UDamageResponseComponent::Get(Target);
 		UUIStatusBar StatusBar;
 
-		UWidgetComponent WidgetComponent = UWidgetComponent::Get(GetOwner(), n"StatusWorldWidget");
+		UWidgetComponent WidgetComponent = UWidgetComponent::Get(Target, n"StatusWorldWidget");
 		if (IsValid(WidgetComponent))
 		{
 			StatusBar = Cast<UUIStatusBar>(WidgetComponent.GetWidget());
