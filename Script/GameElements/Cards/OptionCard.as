@@ -144,7 +144,6 @@ class AOptionCard : AActor
 	{
 		if (OtherActor == this)
 		{
-			Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 			DOnCardClicked.ExecuteIfBound(ID, CardData);
 			switch (CardData.CardType)
 			{
@@ -175,6 +174,7 @@ class AOptionCard : AActor
 					SetActorLocationAndRotation(AbilityTransform.Location, AbilityTransform.Rotation.Rotator());
 					SetActorRelativeScale3D(AbilityTransform.Scale3D);
 					RegisterDragEvents();
+					Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 					break;
 				}
 				default:
@@ -266,6 +266,7 @@ class AOptionCard : AActor
 		{
 			SpawnedWeapon.DestroyActor();
 		}
+		Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 		DestroyActor();
 	}
 

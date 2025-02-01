@@ -1,36 +1,38 @@
 class UUICard : UUserWidget
 {
-	// UPROPERTY(meta = (BindWidget))
-	// UCommonTextBlock CardName;
-
+	UPROPERTY(meta = (BindWidget))
+	UCommonRichTextBlock CardName;
 	UPROPERTY(meta = (BindWidget))
 	UCommonRichTextBlock CardDescription;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_0;
-
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_1;
-
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_2;
-
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_3;
-
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_4;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage PassthroughIcon;
+	UPROPERTY(meta = (BindWidget))
+	UImage ClassIcon;
+	UPROPERTY(meta = (BindWidget))
+	UImage ElementIcon;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation IntroAnim;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation StarIntroAnim1;
+	UWidgetAnimation StarIntroAnim;
 
 	UFUNCTION(BlueprintCallable)
 	void SetCardData(FCardDT CardData)
 	{
-		// RewardName.SetText(FText::FromString(RewardData.Name));
+		CardName.SetText(FText::FromString(CardData.Name));
 		CardDescription.SetText(CardData.Description);
 		SetStars(CardData.Star);
 		// RewardIcon.SetBrushFromTexture(RewardData.Icon);
@@ -46,7 +48,7 @@ class UUICard : UUserWidget
 	UFUNCTION(BlueprintCallable)
 	void PlayCardIntroAnim()
 	{
-		PlayAnimation(StarIntroAnim1);
+		PlayAnimation(StarIntroAnim);
 	}
 
 	UFUNCTION(BlueprintCallable)
