@@ -22,6 +22,9 @@ struct FCardDT
 	UPROPERTY()
 	UTexture2D Icon;
 
+	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"))
+	int Star = 1;
+
 	UPROPERTY()
 	int Cost = 0;
 
@@ -53,6 +56,7 @@ struct FCardDT
 			CardType = ECardType::Survivor;
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 	}
 
@@ -66,6 +70,7 @@ struct FCardDT
 			CardType = ECardType::Survivor;
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 		return this;
 	}
@@ -80,6 +85,7 @@ struct FCardDT
 			CardType = ECardType::Weapon;
 			ItemID = Other.WeaponID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 	}
 
@@ -93,6 +99,7 @@ struct FCardDT
 			CardType = ECardType::Weapon;
 			ItemID = Other.WeaponID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 		return this;
 	}
@@ -107,6 +114,7 @@ struct FCardDT
 			CardType = ECardType::Ability;
 			ItemID = Other.AbilityID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 	}
 
@@ -120,6 +128,7 @@ struct FCardDT
 			CardType = ECardType::Ability;
 			ItemID = Other.AbilityID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 		return this;
 	}
@@ -134,6 +143,7 @@ struct FCardDT
 			CardType = ECardType::Bowling;
 			ItemID = Other.BowlingID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 	}
 
@@ -147,6 +157,7 @@ struct FCardDT
 			CardType = ECardType::Bowling;
 			ItemID = Other.BowlingID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 		return this;
 	}
@@ -161,6 +172,7 @@ struct FCardDT
 			CardType = ECardType::Power;
 			ItemID = Other.PowerID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 	}
 
@@ -174,6 +186,7 @@ struct FCardDT
 			CardType = ECardType::Power;
 			ItemID = Other.PowerID;
 			Cost = Other.Cost;
+			Star = Other.Star;
 		}
 		return this;
 	}

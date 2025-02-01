@@ -8,11 +8,17 @@ struct FSurvivorDT
 	FString Name = "SWAT";
 
 	// FText is for localization, for user facing classes
-	UPROPERTY()
+	UPROPERTY(meta = (MultiLine = true))
 	FText Description = FText::FromString("Description");
 
 	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
+
+	UPROPERTY()
 	UTexture2D Icon;
+
+	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"))
+	int Star = 1;
 
 	UPROPERTY()
 	int Cost = 100;

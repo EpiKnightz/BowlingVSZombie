@@ -19,6 +19,9 @@ struct FPowerDT
 	UPROPERTY()
 	UTexture2D Icon;
 
+	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"))
+	int Star = 1;
+
 	UPROPERTY()
 	int Cost = 110;
 

@@ -17,6 +17,17 @@ enum EDurationType
 	Infinite
 }
 
+enum EElemental
+{
+	Fire,	   // Red
+	Ice,	   // Blue
+	Forest,	   // Green
+	Earth,	   // Brown
+	Lightning, // Yellow
+	Corrosion, // Purple
+	Void,	   // Grey
+}
+
 struct FStatusDT
 {
 	UPROPERTY()

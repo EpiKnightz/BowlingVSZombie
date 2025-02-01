@@ -34,6 +34,14 @@ class AHumanlite : AActor
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	TArray<UAnimMontage> DeadAnims;
 
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent StatusWorldWidget;
+	UUIStatusBar StatusBarWidget;
+
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent HPWorldWidget;
+	UUIHPBar HPBarWidget;
+
 	protected UFCTweenBPActionFloat FloatTween;
 	protected UColorOverlay ColorOverlay;
 	protected FLinearColor DamageColor = FLinearColor::Red;
@@ -50,6 +58,13 @@ class AHumanlite : AActor
 		BodyMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 		HeadMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 		AccessoryMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void BeginPlay()
+	{
+		HPBarWidget = Cast<UUIHPBar>(HPWorldWidget.GetWidget());
+		StatusBarWidget = Cast<UUIStatusBar>(StatusWorldWidget.GetWidget());
 	}
 
 	void SetMeshes(USkeletalMesh InBodyMesh, UStaticMesh InHeadMesh, UStaticMesh InAccMesh)

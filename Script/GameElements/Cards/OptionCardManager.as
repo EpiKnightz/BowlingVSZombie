@@ -141,6 +141,7 @@ class AOptionCardManager : AActor
 	UFUNCTION()
 	void SpawnCard()
 	{
+		Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
 		Pawn.DSetBowlingAimable.ExecuteIfBound(false);
 		Gameplay::SetGlobalTimeDilation(TIME_SCALE_WHEN_SPAWNED_CARD);

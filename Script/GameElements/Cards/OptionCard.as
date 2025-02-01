@@ -18,6 +18,7 @@ class AOptionCard : AActor
 	UWidgetComponent TextWidget;
 	default TextWidget.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	default TextWidget.ReceivesDecals = false;
+	UUICard CardWidget;
 
 	UPROPERTY()
 	TArray<UTemplateSequence> IntroSequences;
@@ -56,7 +57,7 @@ class AOptionCard : AActor
 
 		TemplSequActor = NewObject(this, ATemplateSequenceActor);
 
-		UUICard CardWidget = Cast<UUICard>(TextWidget.GetWidget());
+		CardWidget = Cast<UUICard>(TextWidget.GetWidget());
 		if (IsValid(CardWidget))
 		{
 			EOnCardInit.AddUFunction(CardWidget, n"SetCardData");
@@ -134,6 +135,7 @@ class AOptionCard : AActor
 		TemplSequActor.SetBinding(this);
 		TemplSequActor.GetSequencePlayer().SetPlayRate(1 / Gameplay::GetGlobalTimeDilation());
 		TemplSequActor.GetSequencePlayer().Play();
+		TemplSequActor.GetSequencePlayer().OnFinished.AddUFunction(CardWidget, n"PlayIntroAnim");
 		EOnCardInit.Broadcast(CardData);
 	}
 
@@ -142,6 +144,7 @@ class AOptionCard : AActor
 	{
 		if (OtherActor == this)
 		{
+			Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 			DOnCardClicked.ExecuteIfBound(ID, CardData);
 			switch (CardData.CardType)
 			{

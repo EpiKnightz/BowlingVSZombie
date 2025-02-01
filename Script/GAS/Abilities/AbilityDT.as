@@ -18,6 +18,9 @@ struct FAbilityDT
 	UPROPERTY()
 	FText Description = FText::FromString("Description");
 
+	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"))
+	int Star = 1;
+
 	UPROPERTY()
 	UTexture2D Icon;
 
