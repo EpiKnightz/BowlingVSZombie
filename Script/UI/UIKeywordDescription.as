@@ -17,8 +17,10 @@ class UUIKeywordDescription : UUserWidget
 
 	FGameplayTag2FNameDelegate DGetNameFromTag;
 
-	void Setup(FVector2D MousePos, FVector2D ViewportSize)
+	void Setup()
 	{
+		FVector2D MousePos = WidgetLayout::GetMousePositionOnViewport() * WidgetLayout::GetViewportScale();
+		FVector2D ViewportSize = WidgetLayout::GetViewportSize();
 		SetPositionInViewport(MousePos);
 		SetAlignmentInViewport(FVector2D(MousePos.X >= (ViewportSize.X / 2.0) ? 1 : 0,
 										 MousePos.Y >= (ViewportSize.Y / 2.0) ? 1 : 0));
@@ -38,7 +40,8 @@ class UUIKeywordDescription : UUserWidget
 		}
 		else
 		{
-			Icon.SetVisibility(ESlateVisibility::Hidden);
+			// Icon.SetVisibility(ESlateVisibility::Hidden);
+			Icon.GetParent().SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
@@ -94,6 +97,23 @@ class UUIKeywordDescription : UUserWidget
 		KeywordName.SetText(Keyword.Name);
 		Description.SetText(AddExtraInfos(Keyword));
 		Keytag.SetText(EffectToTag(Keyword));
+		if (IsValid(Keyword.Icon))
+		{
+			Icon.SetVisibility(ESlateVisibility::Visible);
+			Icon.SetBrushFromTexture(Keyword.Icon);
+		}
+		else
+		{
+			Icon.SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	UFUNCTION()
+	void SetSkillDescription(FAbilityDT Keyword)
+	{
+		KeywordName.SetText(FText::FromString(Keyword.Name));
+		Description.SetText(Keyword.Description);
+		Keytag.SetText(FText());
 		if (IsValid(Keyword.Icon))
 		{
 			Icon.SetVisibility(ESlateVisibility::Visible);

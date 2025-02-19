@@ -168,6 +168,11 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	void StatusInitCue()
 	{
+		if (!IsValid(StatusData.StatusVFX))
+		{
+			return;
+		}
+
 		if (!IsValid(StatusEffectComp))
 		{
 			if (StatusData.DurationType == EDurationType::Instant)

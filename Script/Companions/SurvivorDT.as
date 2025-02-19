@@ -26,8 +26,17 @@ struct FSurvivorDT
 	UPROPERTY()
 	float32 HP = 100;
 
-	// UPROPERTY()
-	// float32 Atk = 10;
+	UPROPERTY()
+	float32 InitialRage = 0;
+
+	UPROPERTY()
+	float32 RageRegen = 4;
+
+	UPROPERTY()
+	float32 RageBonus = 10;
+
+	UPROPERTY()
+	float32 Atk = 10;
 
 	UPROPERTY()
 	float32 Speed = 0;

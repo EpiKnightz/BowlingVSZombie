@@ -26,6 +26,19 @@ class UUICard : UUserWidget
 	UImage ElementIcon;
 	FName ElementName;
 
+	UPROPERTY(meta = (BindWidget))
+	UImage ATKIcon;
+	UPROPERTY(meta = (BindWidget))
+	UImage HPIcon;
+	UPROPERTY(meta = (BindWidget))
+	UImage RAGEIcon;
+	UPROPERTY(meta = (BindWidget))
+	UCommonNumericTextBlock TextHP;
+	UPROPERTY(meta = (BindWidget))
+	UCommonNumericTextBlock TextATK;
+	UPROPERTY(meta = (BindWidget))
+	UCommonNumericTextBlock TextRAGE;
+
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation IntroAnim;
 
@@ -38,6 +51,8 @@ class UUICard : UUserWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
 	UDataTable KeywordDataTable;
 
+	FTag2AbilityDataDelegate DGetAbilityDataFromTag;
+
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIKeywordDescription> KeywordPopup;
 
@@ -45,7 +60,7 @@ class UUICard : UUserWidget
 	void SetCardData(FCardDT CardData)
 	{
 		CardName.SetText(FText::FromString(CardData.Name));
-		CardDescription.SetText(CardData.Description);
+		// CardDescription.SetText(CardData.Description);
 		SetStars(CardData.Star);
 
 		//////////////////////////////////////////////////////////////////////////
@@ -57,6 +72,64 @@ class UUICard : UUserWidget
 
 		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Element.GetSingleTagContainer());
 		SetIconFromTag(FilteredTags, ElementIcon, ElementName, n"OnElementClicked");
+
+		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_AtkRate.GetSingleTagContainer());
+		ATKIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnATKClicked");
+
+		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_HP.GetSingleTagContainer());
+		HPIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnHPClicked");
+
+		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_RageRegen.GetSingleTagContainer());
+		RAGEIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnRAGEClicked");
+	}
+
+	FString GenDescFromTags(FGameplayTagContainer AbilitiesTags)
+	{
+		FString Result;
+		TArray<FGameplayTag> TagsArray;
+		GameplayTag::BreakGameplayTagContainer(AbilitiesTags, TagsArray);
+		for (FGameplayTag Tag : TagsArray)
+		{
+			FAbilityDT AbilityData = DGetAbilityDataFromTag.Execute(Tag);
+			if (AbilityData.AbilityID.IsValid())
+			{
+				FName TriggerName = AbilityData.AbilityID.GetCurrentNameOnly();
+				if (TriggerName != n"OnAttackCooldown")
+				{
+					FString AbilityKey = AbilityData.Name;
+					AbilityKey.RemoveSpacesInline();
+					Result += "<link id=\"" + AbilityKey + "\"/>\n ";
+					Result += AbilityData.Description.ToString();
+				}
+			}
+		}
+
+		return Result;
+	}
+
+	UFUNCTION()
+	void SetSurvivorData(FSurvivorDT SurvivorData)
+	{
+		TextHP.GetParent().SetVisibility(ESlateVisibility::Visible);
+		TextHP.SetCurrentValue(SurvivorData.HP);
+		TextRAGE.GetParent().SetVisibility(ESlateVisibility::Visible);
+		TextRAGE.SetCurrentValue(SurvivorData.RageRegen + SurvivorData.RageBonus / 1.5);
+		if (CardDescription.Text.IsEmptyOrWhitespace())
+		{
+			CardDescription.SetText(FText::FromString(GenDescFromTags(SurvivorData.AbilitiesTags) + "\n\n <span style=\"Italic\">"
+													  + SurvivorData.Description.ToString() + "</>"));
+		}
+	}
+
+	UFUNCTION()
+	void SetWeaponData(FWeaponDT WeaponData, float AttackCooldown = 1)
+	{
+		TextATK.GetParent().SetVisibility(ESlateVisibility::Visible);
+		TextATK.SetCurrentValue(WeaponData.Attack * WeaponData.AttackRating / AttackCooldown);
+		if (CardDescription.Text.IsEmptyOrWhitespace())
+		{
+			CardDescription.SetText(FText::FromString(GenDescFromTags(WeaponData.WeaponAbilities)));
+		}
 	}
 
 	void SetIconFromTag(FGameplayTagContainer FilteredTags, UImage& Icon, FName& IconTagName, FName ClickEventName)
@@ -94,7 +167,24 @@ class UUICard : UUserWidget
 		return OnClicked(ElementName);
 	}
 
-	// Type: 0 = Passthrough, 1 = Class, 2 = Element
+	UFUNCTION()
+	private FEventReply OnATKClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(n"AttackRating");
+	}
+
+	UFUNCTION()
+	private FEventReply OnHPClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(n"HealthPoint");
+	}
+
+	UFUNCTION()
+	private FEventReply OnRAGEClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(n"RageRegen");
+	}
+
 	private FEventReply OnClicked(FName KeywordName)
 	{
 		if (KeywordName.IsNone())
@@ -111,7 +201,7 @@ class UUICard : UUserWidget
 				auto UserWidget = Cast<UUIKeywordDescription>(WidgetBlueprint::CreateWidget(KeywordPopup, PlayerController));
 				FVector2D MousePos = WidgetLayout::GetMousePositionOnViewport() * WidgetLayout::GetViewportScale();
 				FVector2D ViewportSize = WidgetLayout::GetViewportSize();
-				UserWidget.Setup(MousePos, ViewportSize);
+				UserWidget.Setup();
 				UserWidget.SetKeywordDescription(KeywordRow);
 				UserWidget.AddToViewport();
 				UserWidget.SetFocus();

@@ -114,6 +114,10 @@ class AStatusManager : AActor
 				{
 					statusComp = UAttackBoostComponent::GetOrCreate(Target, EffectTag.TagName);
 				}
+				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_SkillCooldownBoost))
+				{
+					statusComp = USkillCooldownComponent::GetOrCreate(Target, EffectTag.TagName);
+				}
 				else
 				{
 					return false;

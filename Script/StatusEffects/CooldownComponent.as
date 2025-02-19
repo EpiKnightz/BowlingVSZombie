@@ -6,7 +6,7 @@ class UCooldownComponent : UStatusComponent
 		auto PlayerResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			UMultiplierMod Mod = NewObject(this, UMultiplierMod);
+			UOverrideMod Mod = NewObject(this, UOverrideMod);
 			Mod.SetupOnce(ModID, FindAttrValue(n"AttackAttrSet.AttackCooldown"));
 			PlayerResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(Mod);
 		}

@@ -39,20 +39,6 @@ class AZombie : AHumanlite
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UStaticMesh> WeaponList;
 
-	UPROPERTY(DefaultComponent)
-	UDamageResponseComponent DamageResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UMovementResponseComponent MovementResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UAttackResponseComponent AttackResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UStatusResponseComponent StatusResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Zombie;
 
 	UPROPERTY(DefaultComponent)

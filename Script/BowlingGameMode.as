@@ -212,6 +212,7 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager.DCreateSurvivorFromTag.BindUFunction(SurvivorManager, n"CreateSurvivorFromTag");
 		OptionCardManager.DCreateWeaponFromTag.BindUFunction(WeaponsManager, n"CreateWeaponFromTag");
 		OptionCardManager.DGetAbilityDataFromTag.BindUFunction(AbilitiesManager, n"GetAbilityData");
+		OptionCardManager.DGetWeaponDataFromTag.BindUFunction(WeaponsManager, n"GetWeaponData");
 		OptionCardManager.EOnAttentionUpdate.AddUFunction(UserWidget, n"UpdateAttentionPercent");
 		OptionCardManager.EOnAttentionFull.AddUFunction(UserWidget, n"OnAttentionFull");
 		OptionCardManager.EOnAttentionStackUpdate.AddUFunction(UserWidget, n"UpdateAttentionStack");

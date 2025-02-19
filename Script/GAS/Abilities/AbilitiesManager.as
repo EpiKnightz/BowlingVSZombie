@@ -43,29 +43,14 @@ class AAbilitiesManager : AActor
 	UFUNCTION()
 	void RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
 	{
-		if (AbilityID.MatchesTag(GameplayTags::Ability_Shoot_AtTarget))
+		FAbilityDT AbilityData = GetAbilityData(AbilityID);
+		if (AbilityData.AbilityClass.IsValid())
 		{
-			AbilitySystem.RegisterAbility(UShootAtTargetAbility, AbilityID);
-		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_Shoot))
-		{
-			AbilitySystem.RegisterAbility(UShootBulletAbility, AbilityID);
-		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_Slash))
-		{
-			AbilitySystem.RegisterAbility(USlashAreaAbility, AbilityID);
-		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_MultiShoot))
-		{
-			AbilitySystem.RegisterAbility(UMultiShootAbility, AbilityID);
-		}
-		else if (AbilityID.MatchesTag(GameplayTags::Ability_Grow))
-		{
-			AbilitySystem.RegisterAbility(UGrowUpAbility, AbilityID);
+			AbilitySystem.RegisterAbility(AbilityData.AbilityClass, AbilityID);
 		}
 		else
 		{
-			PrintError("RegisterSingleAbility: AbilityID not found");
+			PrintError("RegisterSingleAbility: " + AbilityID + " not found");
 		}
 	}
 };

@@ -1,9 +1,5 @@
 class UAbility : ULiteAbilityBase
 {
-	// Requirements
-	// - Attribute Cost
-	// - Cooldown- Which could also be a attribute cost
-
 	ULiteAbilitySystem AbilitySystem;
 
 	UTrigger Trigger;
@@ -44,36 +40,9 @@ class UAbility : ULiteAbilityBase
 	bool GetAbilityData(FGameplayTag InAbilityID)
 	{
 		AbilityData = AbilitiesManager.GetAbilityData(InAbilityID);
-		if (AbilityData.AbilityID.IsValid())
+		if (AbilityData.AbilityID.IsValid() && AbilityData.TriggerClass.IsValid())
 		{
-			switch (AbilityData.TriggerType)
-			{
-				case EAbilityTriggerType::OnOverlap:
-				{
-					Trigger = NewObject(this, UTriggerOnOverlap);
-					break;
-				}
-				case EAbilityTriggerType::OnTimeLoop:
-				{
-					Trigger = NewObject(this, UTriggerOnTimeLoop);
-					break;
-				}
-				case EAbilityTriggerType::OnSetup:
-				{
-					Trigger = NewObject(this, UTriggerOnSetup);
-					break;
-				}
-				case EAbilityTriggerType::OnOverlapMarkTarget:
-				{
-					Trigger = NewObject(this, UTriggerOnOverlapMarkTarget);
-					break;
-				}
-				default:
-				{
-					Print("TriggerType not implemented");
-					return false;
-				}
-			}
+			Trigger = NewObject(this, AbilityData.TriggerClass);
 			return true;
 		}
 		return false;

@@ -16,11 +16,6 @@ class UMovementAttrSet : ULiteAttrSet
 		// MaxSpeed.Initialize(100);
 		Accel.Initialize(10);
 		Bounciness.Initialize(0.8);
-	}
-
-	UFUNCTION(BlueprintOverride)
-	void PostInitialize(FName AttrName, float NewValue)
-	{
 		InitDelegates();
 	}
 

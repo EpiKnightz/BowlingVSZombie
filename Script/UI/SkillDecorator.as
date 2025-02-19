@@ -1,5 +1,8 @@
-class UKeywordDecorator : ULinkRTBDecorator
+class USkillDecorator : ULinkRTBDecorator
 {
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
+	UDataTable SkillDataTable;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
 	UDataTable EffectDataTable;
 
@@ -23,50 +26,62 @@ class UKeywordDecorator : ULinkRTBDecorator
 		UserWidget.Setup();
 		UserWidget.DGetNameFromTag.BindUFunction(UIManager, n"GetKeywordName");
 
-		FStatusDT StatusRow;
-		if (EffectDataTable.FindRow(FName(idLink), StatusRow))
+		FAbilityDT SkillRow;
+		if (SkillDataTable.FindRow(FName(idLink), SkillRow))
 		{
-			UserWidget.SetEffectDescription(StatusRow);
+			UserWidget.SetSkillDescription(SkillRow);
 		}
 		else
 		{
-			FKeywordDT KeywordRow;
-			if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+			FStatusDT StatusRow;
+			if (EffectDataTable.FindRow(FName(idLink), StatusRow))
 			{
-				UserWidget.SetKeywordDescription(KeywordRow);
+				UserWidget.SetEffectDescription(StatusRow);
 			}
 			else
 			{
-				PrintError("Keyword not found: " + idLink);
+				FKeywordDT KeywordRow;
+				if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+				{
+					UserWidget.SetKeywordDescription(KeywordRow);
+				}
+				else
+				{
+					PrintError("Keyword not found: " + idLink);
+				}
 			}
 		}
 		UserWidget.AddToViewport();
 		UserWidget.SetFocus();
-		// UserWidget.DCheckAndRemoveWidgetsOfClass.BindUFunction(UIManager, n"CheckAndRemoveWidgetsOfClass");
-		//  UserWidget.DCheckFocusOfClass.BindUFunction(UIManager, n"CheckFocusOfClass");
-		//  UserWidget.DAddFocusWidget.BindUFunction(UIManager, n"AddFocusWidget");
-		//  UserWidget.DRemoveFocusWidget.BindUFunction(UIManager, n"RemoveFocusWidget");
 	}
 
 	UFUNCTION(BlueprintOverride)
 	FText FormatText(FString idLink)
 	{
 		FText Result;
-		FStatusDT StatusRow;
-		if (EffectDataTable.FindRow(FName(idLink), StatusRow))
+		FAbilityDT SkillRow;
+		if (SkillDataTable.FindRow(FName(idLink), SkillRow))
 		{
-			Result = StatusRow.Name;
+			Result = FText::FromString(SkillRow.Name);
 		}
 		else
 		{
-			FKeywordDT KeywordRow;
-			if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+			FStatusDT StatusRow;
+			if (EffectDataTable.FindRow(FName(idLink), StatusRow))
 			{
-				Result = KeywordRow.Name;
+				Result = StatusRow.Name;
 			}
 			else
 			{
-				return Result;
+				FKeywordDT KeywordRow;
+				if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+				{
+					Result = KeywordRow.Name;
+				}
+				else
+				{
+					return Result;
+				}
 			}
 		}
 		if (!Result.IsEmptyOrWhitespace())
@@ -79,21 +94,29 @@ class UKeywordDecorator : ULinkRTBDecorator
 	UFUNCTION(BlueprintOverride)
 	UTexture2D FindIcon(FString idLink)
 	{
-		FStatusDT StatusRow;
-		if (EffectDataTable.FindRow(FName(idLink), StatusRow))
+		FAbilityDT SkillRow;
+		if (SkillDataTable.FindRow(FName(idLink), SkillRow))
 		{
-			return StatusRow.Icon;
+			return SkillRow.Icon;
 		}
 		else
 		{
-			FKeywordDT KeywordRow;
-			if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+			FStatusDT StatusRow;
+			if (EffectDataTable.FindRow(FName(idLink), StatusRow))
 			{
-				return KeywordRow.Icon;
+				return StatusRow.Icon;
 			}
 			else
 			{
-				return nullptr;
+				FKeywordDT KeywordRow;
+				if (KeywordDataTable.FindRow(FName(idLink), KeywordRow))
+				{
+					return KeywordRow.Icon;
+				}
+				else
+				{
+					return nullptr;
+				}
 			}
 		}
 	}
@@ -131,6 +154,11 @@ class UKeywordDecorator : ULinkRTBDecorator
 	UFUNCTION(BlueprintOverride)
 	bool CheckTextFirst(FString idLink)
 	{
+		FAbilityDT SkillRow;
+		if (SkillDataTable.FindRow(FName(idLink), SkillRow))
+		{
+			return false;
+		}
 		return true;
 	}
 }

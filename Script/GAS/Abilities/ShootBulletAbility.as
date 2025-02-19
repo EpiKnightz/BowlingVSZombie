@@ -4,7 +4,6 @@ class UShootBulletAbility : UAttackAbility
 	{
 		if (GetAttackRespComp())
 		{
-			AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
 			return true;
 		}
 		return false;
@@ -14,6 +13,8 @@ class UShootBulletAbility : UAttackAbility
 	{
 		if (IsValid(AttackResponsePtr))
 		{
+			AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
+			AttackResponsePtr.EOnAnimEndNotify.AddUFunction(this, n"OnAnimEndNotify");
 			AttackResponsePtr.DPlayAttackAnim.ExecuteIfBound();
 		}
 	}

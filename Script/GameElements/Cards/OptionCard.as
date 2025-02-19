@@ -68,11 +68,12 @@ class AOptionCard : AActor
 		CardMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 	}
 
-	// ID can be 0, 1 or 2
+	// ID can be 0, 1 or 2 for Left, Middle and Right cards
 	UFUNCTION()
 	void Init(int iID, AOptionCardManager OptionCardManager, FCardDT iCardData)
 	{
 		ID = iID;
+		CardWidget.DGetAbilityDataFromTag = OptionCardManager.DGetAbilityDataFromTag;
 
 		switch (iCardData.CardType)
 		{
@@ -87,6 +88,8 @@ class AOptionCard : AActor
 					SpawnedSurvivor.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 					SpawnedSurvivor.SetTempScale(SurvivorTransform.Scale3D);
 					SpawnedSurvivor.EOnDragReleased.AddUFunction(OptionCardManager, n"OnAnyDragReleased");
+					CardWidget.SetSurvivorData(SurvivorData);
+					CardWidget.SetWeaponData(OptionCardManager.DGetWeaponDataFromTag.ExecuteIfBound(SurvivorData.WeaponTag), SurvivorData.AttackCooldown);
 				}
 				break;
 			}
@@ -98,6 +101,7 @@ class AOptionCard : AActor
 				if (WeaponData.IsValid())
 				{
 					CardData = WeaponData;
+					CardWidget.SetWeaponData(WeaponData);
 					SpawnedWeapon.ActorEnableCollision = true;
 					FRotator NewRotation = WeaponTransform.Rotation.Rotator();
 					if (CardData.ItemID.MatchesTag(GameplayTags::Weapon_Range))
@@ -254,6 +258,7 @@ class AOptionCard : AActor
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		TemplSequActor.GetSequencePlayer().PlayReverse();
 		TemplSequActor.GetSequencePlayer().OnFinished.AddUFunction(this, n"OnFinished");
+		TextWidget.SetVisibility(false);
 	}
 
 	UFUNCTION()

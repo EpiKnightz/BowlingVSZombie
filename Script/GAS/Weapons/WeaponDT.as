@@ -24,6 +24,10 @@ struct FWeaponDT
 	UPROPERTY()
 	float32 Attack = 20;
 
+	// This is for description only, not used in game
+	UPROPERTY()
+	float AttackRating = 3;
+
 	UPROPERTY()
 	UStaticMesh WeaponMesh;
 
@@ -38,7 +42,7 @@ struct FWeaponDT
 	UAnimMontage AttackAnim;
 
 	UPROPERTY()
-	FGameplayTag DefaultAttackAbility;
+	FGameplayTagContainer WeaponAbilities;
 
 	UPROPERTY()
 	FGameplayTagContainer EffectTags;

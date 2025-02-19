@@ -3,7 +3,9 @@ enum EAbilityTriggerType
 	OnOverlap,
 	OnOverlapMarkTarget,
 	OnTimeLoop,
+	OnAttackCooldown,
 	OnSetup,
+	OnRageFull,
 	None,
 }
 
@@ -31,7 +33,10 @@ struct FAbilityDT
 	int Cost = 80;
 
 	UPROPERTY()
-	EAbilityTriggerType TriggerType = EAbilityTriggerType::None;
+	TSubclassOf<UTrigger> TriggerClass;
+
+	UPROPERTY()
+	TSubclassOf<UAbility> AbilityClass;
 
 	UPROPERTY()
 	float TriggerParam = 0;

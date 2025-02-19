@@ -31,6 +31,21 @@ class AHumanlite : AActor
 	default AccessoryMesh.ReceivesDecals = false;
 	default HeadMesh.SetWorldScale3D(FVector::OneVector);
 
+	UPROPERTY(DefaultComponent)
+	UDamageResponseComponent DamageResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UMovementResponseComponent MovementResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UAttackResponseComponent AttackResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UStatusResponseComponent StatusResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	TArray<UAnimMontage> DeadAnims;
 

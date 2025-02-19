@@ -16,13 +16,19 @@ class UAttackAttrSet : ULiteAttrSet
 		Attack.Initialize(10);
 		AttackCooldown.Initialize(1);
 		AttackRange.Initialize(50); // <=100 = Melee, >100 = Ranged
-		DOnPostAttrChange.BindUFunction(this, n"PostAttrChange");
+		InitDelegates();
+	}
+
+	UFUNCTION(BlueprintOverride, Meta = (BlueprintThreadSafe))
+	void InitDelegates()
+	{
+		DOnPreAttrChange.BindUFunction(this, n"PreAttrChange");
 	}
 
 	UFUNCTION(BlueprintOverride)
 	bool PreAttrChange(FName AttrName, float32& NewValue)
 	{
-		if (AttrName == n"AttackCooldown")
+		if (AttrName == AttackCooldown.AttributeName)
 		{
 			if (NewValue <= 0)
 			{

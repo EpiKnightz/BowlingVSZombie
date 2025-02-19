@@ -15,25 +15,22 @@ class ASurvivor : AHumanlite
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent WorldWidget;
 	UUIRankText RankText;
+	UPROPERTY(DefaultComponent, Attach = Collider)
+	UWidgetComponent RageWorldWidget;
+	UUIRageBar RageBarWidget;
 
 	UPROPERTY(DefaultComponent)
 	ULiteAbilitySystem AbilitySystem;
 
-	UPROPERTY(DefaultComponent)
-	UAttackResponseComponent AttackResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Survivor;
 
 	UPROPERTY(DefaultComponent)
-	UDamageResponseComponent DamageResponseComponent;
-
-	UPROPERTY(DefaultComponent)
-	UMovementResponseComponent MovementResponseComponent;
-
-	UPROPERTY(DefaultComponent)
 	URankResponseComponent RankResponseComponent;
+
+	UPROPERTY(DefaultComponent)
+	URageResponseComponent RageResponseComponent;
+	UPROPERTY(DefaultComponent)
+	USkillResponseComponent SkillResponseComponent;
 
 	UPROPERTY(DefaultComponent)
 	UProjectileMovementComponent MovementComp;
@@ -60,10 +57,13 @@ class ASurvivor : AHumanlite
 		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
+		AnimateInst.OnMontageEnded.AddUFunction(this, n"OnMontageEnded");
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
+		AbilitySystem.RegisterAttrSet(URageAttrSet);
+		AbilitySystem.RegisterAttrSet(USkillAttrSet);
 		AbilitySystem.SetBaseValue(n"Accel", 0);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
@@ -71,8 +71,14 @@ class ASurvivor : AHumanlite
 		DamageResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.StopLifeTime = 0;
-		MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"OnPostAddForce");
+		// MovementResponseComponent.EOnPostAddForce.AddUFunction(this, n"OnPostAddForce");
 
+		SkillResponseComponent.Initialize(AbilitySystem);
+
+		StatusResponseComponent.Initialize(AbilitySystem);
+		StatusResponseComponent.DChangeOverlayColor.BindUFunction(ColorOverlay, n"ChangeOverlayColor");
+
+		RankResponseComponent.Initialize(AbilitySystem);
 		RankResponseComponent.EOnRankUp.AddUFunction(this, n"OnRankUp");
 		RankText = Cast<UUIRankText>(WorldWidget.GetWidget());
 		if (!IsValid(RankText))
@@ -84,10 +90,32 @@ class ASurvivor : AHumanlite
 			RankResponseComponent.EOnRankUp.AddUFunction(RankText, n"SetRankText");
 		}
 
+		RageResponseComponent.Initialize(AbilitySystem);
+		RageBarWidget = Cast<UUIRageBar>(RageWorldWidget.GetWidget());
+		if (!IsValid(RankText))
+		{
+			PrintError("RageBarWidget is invalid");
+		}
+		else
+		{
+			RageWorldWidget.SetVisibility(false);
+		}
+		RageResponseComponent.EOnRageChange.AddUFunction(RageBarWidget, n"SetRageBar");
+
 		auto AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 		if (IsValid(AbilitiesManager))
 		{
 			DRegisterAbilities.BindUFunction(AbilitiesManager, n"RegisterAbilities");
+		}
+	}
+
+	UFUNCTION()
+	private void OnPostCalculation(FName AttrName, float Value)
+	{
+		if ((AttrName == n"Damage" || AttrName == n"HP") && Value > 0)
+		{
+			float HPPercentage = AbilitySystem.GetValue(n"HP") / AbilitySystem.GetValue(n"MaxHP");
+			HPBarWidget.SetHPBar(HPPercentage);
 		}
 	}
 
@@ -104,8 +132,13 @@ class ASurvivor : AHumanlite
 		Data.Add(n"MaxHP", DataRow.HP);
 		Data.Add(n"MoveSpeed", DataRow.Speed);
 		Data.Add(n"Accel", DataRow.Accel);
+		Data.Add(n"Attack", DataRow.Atk);
 		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
 		Data.Add(n"Bounciness", DataRow.Bounciness);
+		Data.Add(n"InitialRage", DataRow.InitialRage);
+		RageResponseComponent.AddRage(DataRow.InitialRage);
+		Data.Add(n"RageRegen", DataRow.RageRegen);
+		Data.Add(n"RageBonus", DataRow.RageBonus);
 
 		AbilitySystem.ImportData(Data);
 
@@ -218,7 +251,7 @@ class ASurvivor : AHumanlite
 			ColorOverlay.ResetOverlayColor();
 			PopUpAnimation();
 			RegisterDragEvents(false);
-			EnableAttack();
+			EnableSurvivor();
 			DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
 		}
 		else
@@ -231,15 +264,19 @@ class ASurvivor : AHumanlite
 	}
 
 	UFUNCTION()
-	void EnableAttack(bool bEnabled = true)
+	void EnableSurvivor(bool bEnabled = true)
 	{
 		if (bEnabled)
 		{
 			AttackResponseComponent.DPlayAttackAnim.BindUFunction(this, n"PlayAttackAnim");
+			RageWorldWidget.SetVisibility(true);
+			RageResponseComponent.ComponentTickEnabled = true;
 		}
 		else
 		{
 			AttackResponseComponent.DPlayAttackAnim.Clear();
+			RageWorldWidget.SetVisibility(false);
+			RageResponseComponent.ComponentTickEnabled = false;
 		}
 	}
 
@@ -302,6 +339,15 @@ class ASurvivor : AHumanlite
 		{
 			AnimateInst.Montage_Play(Weapon.AttackAnim);
 		}
+	}
+
+	UFUNCTION()
+	private void OnMontageEnded(UAnimMontage Montage, bool bInterrupted)
+	{
+		// if (Montage == Weapon.AttackAnim)
+		// {
+		// AttackResponseComponent.EOnAnimEndNotify.Broadcast();
+		//}
 	}
 
 	void PlayDeadAnim(int AnimIndex) override

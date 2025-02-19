@@ -16,9 +16,7 @@ class UTagDecorator : ULinkRTBDecorator
 			{
 				APlayerController PlayerController = Gameplay::GetPlayerController(0);
 				auto UserWidget = Cast<UUIKeywordDescription>(WidgetBlueprint::CreateWidget(KeywordPopup, PlayerController));
-				FVector2D MousePos = WidgetLayout::GetMousePositionOnViewport() * WidgetLayout::GetViewportScale();
-				FVector2D ViewportSize = WidgetLayout::GetViewportSize();
-				UserWidget.Setup(MousePos, ViewportSize);
+				UserWidget.Setup();
 				UserWidget.SetKeywordDescription(KeywordRow);
 				UserWidget.AddToViewport();
 				UserWidget.SetFocus();
@@ -101,5 +99,11 @@ class UTagDecorator : ULinkRTBDecorator
 			}
 		}
 		return -1;
+	}
+
+	UFUNCTION(BlueprintOverride)
+	bool CheckTextFirst(FString idLink)
+	{
+		return true;
 	}
 }

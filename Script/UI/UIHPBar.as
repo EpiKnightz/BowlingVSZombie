@@ -4,10 +4,10 @@ class UUIHPBar : UUserWidget
 	UProgressBar HPBar;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation RankChangeAnimation;
+	UWidgetAnimation FadeInAnimation;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation RankStopAnimation;
+	UWidgetAnimation FadeOutAnimation;
 
 	UFUNCTION()
 	void SetHPBar(float Percent)
@@ -15,7 +15,7 @@ class UUIHPBar : UUserWidget
 		HPBar.SetPercent(Percent);
 		if (Percent <= 0)
 		{
-			if (!IsAnimationPlaying(RankStopAnimation))
+			if (!IsAnimationPlaying(FadeOutAnimation))
 			{
 				FadeHPBar();
 			}
@@ -24,7 +24,7 @@ class UUIHPBar : UUserWidget
 		{
 			StopAllAnimations();
 			HPBar.SetVisibility(ESlateVisibility::Visible);
-			PlayAnimation(RankChangeAnimation);
+			PlayAnimation(FadeInAnimation);
 		}
 		System::SetTimer(this, n"FadeHPBar", 2.5, false);
 	}
@@ -34,7 +34,7 @@ class UUIHPBar : UUserWidget
 	{
 		if (HPBar.IsVisible())
 		{
-			PlayAnimation(RankStopAnimation);
+			PlayAnimation(FadeOutAnimation);
 		}
 	}
 }

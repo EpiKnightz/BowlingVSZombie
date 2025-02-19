@@ -2,13 +2,9 @@ class USlashAreaAbility : UAttackAbility
 {
 	bool SetupAbilityChild() override
 	{
-		if (GetAttackRespComp())
+		if (GetAttackRespComp() && AbilityData.AbilityID.IsValid())
 		{
-			if (AbilityData.AbilityID.IsValid())
-			{
-				AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
-				return true;
-			}
+			return true;
 		}
 		return false;
 	}
@@ -17,6 +13,8 @@ class USlashAreaAbility : UAttackAbility
 	{
 		if (IsValid(AttackResponsePtr))
 		{
+			AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
+			AttackResponsePtr.EOnAnimEndNotify.AddUFunction(this, n"OnAnimEndNotify");
 			AttackResponsePtr.DPlayAttackAnim.ExecuteIfBound();
 		}
 	}
@@ -37,6 +35,7 @@ class USlashAreaAbility : UAttackAbility
 				UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
 				if (IsValid(DamageResponse))
 				{
+					// Todo: Remove hardcoded damage
 					DamageResponse.DOnTakeHit.ExecuteIfBound(100);
 				}
 			}

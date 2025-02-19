@@ -21,7 +21,8 @@ class AOptionCardManager : AActor
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;
 	FTagWeapon2DataDelegate DCreateWeaponFromTag;
-	FTagAbility2DataDelegate DGetAbilityDataFromTag;
+	FTag2WeaponDataDelegate DGetWeaponDataFromTag;
+	FTag2AbilityDataDelegate DGetAbilityDataFromTag;
 	FCardDTEvent EOnCardAdded;
 	FFloatEvent EOnAttentionUpdate;
 	FVoidEvent EOnAttentionFull;

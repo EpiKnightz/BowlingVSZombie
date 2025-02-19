@@ -150,8 +150,12 @@ class UWeapon : UStaticMeshComponent
 		if (IsValid(AbilitySys))
 		{
 			Gameplay::GetActorOfClass(AAbilitiesManager)
-				.RegisterAbilities(Data.DefaultAttackAbility.GetSingleTagContainer(), AbilitySys);
-			AbilitySys.SetBaseValue(n"Attack", Data.Attack);
+				.RegisterAbilities(Data.WeaponAbilities, AbilitySys);
+			// 18-2-25: I decided that everytime a weapon is equipped, the attack value is added to the base value
+			// Still considering if using modifier or straight up adding is better
+			UAdditiveMod WeaponAtkMod = NewObject(this, UAdditiveMod);
+			WeaponAtkMod.SetupOnce(1, Data.Attack);
+			AbilitySys.AddModifier(n"Attack", WeaponAtkMod);
 		}
 	}
 

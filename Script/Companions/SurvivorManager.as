@@ -119,7 +119,7 @@ class ASurvivorManager : AActor
 		SpawnedActor.SetData(SurvivorData);
 		SpawnedActor.DGetRankedSurvivorData.BindUFunction(this, n"GetRankedSurvivorData");
 		SpawnedSurvivorList.Add(SpawnedActor.GetName());
-		EOnGameStateChanged.AddUFunction(SpawnedActor, n"EnableAttack");
+		EOnGameStateChanged.AddUFunction(SpawnedActor, n"EnableSurvivor");
 		EOnSurvivorSpawned.Broadcast(SpawnedActor);
 	}
 };

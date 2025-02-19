@@ -11,12 +11,6 @@ class UMultiplierPierceAttrSet : ULiteAttrSet
 	{
 		FirstPierceMultiplier.Initialize(1.1);
 		SubsequentPierceMultiplier.Initialize(0.1);
-		// InitDelegates();
-	}
-
-	UFUNCTION(BlueprintOverride)
-	void PostInitialize(FName AttrName, float NewValue)
-	{
 		InitDelegates();
 	}
 

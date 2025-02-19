@@ -12,8 +12,9 @@ class UPrimaryAttrSet : ULiteAttrSet
 	UPrimaryAttrSet()
 	{
 		MaxHP.Initialize(100);
-		HP.Initialize(MaxHP.GetCurrentValue());
+		// HP.Initialize(MaxHP.GetCurrentValue());
 		Damage.Initialize(0);
+		InitDelegates();
 	}
 
 	UFUNCTION(BlueprintOverride, Meta = (BlueprintThreadSafe))
@@ -31,7 +32,6 @@ class UPrimaryAttrSet : ULiteAttrSet
 		{
 			HP.Initialize(NewValue);
 		}
-		InitDelegates();
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -43,10 +43,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 			{
 				return true;
 			}
-			if (NewValue > MaxHP.GetCurrentValue() || NewValue < 0)
-			{
-				NewValue = Math::Clamp(NewValue, 0.0f, MaxHP.GetCurrentValue());
-			}
+			NewValue = Math::Clamp(NewValue, 0.0f, MaxHP.GetCurrentValue());
 		}
 		return false;
 	}

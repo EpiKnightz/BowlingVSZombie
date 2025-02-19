@@ -13,12 +13,12 @@ class UBowlingGameInstance : UGameInstance
 	UFUNCTION(BlueprintOverride)
 	void Init()
 	{
-#if EDITOR
+		// #if EDITOR
 		CurrentLevel = 7;
 		MaxRunHP = 100;
 		CurrentRunHP = 100;
 		// RunCoinTotal = 200;
-#endif
+		// #endif
 	}
 
 	UFUNCTION()

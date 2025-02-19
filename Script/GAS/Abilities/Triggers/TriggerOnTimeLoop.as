@@ -1,7 +1,6 @@
-class UTriggerOnTimeLoop : UTrigger
+class UTriggerOnTimeLoop : UTriggerOnAttackCooldown
 {
-	FActorDelegate DPeriodicActivation;
-	float TriggerCooldown;
+	float TriggerCooldownModifier = 1;
 
 	bool SetupTrigger(UAbility Ability, float TriggerParam) override
 	{
@@ -12,22 +11,38 @@ class UTriggerOnTimeLoop : UTrigger
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
 			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnEnterTheBattlefield");
 			TriggerCooldown = TriggerParam;
+			Ability.AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
 			return true;
 		}
 		return false;
 	}
 
-	UFUNCTION()
-	void OnEnterTheBattlefield()
+	UFUNCTION(BlueprintOverride, meta = (NoSuperCall))
+	void OnCooldownUpdate(FName AttrName, float Value)
 	{
-		// Activate one time, then set timer for subsequent activation
-		PeriodicActivation();
-		System::SetTimer(this, n"PeriodicActivation", TriggerCooldown, true);
+		if (AttrName == n"SkillCooldownModifier")
+		{
+			TriggerCooldownModifier = Value;
+			float remainingTime = System::GetTimerRemainingTime(this, "PeriodicActivation");
+			if (remainingTime > 0)
+			{
+				remainingTime /= TriggerCooldownModifier;
+				System::ClearTimer(this, "PeriodicActivation");
+				System::SetTimer(this, n"PeriodicActivation", remainingTime, false);
+			}
+		}
 	}
 
-	UFUNCTION()
+	UFUNCTION(BlueprintOverride, meta = (NoSuperCall))
 	void PeriodicActivation()
 	{
 		DPeriodicActivation.ExecuteIfBound(nullptr);
+		System::SetTimer(this, n"PeriodicActivation", TriggerCooldown / TriggerCooldownModifier, false);
+	}
+
+	void StopTrigger() override
+	{
+		System::ClearTimer(this, "PeriodicActivation");
+		Super::StopTrigger();
 	}
 };
