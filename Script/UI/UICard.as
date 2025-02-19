@@ -17,11 +17,14 @@ class UUICard : UUserWidget
 	UImage Star_4;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage PassthroughIcon;
+	UImage StruckTypeIcon;
+	FName StruckTypeName;
 	UPROPERTY(meta = (BindWidget))
 	UImage ClassIcon;
+	FName ClassName;
 	UPROPERTY(meta = (BindWidget))
 	UImage ElementIcon;
+	FName ElementName;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation IntroAnim;
@@ -29,26 +32,117 @@ class UUICard : UUserWidget
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation StarIntroAnim;
 
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation StarIdleAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
+	UDataTable KeywordDataTable;
+
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UUIKeywordDescription> KeywordPopup;
+
 	UFUNCTION(BlueprintCallable)
 	void SetCardData(FCardDT CardData)
 	{
 		CardName.SetText(FText::FromString(CardData.Name));
 		CardDescription.SetText(CardData.Description);
 		SetStars(CardData.Star);
-		// RewardIcon.SetBrushFromTexture(RewardData.Icon);
+
+		//////////////////////////////////////////////////////////////////////////
+		FGameplayTagContainer FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_StruckType.GetSingleTagContainer());
+		SetIconFromTag(FilteredTags, StruckTypeIcon, StruckTypeName, n"OnStruckTypeClicked");
+
+		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Class.GetSingleTagContainer());
+		SetIconFromTag(FilteredTags, ClassIcon, ClassName, n"OnClassClicked");
+
+		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Element.GetSingleTagContainer());
+		SetIconFromTag(FilteredTags, ElementIcon, ElementName, n"OnElementClicked");
+	}
+
+	void SetIconFromTag(FGameplayTagContainer FilteredTags, UImage& Icon, FName& IconTagName, FName ClickEventName)
+	{
+		if (!FilteredTags.IsEmpty())
+		{
+			IconTagName = FilteredTags.First().GetCurrentNameOnly();
+			FKeywordDT KeywordRow;
+			if (KeywordDataTable.FindRow(IconTagName, KeywordRow))
+			{
+				Icon.SetBrushFromTexture(KeywordRow.Icon);
+				Icon.SetVisibility(ESlateVisibility::Visible);
+				Icon.OnMouseButtonDownEvent.BindUFunction(this, ClickEventName);
+				return;
+			}
+		}
+		Icon.SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	UFUNCTION()
+	private FEventReply OnStruckTypeClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(StruckTypeName);
+	}
+
+	UFUNCTION()
+	private FEventReply OnClassClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(ClassName);
+	}
+
+	UFUNCTION()
+	private FEventReply OnElementClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		return OnClicked(ElementName);
+	}
+
+	// Type: 0 = Passthrough, 1 = Class, 2 = Element
+	private FEventReply OnClicked(FName KeywordName)
+	{
+		if (KeywordName.IsNone())
+		{
+			PrintError("Keyword name is none");
+			return FEventReply::Unhandled();
+		}
+		FKeywordDT KeywordRow;
+		if (KeywordDataTable.FindRow(KeywordName, KeywordRow))
+		{
+			if (!KeywordRow.Description.IsEmptyOrWhitespace())
+			{
+				APlayerController PlayerController = Gameplay::GetPlayerController(0);
+				auto UserWidget = Cast<UUIKeywordDescription>(WidgetBlueprint::CreateWidget(KeywordPopup, PlayerController));
+				FVector2D MousePos = WidgetLayout::GetMousePositionOnViewport() * WidgetLayout::GetViewportScale();
+				FVector2D ViewportSize = WidgetLayout::GetViewportSize();
+				UserWidget.Setup(MousePos, ViewportSize);
+				UserWidget.SetKeywordDescription(KeywordRow);
+				UserWidget.AddToViewport();
+				UserWidget.SetFocus();
+			}
+		}
+		else
+		{
+			PrintError("Keyword not found: " + KeywordName);
+			return FEventReply::Unhandled();
+		}
+		return FEventReply::Handled();
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void PlayIntroAnim()
 	{
 		PlayAnimation(IntroAnim);
-		System::SetTimer(this, n"PlayCardIntroAnim", IntroAnim.GetEndTime() * Gameplay::GetGlobalTimeDilation(), false);
+		System::SetTimer(this, n"PlayStarIntroAnim", IntroAnim.GetEndTime() * Gameplay::GetGlobalTimeDilation(), false);
 	}
 
 	UFUNCTION(BlueprintCallable)
-	void PlayCardIntroAnim()
+	void PlayStarIntroAnim()
 	{
 		PlayAnimation(StarIntroAnim);
+		// System::SetTimer(this, n"PlayStarIdleAnim", StarIntroAnim.GetEndTime() * Gameplay::GetGlobalTimeDilation(), false);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void PlayStarIdleAnim()
+	{
+		PlayAnimation(StarIdleAnim, 0, 0, EUMGSequencePlayMode::Forward, 0.5);
 	}
 
 	UFUNCTION(BlueprintCallable)

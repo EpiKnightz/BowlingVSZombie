@@ -12,6 +12,12 @@ struct FKeywordDT
 	UPROPERTY(EditAnywhere, Category = Appearance)
 	UTexture2D Icon;
 
+	UPROPERTY()
+	bool bUseCustomColor = false;
+
+	UPROPERTY(meta = (EditCondition = "bUseCustomColor", EditConditionHides))
+	FLinearColor CustomColor;
+
 	FKeywordDT(FStatusDT Other)
 	{
 		if (!Other.Name.IsEmptyOrWhitespace())

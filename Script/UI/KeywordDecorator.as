@@ -20,11 +20,9 @@ class UKeywordDecorator : ULinkRTBDecorator
 		}
 		APlayerController PlayerController = Gameplay::GetPlayerController(0);
 		auto UserWidget = Cast<UUIKeywordDescription>(WidgetBlueprint::CreateWidget(KeywordPopup, PlayerController));
-		float32 MouseX = 0, MouseY = 0;
-		PlayerController.GetMousePosition(MouseX, MouseY);
-		int SizeX = 0, SizeY = 0;
-		PlayerController.GetViewportSize(SizeX, SizeY);
-		UserWidget.Setup(MouseX, MouseY, SizeX, SizeY);
+		FVector2D MousePos = WidgetLayout::GetMousePositionOnViewport() * WidgetLayout::GetViewportScale();
+		FVector2D ViewportSize = WidgetLayout::GetViewportSize();
+		UserWidget.Setup(MousePos, ViewportSize);
 		UserWidget.DGetNameFromTag.BindUFunction(UIManager, n"GetKeywordName");
 
 		FStatusDT StatusRow;

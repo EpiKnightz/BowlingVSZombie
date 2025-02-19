@@ -9,6 +9,9 @@ struct FWeaponDT
 	UPROPERTY()
 	FText Description = FText::FromString("Description");
 
+	UPROPERTY(meta = (MultiLine = true))
+	FGameplayTagContainer DescriptionTags;
+
 	UPROPERTY()
 	UTexture2D Icon;
 

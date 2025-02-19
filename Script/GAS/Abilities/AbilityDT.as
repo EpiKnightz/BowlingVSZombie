@@ -15,8 +15,11 @@ struct FAbilityDT
 	UPROPERTY()
 	FString Name = "Ability Name";
 
-	UPROPERTY()
+	UPROPERTY(meta = (MultiLine = true))
 	FText Description = FText::FromString("Description");
+
+	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
 
 	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"))
 	int Star = 1;

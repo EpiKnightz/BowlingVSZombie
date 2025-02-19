@@ -6,8 +6,11 @@ struct FBallDT
 	UPROPERTY()
 	FString Name = "Bowling";
 
-	UPROPERTY()
+	UPROPERTY(meta = (MultiLine = true))
 	FText Description = FText::FromString("BowlingDes");
+
+	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
 
 	UPROPERTY()
 	UTexture2D Icon;

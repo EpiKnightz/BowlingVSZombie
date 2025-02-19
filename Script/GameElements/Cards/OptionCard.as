@@ -173,6 +173,7 @@ class AOptionCard : AActor
 				{
 					SetActorLocationAndRotation(AbilityTransform.Location, AbilityTransform.Rotation.Rotator());
 					SetActorRelativeScale3D(AbilityTransform.Scale3D);
+					TextWidget.SetWidgetSpace(EWidgetSpace::World);
 					RegisterDragEvents();
 					Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 					break;
@@ -266,6 +267,7 @@ class AOptionCard : AActor
 		{
 			SpawnedWeapon.DestroyActor();
 		}
+		TextWidget.SetVisibility(false);
 		Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 		DestroyActor();
 	}

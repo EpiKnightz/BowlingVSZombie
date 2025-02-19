@@ -13,8 +13,11 @@ struct FPowerDT
 	UPROPERTY()
 	FString Name = "Bouncer Power";
 
-	UPROPERTY()
+	UPROPERTY(meta = (MultiLine = true))
 	FText Description = FText::FromString("After 1st bounce, Increase bowling's damage by 1.5x");
+
+	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
 
 	UPROPERTY()
 	UTexture2D Icon;

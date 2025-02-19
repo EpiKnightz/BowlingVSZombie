@@ -28,6 +28,9 @@ struct FCardDT
 	UPROPERTY()
 	int Cost = 0;
 
+	UPROPERTY()
+	FGameplayTagContainer DescriptionTags;
+
 	ECardType CardType = ECardType::None;
 
 	bool IsValid()
@@ -57,6 +60,7 @@ struct FCardDT
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 	}
 
@@ -71,6 +75,7 @@ struct FCardDT
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;
 	}
@@ -86,6 +91,7 @@ struct FCardDT
 			ItemID = Other.WeaponID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 	}
 
@@ -100,6 +106,7 @@ struct FCardDT
 			ItemID = Other.WeaponID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;
 	}
@@ -115,6 +122,7 @@ struct FCardDT
 			ItemID = Other.AbilityID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 	}
 
@@ -129,6 +137,7 @@ struct FCardDT
 			ItemID = Other.AbilityID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;
 	}
@@ -144,6 +153,7 @@ struct FCardDT
 			ItemID = Other.BowlingID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 	}
 
@@ -158,6 +168,7 @@ struct FCardDT
 			ItemID = Other.BowlingID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;
 	}
@@ -173,6 +184,7 @@ struct FCardDT
 			ItemID = Other.PowerID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 	}
 
@@ -187,6 +199,7 @@ struct FCardDT
 			ItemID = Other.PowerID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;
 	}

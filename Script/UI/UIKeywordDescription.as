@@ -17,11 +17,11 @@ class UUIKeywordDescription : UUserWidget
 
 	FGameplayTag2FNameDelegate DGetNameFromTag;
 
-	void Setup(float32 MouseX, float32 MouseY, int ViewportSizeX, int ViewportSizeY)
+	void Setup(FVector2D MousePos, FVector2D ViewportSize)
 	{
-		SetPositionInViewport(FVector2D(MouseX, MouseY));
-		SetAlignmentInViewport(FVector2D(MouseX >= (ViewportSizeX / 2.0) ? 1 : 0,
-										 MouseY >= (ViewportSizeY / 2.0) ? 1 : 0));
+		SetPositionInViewport(MousePos);
+		SetAlignmentInViewport(FVector2D(MousePos.X >= (ViewportSize.X / 2.0) ? 1 : 0,
+										 MousePos.Y >= (ViewportSize.Y / 2.0) ? 1 : 0));
 		PlayAnimation(IntroAnim);
 	}
 
