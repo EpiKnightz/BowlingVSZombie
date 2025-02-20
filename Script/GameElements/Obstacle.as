@@ -34,8 +34,8 @@ class AObstacle : AActor
 		OriginalLoc = GetActorLocation();
 
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.Initialize(n"MaxHp", 200);
-		OldHP = AbilitySystem.GetValue(n"HP");
+		AbilitySystem.Initialize(PrimaryAttrSet::MaxHP, 200);
+		OldHP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
 
 		DamageResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
@@ -69,7 +69,7 @@ class AObstacle : AActor
 	UFUNCTION()
 	void TakeDamageCue()
 	{
-		float NewHP = AbilitySystem.GetValue(n"HP");
+		float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
 		if (OldHP > 150 && NewHP <= 150)
 		{
 			VisualChange(0);

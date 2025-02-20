@@ -155,7 +155,7 @@ class UWeapon : UStaticMeshComponent
 			// Still considering if using modifier or straight up adding is better
 			UAdditiveMod WeaponAtkMod = NewObject(this, UAdditiveMod);
 			WeaponAtkMod.SetupOnce(1, Data.Attack);
-			AbilitySys.AddModifier(n"Attack", WeaponAtkMod);
+			AbilitySys.AddModifier(AttackAttrSet::Attack, WeaponAtkMod);
 		}
 	}
 

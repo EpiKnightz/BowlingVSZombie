@@ -20,7 +20,7 @@ class UTriggerOnTimeLoop : UTriggerOnAttackCooldown
 	UFUNCTION(BlueprintOverride, meta = (NoSuperCall))
 	void OnCooldownUpdate(FName AttrName, float Value)
 	{
-		if (AttrName == n"SkillCooldownModifier")
+		if (AttrName == SkillAttrSet::SkillCooldownModifier)
 		{
 			TriggerCooldownModifier = Value;
 			float remainingTime = System::GetTimerRemainingTime(this, "PeriodicActivation");

@@ -118,6 +118,7 @@ class AZombie : AHumanlite
 		StatusResponseComponent.DChangeOverlayColor.BindUFunction(ColorOverlay, n"ChangeOverlayColor");
 
 		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.SetupAttack(n"StartAttacking");
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 		AttackResponseComponent.EOnAnimEndNotify.AddUFunction(this, n"OnAttackEndNotify");
 
@@ -135,13 +136,13 @@ class AZombie : AHumanlite
 	void SetData(FZombieDT DataRow)
 	{
 		TMap<FName, float32> Data;
-		Data.Add(n"MaxHP", DataRow.HP);
-		Data.Add(n"Attack", DataRow.Atk);
-		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
-		Data.Add(n"AttackRange", DataRow.AttackRange);
-		Data.Add(n"MoveSpeed", DataRow.Speed);
-		Data.Add(n"Accel", DataRow.Accel);
-		Data.Add(n"Bounciness", DataRow.Bounciness);
+		Data.Add(PrimaryAttrSet::MaxHP, DataRow.HP);
+		Data.Add(AttackAttrSet::Attack, DataRow.Atk);
+		Data.Add(AttackAttrSet::AttackCooldown, DataRow.AttackCooldown);
+		Data.Add(AttackAttrSet::AttackRange, DataRow.AttackRange);
+		Data.Add(MovementAttrSet::MoveSpeed, DataRow.Speed);
+		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
+		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
 
 		PhaseResponseComponent.SetupPhaseData(DataRow.NumberOfPhases,
 											  DataRow.Lv1Modifiers,
@@ -174,11 +175,11 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void OnPostSetCurrentValue(FName AttrName, float Value)
 	{
-		if (AttrName == n"MoveSpeed")
+		if (AttrName == MovementAttrSet::MoveSpeed)
 		{
 			SetMoveSpeed(Value);
 		}
-		if (AttrName == n"AttackCooldown")
+		if (AttrName == AttackAttrSet::AttackCooldown)
 		{
 			SetAttackCooldown(Value);
 		}
@@ -187,11 +188,16 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void OnPostCalculation(FName AttrName, float Value)
 	{
-		if ((AttrName == n"Damage" || AttrName == n"HP") && Value > 0)
+		if ((AttrName == PrimaryAttrSet::Damage || AttrName == PrimaryAttrSet::HP) && Value > 0)
 		{
-			float HPPercentage = AbilitySystem.GetValue(n"HP") / AbilitySystem.GetValue(n"MaxHP");
+			float HPPercentage = AbilitySystem.GetValue(PrimaryAttrSet::HP) / AbilitySystem.GetValue(PrimaryAttrSet::MaxHP);
 			PhaseResponseComponent.CheckForRankUp(HPPercentage);
 			HPBarWidget.SetHPBar(HPPercentage);
+		}
+		if (AttrName == AttackAttrSet::AttackCooldown && Value > 0)
+		{
+			System::ClearTimer(this, "PeriodicCheck");
+			System::SetTimer(this, n"PeriodicCheck", Value, true);
 		}
 	}
 
@@ -213,7 +219,7 @@ class AZombie : AHumanlite
 			{
 				if (IsValid(Target))
 				{
-					StartAttacking();
+					AttackResponseComponent.ActivateAttack();
 				}
 				else
 				{
@@ -234,7 +240,7 @@ class AZombie : AHumanlite
 			{
 				if (!DamageResponseComponent.bIsDead) // If not dead, meaning the zomb goes to end screen, Deal dmg to player
 				{
-					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"), GetName());
+					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack), GetName());
 				}
 				DestroyActor();
 			}
@@ -267,7 +273,7 @@ class AZombie : AHumanlite
 
 		AnimateInst.bIsMirror = Math::RandBool();
 		RangeCollider.SetRelativeLocation(FVector(AnimateInst.bIsMirror ? RANGE_COLLIDER_SIZE : -RANGE_COLLIDER_SIZE,
-												  AbilitySystem.GetValue(n"AttackRange"),
+												  AbilitySystem.GetValue(AttackAttrSet::AttackRange),
 												  0));
 		ReplaceAnimation(AtkAnims);
 
@@ -387,15 +393,17 @@ class AZombie : AHumanlite
 					RemoveTarget();
 					return false;
 				}
-				StartAttacking();
-				Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
-				Target.EOnDeadCue.AddUFunction(this, n"RemoveTargetWhenDead");
-				auto TargetMoveRes = UMovementResponseComponent::Get(OtherActor);
-				if (IsValid(TargetMoveRes))
+				if (AttackResponseComponent.ActivateAttack())
 				{
-					TargetMoveRes.EOnPostAddForce.AddUFunction(this, n"InterruptAttacking");
+					Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
+					Target.EOnDeadCue.AddUFunction(this, n"RemoveTargetWhenDead");
+					auto TargetMoveRes = UMovementResponseComponent::Get(OtherActor);
+					if (IsValid(TargetMoveRes))
+					{
+						TargetMoveRes.EOnPostAddForce.AddUFunction(this, n"InterruptAttacking");
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 		return false;
@@ -430,7 +438,7 @@ class AZombie : AHumanlite
 												 - GetActorLocation())
 							 + FRotator(0, -90, 0));
 			int random = Math::RandRange(0, AttackAnim.Num() - 1);
-			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(n"AttackCooldown"));
+			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(AttackAttrSet::AttackCooldown));
 		}
 		else
 		{
@@ -449,7 +457,7 @@ class AZombie : AHumanlite
 							 + FRotator(0, -90, 0));
 			if (IsMelee())
 			{
-				Target.TakeHit(AbilitySystem.GetValue(n"Attack"));
+				Target.TakeHit(AbilitySystem.GetValue(AttackAttrSet::Attack));
 			}
 			else
 			{
@@ -580,7 +588,7 @@ class AZombie : AHumanlite
 		TArray<AActor> ignoreActors;
 		ignoreActors.Add(this);
 		TArray<AActor> outActors;
-		System::SphereOverlapActors(GetActorLocation(), AbilitySystem.GetValue(n"AttackRange") * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
+		System::SphereOverlapActors(GetActorLocation(), AbilitySystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 		float32 Distance = -1;
 		AActor NearestTarget = Gameplay::FindNearestActor(GetActorLocation(), outActors, Distance);
@@ -613,7 +621,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void HealCue()
 	{
-		Print("HealCue");
+		// Print("HealCue");
 	}
 
 	// void TakeDamageCue() override
@@ -662,7 +670,7 @@ class AZombie : AHumanlite
 	{
 		ResetRotation();
 		MovementResponseComponent.SetIsAccelable(true);
-		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
+		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
 		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
 	}
 

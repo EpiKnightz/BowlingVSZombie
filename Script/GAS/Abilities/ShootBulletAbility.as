@@ -15,7 +15,7 @@ class UShootBulletAbility : UAttackAbility
 		{
 			AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
 			AttackResponsePtr.EOnAnimEndNotify.AddUFunction(this, n"OnAnimEndNotify");
-			AttackResponsePtr.DPlayAttackAnim.ExecuteIfBound();
+			AttackResponsePtr.ActivateAttack();
 		}
 	}
 
@@ -37,7 +37,7 @@ class UShootBulletAbility : UAttackAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.ProjectileData = AbilityData;
-			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(n"Attack");
+			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
 		}
 	}
 

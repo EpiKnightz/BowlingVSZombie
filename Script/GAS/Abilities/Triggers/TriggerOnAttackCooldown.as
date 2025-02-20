@@ -10,7 +10,7 @@ class UTriggerOnAttackCooldown : UTrigger
 		{
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
 			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnEnterTheBattlefield");
-			TriggerCooldown = Ability.AbilitySystem.GetValue(n"AttackCooldown");
+			TriggerCooldown = Ability.AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
 			Ability.AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
 			return true;
 		}
@@ -27,7 +27,7 @@ class UTriggerOnAttackCooldown : UTrigger
 	UFUNCTION(BlueprintEvent)
 	void OnCooldownUpdate(FName AttrName, float Value)
 	{
-		if (AttrName == n"AttackCooldown")
+		if (AttrName == AttackAttrSet::AttackCooldown)
 		{
 			TriggerCooldown = Value;
 			System::ClearTimer(this, "PeriodicActivation");

@@ -57,8 +57,8 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			AbilitySystem.SetBaseValue(n"Damage", Damage);
-			// AbilitySystem.Calculate(n"Damage");
+			AbilitySystem.SetBaseValue(PrimaryAttrSet::Damage, Damage);
+			// AbilitySystem.Calculate(PrimaryAttrSet::Damage);
 			if (CheckIsAlive())
 			{
 				EOnDamageCue.Broadcast();
@@ -78,8 +78,8 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			float NewHP = AbilitySystem.GetValue(n"HP") + Heal;
-			AbilitySystem.SetBaseValue(n"HP", NewHP);
+			float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP) + Heal;
+			AbilitySystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
 			EOnHealCue.Broadcast();
 			return true;
 		}
@@ -91,9 +91,9 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			float NewHP = AbilitySystem.GetValue(n"HP") - Amount;
-			AbilitySystem.SetBaseValue(n"HP", NewHP);
-			// AbilitySystem.Calculate(n"HP");
+			float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP) - Amount;
+			AbilitySystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
+			// AbilitySystem.Calculate(PrimaryAttrSet::HP);
 			if (CheckIsAlive())
 			{
 				return true;
@@ -110,14 +110,14 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	private bool RemoveHPPercent(float Value)
 	{
-		float Amount = AbilitySystem.GetValue(n"MaxHP") * Value;
+		float Amount = AbilitySystem.GetValue(PrimaryAttrSet::MaxHP) * Value;
 		return (RemoveHP(Amount));
 	}
 
 	UFUNCTION()
 	bool CheckIsAlive()
 	{
-		if (AbilitySystem.GetValue(n"HP") <= 0)
+		if (AbilitySystem.GetValue(PrimaryAttrSet::HP) <= 0)
 		{
 			return false;
 		}
@@ -130,8 +130,8 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	bool IsDamaged()
 	{
-		float HP = AbilitySystem.GetValue(n"HP");
-		return (HP > 0 && HP < AbilitySystem.GetValue(n"MaxHP"));
+		float HP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
+		return (HP > 0 && HP < AbilitySystem.GetValue(PrimaryAttrSet::MaxHP));
 	}
 
 	UFUNCTION()

@@ -1,4 +1,4 @@
-class UFreezeComponent : UStatusComponent
+class UFreezeStatus : UStatusComponent
 {
 	void DoInitChildren() override
 	{
@@ -13,9 +13,7 @@ class UFreezeComponent : UStatusComponent
 		auto AttackResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(AttackResponse))
 		{
-			UMultiplierMod CooldownMod = NewObject(this, UMultiplierMod);
-			CooldownMod.SetupOnce(ModID, 999999);
-			AttackResponse.DOnChangeAttackCooldownModifier.ExecuteIfBound(CooldownMod);
+			AttackResponse.PauseAttack();
 		}
 
 		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
@@ -39,7 +37,7 @@ class UFreezeComponent : UStatusComponent
 		auto AttackResponse = UAttackResponseComponent::Get(GetOwner());
 		if (IsValid(AttackResponse))
 		{
-			AttackResponse.DOnRemoveAttackCooldownModifier.ExecuteIfBound(this, ModID);
+			AttackResponse.ResumeAttack();
 		}
 
 		auto StatusResponse = UStatusResponseComponent::Get(GetOwner());
@@ -51,7 +49,7 @@ class UFreezeComponent : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
-			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(n"PrimaryAttrSet.Damage"));
+			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(PrimaryAttrSet::Damage));
 		}
 
 		Super::EndStatusEffect();

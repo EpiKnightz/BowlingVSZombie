@@ -1,3 +1,12 @@
+namespace PrimaryAttrSet
+{
+	const FName HP = n"HP";
+	const FName MaxHP = n"MaxHP";
+	const FName Damage = n"Damage";
+	const FName FullDamage = n"PrimaryAttrSet.Damage";
+	const FName FullHP = n"PrimaryAttrSet.HP";
+	const FName FullMaxHP = n"PrimaryAttrSet.MaxHP";
+}
 class UPrimaryAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Primary Attribute")

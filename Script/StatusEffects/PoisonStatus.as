@@ -1,8 +1,8 @@
-class UPoisonComponent : UDoTComponent
+class UPoisonStatus : UDoTStatus
 {
 	void FindDamageSource() override
 	{
-		DamagePerInterval = FindAttrValue(n"PrimaryAttrSet.HP");
+		DamagePerInterval = FindAttrValue(PrimaryAttrSet::FullHP);
 	}
 
 	bool ActionPerInterval() override

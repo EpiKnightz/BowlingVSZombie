@@ -64,9 +64,10 @@ class ASurvivor : AHumanlite
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.RegisterAttrSet(URageAttrSet);
 		AbilitySystem.RegisterAttrSet(USkillAttrSet);
-		AbilitySystem.SetBaseValue(n"Accel", 0);
+		AbilitySystem.SetBaseValue(MovementAttrSet::Accel, 0);
 
 		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.SetupAttack(n"PlayAttackAnim");
 		TargetResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
@@ -112,9 +113,9 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	private void OnPostCalculation(FName AttrName, float Value)
 	{
-		if ((AttrName == n"Damage" || AttrName == n"HP") && Value > 0)
+		if ((AttrName == PrimaryAttrSet::Damage || AttrName == PrimaryAttrSet::HP) && Value > 0)
 		{
-			float HPPercentage = AbilitySystem.GetValue(n"HP") / AbilitySystem.GetValue(n"MaxHP");
+			float HPPercentage = AbilitySystem.GetValue(PrimaryAttrSet::HP) / AbilitySystem.GetValue(PrimaryAttrSet::MaxHP);
 			HPBarWidget.SetHPBar(HPPercentage);
 		}
 	}
@@ -129,16 +130,16 @@ class ASurvivor : AHumanlite
 	{
 		TargetResponseComponent.SetID(DataRow.SurvivorID);
 		TMap<FName, float32> Data;
-		Data.Add(n"MaxHP", DataRow.HP);
-		Data.Add(n"MoveSpeed", DataRow.Speed);
-		Data.Add(n"Accel", DataRow.Accel);
-		Data.Add(n"Attack", DataRow.Atk);
-		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
-		Data.Add(n"Bounciness", DataRow.Bounciness);
-		Data.Add(n"InitialRage", DataRow.InitialRage);
+		Data.Add(PrimaryAttrSet::MaxHP, DataRow.HP);
+		Data.Add(MovementAttrSet::MoveSpeed, DataRow.Speed);
+		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
+		Data.Add(AttackAttrSet::Attack, DataRow.Atk);
+		Data.Add(AttackAttrSet::AttackCooldown, DataRow.AttackCooldown);
+		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
+		Data.Add(RageAttrSet::InitialRage, DataRow.InitialRage);
 		RageResponseComponent.AddRage(DataRow.InitialRage);
-		Data.Add(n"RageRegen", DataRow.RageRegen);
-		Data.Add(n"RageBonus", DataRow.RageBonus);
+		Data.Add(RageAttrSet::RageRegen, DataRow.RageRegen);
+		Data.Add(RageAttrSet::RageBonus, DataRow.RageBonus);
 
 		AbilitySystem.ImportData(Data);
 
@@ -268,13 +269,13 @@ class ASurvivor : AHumanlite
 	{
 		if (bEnabled)
 		{
-			AttackResponseComponent.DPlayAttackAnim.BindUFunction(this, n"PlayAttackAnim");
+			AttackResponseComponent.ResumeAttack();
 			RageWorldWidget.SetVisibility(true);
 			RageResponseComponent.ComponentTickEnabled = true;
 		}
 		else
 		{
-			AttackResponseComponent.DPlayAttackAnim.Clear();
+			AttackResponseComponent.PauseAttack();
 			RageWorldWidget.SetVisibility(false);
 			RageResponseComponent.ComponentTickEnabled = false;
 		}
@@ -337,7 +338,9 @@ class ASurvivor : AHumanlite
 	{
 		if (!DamageResponseComponent.bIsDead)
 		{
-			AnimateInst.Montage_Play(Weapon.AttackAnim);
+			float PlayRate = AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
+			PlayRate = Weapon.AttackAnim.PlayLength > PlayRate ? Weapon.AttackAnim.PlayLength / PlayRate : 1;
+			AnimateInst.Montage_Play(Weapon.AttackAnim, PlayRate);
 		}
 	}
 

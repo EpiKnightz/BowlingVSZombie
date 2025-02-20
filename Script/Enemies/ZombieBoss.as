@@ -182,9 +182,9 @@ class AZombieBoss : AActor
 	UFUNCTION()
 	private void OnPostCalculation(FName AttrName, float Value)
 	{
-		if (AttrName == n"Damage" && Value > 0)
+		if (AttrName == PrimaryAttrSet::Damage && Value > 0)
 		{
-			float HPPercentage = AbilitySystem.GetValue(n"HP") / AbilitySystem.GetValue(n"MaxHP");
+			float HPPercentage = AbilitySystem.GetValue(PrimaryAttrSet::HP) / AbilitySystem.GetValue(PrimaryAttrSet::MaxHP);
 			ZombieManager.DOnProgressChanged.ExecuteIfBound(HPPercentage);
 			if (HPPercentage <= 0.3 && CurrentPhase == EBossPhase::AttackPhase)
 			{
@@ -203,12 +203,12 @@ class AZombieBoss : AActor
 	void SetData(FZombieDT DataRow)
 	{
 		TMap<FName, float32> Data;
-		Data.Add(n"MaxHP", DataRow.HP);
-		Data.Add(n"Attack", DataRow.Atk);
-		Data.Add(n"MoveSpeed", DataRow.Speed);
-		Data.Add(n"Accel", DataRow.Accel);
-		Data.Add(n"AttackCooldown", DataRow.AttackCooldown);
-		Data.Add(n"Bounciness", DataRow.Bounciness);
+		Data.Add(PrimaryAttrSet::MaxHP, DataRow.HP);
+		Data.Add(AttackAttrSet::Attack, DataRow.Atk);
+		Data.Add(AttackAttrSet::AttackCooldown, DataRow.AttackCooldown);
+		Data.Add(MovementAttrSet::MoveSpeed, DataRow.Speed);
+		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
+		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
 
 		AbilitySystem.ImportData(Data);
 
@@ -260,12 +260,12 @@ class AZombieBoss : AActor
 		{
 			case EBossPhase::SummonPhase:
 			{
-				System::SetTimer(this, n"PlaySummonAnim", AbilitySystem.GetValue(n"AttackCooldown"), false);
+				System::SetTimer(this, n"PlaySummonAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
 				break;
 			}
 			case EBossPhase::AttackPhase:
 			{
-				System::SetTimer(this, n"PlayTripleSummonAnim", AbilitySystem.GetValue(n"AttackCooldown"), false);
+				System::SetTimer(this, n"PlayTripleSummonAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
 				// Spawn faster
 				break;
 			}
@@ -318,7 +318,7 @@ class AZombieBoss : AActor
 				break;
 		}
 		MovementResponseComponent.InitForce(MoveVector, 1);
-		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(n"MoveSpeed"));
+		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
 	}
 
 	void StopMoving()
@@ -431,7 +431,7 @@ class AZombieBoss : AActor
 		// Immune to damage while roaring
 		// UOverrideMod Mod = NewObject(this, UOverrideMod);
 		// Mod.SetupOnce(0, 0);
-		// AbilitySystem.AddModifier(n"Damage", Mod, false);
+		// AbilitySystem.AddModifier(PrimaryAttrSet::Damage, Mod, false);
 		ImmuneMod.AddToAbilitySystem(AbilitySystem);
 		// Switch mode
 		CurrentPhase++;
@@ -441,7 +441,7 @@ class AZombieBoss : AActor
 	UFUNCTION()
 	void OnRoarAnimEnded()
 	{
-		// AbilitySystem.RemoveModifier(n"Damage", this, 0);
+		// AbilitySystem.RemoveModifier(PrimaryAttrSet::Damage, this, 0);
 		ImmuneMod.RemoveFromAbilitySystem(AbilitySystem);
 		switch (CurrentPhase)
 		{
@@ -466,6 +466,9 @@ class AZombieBoss : AActor
 				MovementResponseComponent.EOnBounceCue.Unbind(this, n"OnBounceCue");
 				break;
 			}
+			default:
+				PrintWarning("Phase not supported");
+				break;
 		}
 		StartMoving();
 	}
@@ -501,7 +504,7 @@ class AZombieBoss : AActor
 		}
 		else
 		{
-			// System::SetTimer(this, n"PlayAttackAnim", AbilitySystem.GetValue(n"AttackCooldown"), false);
+			// System::SetTimer(this, n"PlayAttackAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
 			PlayAttackAnim();
 		}
 	}
@@ -538,7 +541,7 @@ class AZombieBoss : AActor
 	{
 		if (IsValid(Target))
 		{
-			Target.DOnTakeDamage.ExecuteIfBound(AbilitySystem.GetValue(n"Attack"));
+			Target.DOnTakeDamage.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack));
 		}
 	}
 

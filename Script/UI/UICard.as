@@ -182,7 +182,7 @@ class UUICard : UUserWidget
 	UFUNCTION()
 	private FEventReply OnRAGEClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
 	{
-		return OnClicked(n"RageRegen");
+		return OnClicked(RageAttrSet::RageRegen);
 	}
 
 	private FEventReply OnClicked(FName KeywordName)

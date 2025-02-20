@@ -46,6 +46,9 @@ struct FStatusDT
 	UTexture2D Icon;
 
 	UPROPERTY()
+	TSubclassOf<UStatusComponent> StatusEffectClass;
+
+	UPROPERTY()
 	ETargetType TargetType = ETargetType::Zombie;
 
 	UPROPERTY()
@@ -58,6 +61,9 @@ struct FStatusDT
 	UPROPERTY()
 	EStackingRule StackingRule = EStackingRule::None;
 
+	UPROPERTY()
+	TMap<FGameplayTag, float> AffectedAttributes;
+
 	/// Particle system to display when this status effect is active.
 	UPROPERTY()
 	UNiagaraSystem StatusVFX;
@@ -65,7 +71,4 @@ struct FStatusDT
 	/// Particle system to display when this status effect is active.
 	UPROPERTY()
 	UNiagaraSystem StatusEndVFX;
-
-	UPROPERTY()
-	TMap<FGameplayTag, float> AffectedAttributes;
 }

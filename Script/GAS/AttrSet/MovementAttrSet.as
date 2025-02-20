@@ -1,3 +1,12 @@
+namespace MovementAttrSet
+{
+	const FName MoveSpeed = n"MoveSpeed";
+	const FName Accel = n"Accel";
+	const FName Bounciness = n"Bounciness";
+	const FName FullMoveSpeed = n"MovementAttrSet.MoveSpeed";
+	const FName FullAccel = n"MovementAttrSet.Accel";
+	const FName FullBounciness = n"MovementAttrSet.Bounciness";
+}
 class UMovementAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")

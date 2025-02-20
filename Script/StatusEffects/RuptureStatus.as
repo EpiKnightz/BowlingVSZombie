@@ -1,4 +1,4 @@
-class URuptureComponent : UStatusComponent
+class URuptureStatus : UStatusComponent
 {
 	FFloat2BoolDelegate DOnOldApplyDamage;
 	float extraDamage;
@@ -8,10 +8,11 @@ class URuptureComponent : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
-			DOnOldApplyDamage.BindUFunction(DamageResponse.DOnTakeDamage.UObject, DamageResponse.DOnTakeDamage.FunctionName);
+			// DOnOldApplyDamage.BindUFunction(DamageResponse.DOnTakeDamage.UObject, DamageResponse.DOnTakeDamage.FunctionName);
+			DOnOldApplyDamage = DamageResponse.DOnTakeDamage;
 			DamageResponse.DOnTakeDamage.Clear();
 			DamageResponse.DOnTakeDamage.BindUFunction(this, n"CustomApplyDamage");
-			extraDamage = FindAttrValue(n"PrimaryAttrSet.Damage");
+			extraDamage = FindAttrValue(PrimaryAttrSet::Damage);
 		}
 	}
 
@@ -33,7 +34,8 @@ class URuptureComponent : UStatusComponent
 		if (IsValid(DamageResponse))
 		{
 			DamageResponse.DOnTakeDamage.Clear();
-			DamageResponse.DOnTakeDamage.BindUFunction(DOnOldApplyDamage.UObject, DOnOldApplyDamage.FunctionName);
+			// DamageResponse.DOnTakeDamage.BindUFunction(DOnOldApplyDamage.UObject, DOnOldApplyDamage.FunctionName);
+			DamageResponse.DOnTakeDamage = DOnOldApplyDamage;
 			DOnOldApplyDamage.Clear();
 		}
 		Super::EndStatusEffect();

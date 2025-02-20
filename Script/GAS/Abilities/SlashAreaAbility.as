@@ -15,7 +15,7 @@ class USlashAreaAbility : UAttackAbility
 		{
 			AttackResponsePtr.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
 			AttackResponsePtr.EOnAnimEndNotify.AddUFunction(this, n"OnAnimEndNotify");
-			AttackResponsePtr.DPlayAttackAnim.ExecuteIfBound();
+			AttackResponsePtr.ActivateAttack();
 		}
 	}
 

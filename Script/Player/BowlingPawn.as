@@ -147,8 +147,8 @@ class ABowlingPawn : APawn
 		SetupPlayerInputComponent(InputComponent);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.Initialize(n"MoveSpeed", 500);
-		AbilitySystem.Initialize(n"Accel", 500);
+		AbilitySystem.Initialize(MovementAttrSet::MoveSpeed, 500);
+		AbilitySystem.Initialize(MovementAttrSet::Accel, 500);
 
 		AnimateInst = Cast<UCustomAnimInst>(HamsterMesh.GetAnimInstance());
 		OriginalPos = GetActorLocation();
@@ -201,7 +201,7 @@ class ABowlingPawn : APawn
 	UFUNCTION()
 	private void OnPostSetCurrentValue(FName AttrName, float Value)
 	{
-		if (AttrName == n"AttackCooldown")
+		if (AttrName == AttackAttrSet::AttackCooldown)
 		{
 			if (IsValid(FloatTween) && FloatTween.IsValid())
 			{
@@ -286,8 +286,8 @@ class ABowlingPawn : APawn
 						{
 							PrintError("Bowling ID not found in data table");
 						}
-						AbilitySystem.SetBaseValue(n"AttackCooldown", CurrentBallData.Cooldown);
-						AbilitySystem.SetBaseValue(n"Attack", CurrentBallData.Atk);
+						AbilitySystem.SetBaseValue(AttackAttrSet::AttackCooldown, CurrentBallData.Cooldown);
+						AbilitySystem.SetBaseValue(AttackAttrSet::Attack, CurrentBallData.Atk);
 						// Print("Attack " + CurrentBallData.Atk);
 						PredictLine.ClearInstances();
 						CurrentTouchTarget = ETouchTarget::Battlefield;
@@ -376,7 +376,7 @@ class ABowlingPawn : APawn
 					SetCooldownPercent(0);
 
 					ClearTween();
-					FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(n"AttackCooldown"), EFCEase::InQuad);
+					FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), EFCEase::InQuad);
 					FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
 					FloatTween.Start();
 
@@ -423,7 +423,7 @@ class ABowlingPawn : APawn
 		if (AttackResponseComponent.DGetAttackLocation.IsBound() && AttackResponseComponent.DGetAttackRotation.IsBound())
 		{
 			ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, AttackResponseComponent.DGetAttackLocation.Execute(), AttackResponseComponent.DGetAttackRotation.Execute()));
-			CurrentBallData.Atk = AbilitySystem.GetValue(n"Attack");
+			CurrentBallData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
 			SpawnedActor.SetData(CurrentBallData);
 			SpawnedActor.SetOwner(this);
 			SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed);
@@ -456,7 +456,7 @@ class ABowlingPawn : APawn
 
 		float moveAmount = targetLocation.Y - currentLocation.Y;
 		float newTimeDilation = Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, moveAmount / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime);
-		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(n"MoveSpeed") * Gameplay::GetWorldDeltaSeconds() / newTimeDilation);
+		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(MovementAttrSet::MoveSpeed) * Gameplay::GetWorldDeltaSeconds() / newTimeDilation);
 		Gameplay::SetGlobalTimeDilation(newTimeDilation);
 		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -MaxSlowTimeDistance, MaxSlowTimeDistance), currentLocation.Z));
 	}

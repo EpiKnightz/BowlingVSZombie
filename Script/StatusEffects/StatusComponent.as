@@ -8,6 +8,9 @@ enum EStackingRule
 
 class UStatusComponent : UActorComponent
 {
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSubclassOf<UModifier> ModClass = UOverrideMod;
+
 	protected int ModID = 1;
 
 	FStatusDT StatusData;
@@ -61,7 +64,7 @@ class UStatusComponent : UActorComponent
 		if (IsApplicable())
 		{
 			StatusInitCue();
-			Activate();
+			Activate(true);
 			if (InitTimes == 0)
 			{
 				SetCurrentDuration(StatusData.Duration);

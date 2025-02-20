@@ -75,57 +75,9 @@ class AStatusManager : AActor
 	{
 		UStatusComponent statusComp;
 		FStatusDT EffectData;
-
-		if (EffectTag.MatchesTag(GameplayTags::Status_Negative))
+		if (EffectMap.Find(EffectTag, EffectData))
 		{
-			if (EffectMap.Find(EffectTag, EffectData))
-			{
-				if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Burn))
-				{
-					statusComp = UBurningComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Chill))
-				{
-					statusComp = UChillingComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Freeze))
-				{
-					statusComp = UFreezeComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Negative_Rupture))
-				{
-					statusComp = URuptureComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else
-				{
-					return false;
-				}
-			}
-		}
-		else if (EffectTag.MatchesTag(GameplayTags::Status_Positive))
-		{
-			if (EffectMap.Find(EffectTag, EffectData))
-			{
-				if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_CooldownBoost))
-				{
-					statusComp = UCooldownComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_AttackBoost))
-				{
-					statusComp = UAttackBoostComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else if (EffectTag.MatchesTagExact(GameplayTags::Status_Positive_SkillCooldownBoost))
-				{
-					statusComp = USkillCooldownComponent::GetOrCreate(Target, EffectTag.TagName);
-				}
-				else
-				{
-					return false;
-				}
-			}
-		}
-		if (IsValid(statusComp))
-		{
+			statusComp = Target.GetOrCreateComponent(EffectData.StatusEffectClass);
 			if (IsValid(StatusBar))
 			{
 				statusComp.DAddStatusUI.BindUFunction(StatusBar, n"AddStatus");

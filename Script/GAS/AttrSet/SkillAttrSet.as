@@ -1,4 +1,13 @@
 const float32 MIN_SKILL_COOLDOWN = 0.1f;
+namespace SkillAttrSet
+{
+	const FName SkillAttackModifier = n"SkillAttackModifier";
+	const FName SkillCooldownModifier = n"SkillCooldownModifier";
+	const FName SkillRangeModifier = n"SkillRangeModifier";
+	const FName FullSkillAttackModifier = n"SkillAttrSet.SkillAttackModifier";
+	const FName FullSkillCooldownModifier = n"SkillAttrSet.SkillCooldownModifier";
+	const FName FullSkillRangeModifier = n"SkillAttrSet.SkillRangeModifier";
+}
 class USkillAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Skill Attribute")

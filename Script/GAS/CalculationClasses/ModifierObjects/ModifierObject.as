@@ -1,3 +1,4 @@
+// Use these for one time effect, or stuff that last permanently, doesn't care about end effect
 class UModifierObject : UDataAsset
 {
 	UPROPERTY()

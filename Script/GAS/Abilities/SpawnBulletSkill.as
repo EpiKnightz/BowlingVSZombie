@@ -15,7 +15,7 @@ class USpawnBulletSkill : UAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.ProjectileData = AbilityData;
-			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(n"Attack");
+			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
 		}
 	}
 };

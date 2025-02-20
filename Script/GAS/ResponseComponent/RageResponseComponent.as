@@ -17,7 +17,7 @@ class URageResponseComponent : UResponseComponent
 	void Tick(float DeltaSeconds)
 	{
 		// Becareful of this starting before actual gameplay
-		AddRage(DeltaSeconds * AbilitySystem.GetValue(n"RageRegen"));
+		AddRage(DeltaSeconds * AbilitySystem.GetValue(RageAttrSet::RageRegen));
 	}
 
 	UFUNCTION()

@@ -1,3 +1,9 @@
+namespace RageAttrSet
+{
+	const FName InitialRage = n"InitialRage";
+	const FName RageRegen = n"RageRegen";
+	const FName RageBonus = n"RageBonus";
+}
 class URageAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Rage Attribute")

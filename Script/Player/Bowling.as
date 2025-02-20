@@ -71,7 +71,7 @@ class ABowling : AProjectile
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.SetBaseValue(n"Accel", 0);
+		AbilitySystem.SetBaseValue(MovementAttrSet::Accel, 0);
 		AbilitySystem.RegisterAttrSet(UMultiplierBounceAttrSet);
 
 		MovementResponseComponent.Initialize(AbilitySystem);

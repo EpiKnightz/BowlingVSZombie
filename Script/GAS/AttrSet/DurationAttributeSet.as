@@ -1,3 +1,10 @@
+namespace DurationAttrSet
+{
+	const FName Duration = n"Duration";
+	const FName Interval = n"Interval";
+	const FName FullDuration = n"DurationAttrSet.Duration";
+	const FName FullInterval = n"DurationAttrSet.Interval";
+}
 class UDurationAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadOnly, Category = "Duration Attribute")

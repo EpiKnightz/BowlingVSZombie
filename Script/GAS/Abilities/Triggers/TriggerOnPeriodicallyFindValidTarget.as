@@ -45,7 +45,7 @@ class UTriggerOnPeriodicallyFindValidTarget : UTrigger
 		TArray<AActor> ignoreActors;
 		ignoreActors.Add(AbilityOwner);
 		TArray<AActor> outActors;
-		System::SphereOverlapActors(AbilityOwner.GetActorLocation(), AbilitySystem.GetValue(n"AttackRange") * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
+		System::SphereOverlapActors(AbilityOwner.GetActorLocation(), AbilitySystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 		float32 Distance = -1;
 		AActor NearestTarget = Gameplay::FindNearestActor(AbilityOwner.GetActorLocation(), outActors, Distance);

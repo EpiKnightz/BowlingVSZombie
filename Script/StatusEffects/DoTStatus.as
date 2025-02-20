@@ -1,4 +1,4 @@
-class UDoTComponent : UStatusComponent
+class UDoTStatus : UStatusComponent
 {
 	float Interval;
 	float CurrentInterval = -1;
@@ -10,7 +10,7 @@ class UDoTComponent : UStatusComponent
 
 	void DoInitChildren() override
 	{
-		Interval = FindAttrValue(n"DurationAttributeSet.Interval");
+		Interval = FindAttrValue(DurationAttrSet::FullInterval);
 		FindDamageSource();
 		CurrentInterval = Interval;
 
@@ -25,7 +25,7 @@ class UDoTComponent : UStatusComponent
 
 	void FindDamageSource()
 	{
-		DamagePerInterval = FindAttrValue(n"AttackAttrSet.Attack");
+		DamagePerInterval = FindAttrValue(AttackAttrSet::FullAttack);
 	}
 
 	bool ActionPerInterval()

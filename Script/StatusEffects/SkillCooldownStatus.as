@@ -1,13 +1,13 @@
 
-class USkillCooldownComponent : UStatusComponent
+class USkillCooldownStatus : UStatusComponent
 {
 	void DoInitChildren() override
 	{
 		auto PlayerResponse = USkillResponseComponent::Get(GetOwner());
 		if (IsValid(PlayerResponse))
 		{
-			UOverrideMod Mod = NewObject(this, UOverrideMod);
-			Mod.SetupOnce(ModID, FindAttrValue(n"SkillAttrSet.SkillCooldownModifier"));
+			auto Mod = NewObject(this, ModClass);
+			Mod.SetupOnce(ModID, FindAttrValue(SkillAttrSet::FullSkillCooldownModifier));
 			PlayerResponse.DOnChangeSkillCooldownModifier.ExecuteIfBound(Mod);
 		}
 	}

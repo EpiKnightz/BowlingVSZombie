@@ -1,5 +1,15 @@
 const float32 MIN_ATTACK_COOLDOWN = 0.1f;
 
+namespace AttackAttrSet
+{
+	const FName Attack = n"Attack";
+	const FName AttackCooldown = n"AttackCooldown";
+	const FName AttackRange = n"AttackRange";
+	const FName FullAttack = n"AttackAttrSet.Attack";
+	const FName FullAttackCooldown = n"AttackAttrSet.AttackCooldown";
+	const FName FullAttackRange = n"AttackAttrSet.AttackRange";
+}
+
 class UAttackAttrSet : ULiteAttrSet
 {
 	UPROPERTY(BlueprintReadWrite, Category = "Attack Attribute")

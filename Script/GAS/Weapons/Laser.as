@@ -80,7 +80,7 @@ class ALaser : AProjectile
 				OnBulletImpact();
 			}
 		}
-		Print("Hit");
+		// Print("Hit");
 		OutActors.Empty();
 	}
 
