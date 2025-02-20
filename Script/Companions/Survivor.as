@@ -338,9 +338,9 @@ class ASurvivor : AHumanlite
 	{
 		if (!DamageResponseComponent.bIsDead)
 		{
-			float PlayRate = AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
-			PlayRate = Weapon.AttackAnim.PlayLength > PlayRate ? Weapon.AttackAnim.PlayLength / PlayRate : 1;
-			AnimateInst.Montage_Play(Weapon.AttackAnim, PlayRate);
+			// float PlayRate = AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
+			// PlayRate = Weapon.AttackAnim.PlayLength > PlayRate ? Weapon.AttackAnim.PlayLength / PlayRate : 1;
+			AnimateInst.Montage_Play(Weapon.AttackAnim);
 		}
 	}
 
