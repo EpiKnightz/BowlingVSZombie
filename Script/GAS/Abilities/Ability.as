@@ -3,7 +3,6 @@ class UAbility : ULiteAbilityBase
 	ULiteAbilitySystem AbilitySystem;
 
 	UTrigger Trigger;
-	FGameplayTagContainer AbilityTags; // Like having status effect chill, pierce, etc
 
 	protected AAbilitiesManager AbilitiesManager;
 	protected FAbilityDT AbilityData;
@@ -68,15 +67,24 @@ class UAbility : ULiteAbilityBase
 	}
 
 	UFUNCTION()
-	void StopAbility()
+	void OnAbilityEnd()
 	{
+		if (AbilityData.AbilityTags.HasTagExact(GameplayTags::Description_Skill_Rage))
+		{
+			auto RageResponsePtr = URageResponseComponent::Get(AbilitySystem.GetOwner());
+			if (IsValid(RageResponsePtr))
+			{
+				RageResponsePtr.OnRageSkillEnd();
+			}
+		}
 	}
 
 	UFUNCTION()
 	void RemoveAbility()
 	{
-		StopAbility();
+		// Be careful with calling onabilityend here
 		Trigger.StopTrigger();
+		OnAbilityEnd();
 		AbilitySystem.DeregAbility(Key);
 	}
 };

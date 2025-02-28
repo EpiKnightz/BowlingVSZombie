@@ -38,11 +38,13 @@ class ABullet : AProjectile
 	UFUNCTION()
 	private void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		CheckForCollision(OtherActor);
-		OnBulletImpact();
+		if (!DealDamage(OtherActor))
+		{
+			OnBulletImpact();
+		}
 	}
 
-	void CheckForCollision(AActor OtherActor)
+	bool DealDamage(AActor OtherActor)
 	{
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
@@ -51,15 +53,16 @@ class ABullet : AProjectile
 				&& ProjectileDataComp.ProjectileData.Atk != ProjectileSpec::UNINIT_VALUE)
 			{
 				// This is because the atk should already been buff/debuff at spawned
-				DamageResponse.TakeHit(ProjectileDataComp.ProjectileData.Atk);
+				DamageResponse.DOnTakeHit.ExecuteIfBound(ProjectileDataComp.ProjectileData.Atk);
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
 					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
 				}
-				OnBulletImpact();
+				return true;
 			}
 		}
+		return false;
 	}
 
 	// UFUNCTION(BlueprintOverride)
@@ -75,13 +78,19 @@ class ABullet : AProjectile
 	void OnBulletImpact()
 	{
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
-		DestroyActor();
+		if (!ProjectileDataComp.ProjectileData.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
+		{
+			DestroyActor();
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
 	void ActorBeginOverlap(AActor OtherActor)
 	{
-		CheckForCollision(OtherActor);
+		if (DealDamage(OtherActor))
+		{
+			OnBulletImpact();
+		}
 	}
 
 	void SetHoming(USceneComponent Target)

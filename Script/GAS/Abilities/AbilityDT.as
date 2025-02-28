@@ -1,14 +1,3 @@
-enum EAbilityTriggerType
-{
-	OnOverlap,
-	OnOverlapMarkTarget,
-	OnTimeLoop,
-	OnAttackCooldown,
-	OnSetup,
-	OnRageFull,
-	None,
-}
-
 struct FAbilityDT
 {
 	UPROPERTY()

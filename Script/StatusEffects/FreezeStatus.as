@@ -49,7 +49,7 @@ class UFreezeStatus : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
-			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(PrimaryAttrSet::Damage));
+			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(PrimaryAttrSet::FullDamage));
 		}
 
 		Super::EndStatusEffect();

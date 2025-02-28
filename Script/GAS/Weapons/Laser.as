@@ -74,9 +74,14 @@ class ALaser : AProjectile
 		for (AActor overlappedActor : OutActors)
 		{
 			UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
-			if (IsValid(DamageResponse))
+			if (IsValid(DamageResponse) && ProjectileDataComp.ProjectileData.Atk != ProjectileSpec::UNINIT_VALUE)
 			{
-				DamageResponse.DOnTakeHit.ExecuteIfBound(10);
+				DamageResponse.DOnTakeHit.ExecuteIfBound(ProjectileDataComp.ProjectileData.Atk);
+				auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
+				if (IsValid(StatusResponse))
+				{
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+				}
 				OnBulletImpact();
 			}
 		}

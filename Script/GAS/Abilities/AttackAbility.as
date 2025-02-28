@@ -2,6 +2,15 @@ class UAttackAbility : UAbility
 {
 	UAttackResponseComponent AttackResponsePtr;
 
+	bool SetupAbilityChild() override
+	{
+		if (GetAttackRespComp() && AbilityData.AbilityID.IsValid())
+		{
+			return true;
+		}
+		return false;
+	}
+
 	protected bool GetAttackRespComp()
 	{
 		AttackResponsePtr = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
@@ -13,5 +22,6 @@ class UAttackAbility : UAbility
 	{
 		AttackResponsePtr.EOnAnimHitNotify.UnbindObject(this);
 		AttackResponsePtr.EOnAnimEndNotify.UnbindObject(this);
+		OnAbilityEnd();
 	}
 }

@@ -106,7 +106,7 @@ class ABowling : AProjectile
 
 		RotatingComp.RotationRate = BASE_ROTATION_RATE * Data.BowlingSpeed;
 
-		SetPiercable(ProjectileDataComp.ProjectileData.bIsPiercable);
+		SetPiercable(ProjectileDataComp.ProjectileData.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing));
 	}
 
 	UFUNCTION()
@@ -122,7 +122,7 @@ class ABowling : AProjectile
 								   0 :
 								   MultiplierResponseComponent.DCaluclateMultiplier.Execute(ProjectileDataComp.ProjectileData.Atk);
 				// This is because the atk should already been buff/debuff at spawned time.
-				DamageResponse.TakeHit(Damage);
+				DamageResponse.DOnTakeHit.ExecuteIfBound(Damage);
 				if (Damage > 0)
 				{
 					auto StatusResponse = UStatusResponseComponent::Get(OtherActor);

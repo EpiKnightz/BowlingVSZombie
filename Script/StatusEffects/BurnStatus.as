@@ -3,7 +3,7 @@ class UBurnStatus : UDoTStatus
 {
 	void FindDamageSource() override
 	{
-		DamagePerInterval = FindAttrValue(PrimaryAttrSet::Damage);
+		DamagePerInterval = FindAttrValue(PrimaryAttrSet::FullDamage);
 	}
 
 	bool ActionPerInterval() override

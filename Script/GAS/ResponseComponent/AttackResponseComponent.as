@@ -11,6 +11,7 @@ class UAttackResponseComponent : UResponseComponent
 	FVoidEvent EOnAnimHitNotify;
 	FVoidEvent EOnAnimEndNotify;
 	FVoidDelegate DPlayAttackAnim;
+	FVoidEvent EOnPreAttackActivate;
 	private FVoidDelegate DBackupPlayAttackAnim;
 	FActorEvent EOnBeginOverlapEvent;
 	FName2VectorDelegate DGetSocketLocation;
@@ -38,6 +39,7 @@ class UAttackResponseComponent : UResponseComponent
 	{
 		if (DPlayAttackAnim.IsBound())
 		{
+			EOnPreAttackActivate.Broadcast();
 			DPlayAttackAnim.Execute();
 			return true;
 		}

@@ -1,14 +1,5 @@
 class USlashAreaAbility : UAttackAbility
 {
-	bool SetupAbilityChild() override
-	{
-		if (GetAttackRespComp() && AbilityData.AbilityID.IsValid())
-		{
-			return true;
-		}
-		return false;
-	}
-
 	void ActivateAbilityChild(AActor OtherActor) override
 	{
 		if (IsValid(AttackResponsePtr))
@@ -35,8 +26,7 @@ class USlashAreaAbility : UAttackAbility
 				UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
 				if (IsValid(DamageResponse))
 				{
-					// Todo: Remove hardcoded damage
-					DamageResponse.DOnTakeHit.ExecuteIfBound(100);
+					DamageResponse.DOnTakeHit.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack));
 				}
 			}
 		}

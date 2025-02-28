@@ -1,5 +1,6 @@
 const float TIME_SCALE_WHEN_SPAWNED_CARD = 0.05;
 const int MAX_RANDOM_RETRY = 6;
+const float STARTING_ATTENTION_BAR_PERCENT = 0.8;
 
 class AOptionCardManager : AActor
 {
@@ -16,7 +17,7 @@ class AOptionCardManager : AActor
 	private int LastSpawnedID = -1;
 	private int SpawnWaveCount = 0;
 	private float AttentionBarPercent = 0;
-	private float AttentionFillRate = 0.5; // Equal to 20s to fill. TODO: Make this a data
+	private float AttentionFillRate = 0.05; // Equal to 20s to fill. TODO: Make this a data
 	private int AttentionStack = 0;
 
 	FTagSurvivor2DataDelegate DCreateSurvivorFromTag;

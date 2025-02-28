@@ -12,7 +12,7 @@ class URuptureStatus : UStatusComponent
 			DOnOldApplyDamage = DamageResponse.DOnTakeDamage;
 			DamageResponse.DOnTakeDamage.Clear();
 			DamageResponse.DOnTakeDamage.BindUFunction(this, n"CustomApplyDamage");
-			extraDamage = FindAttrValue(PrimaryAttrSet::Damage);
+			extraDamage = FindAttrValue(PrimaryAttrSet::FullDamage);
 		}
 	}
 

@@ -29,7 +29,7 @@ class UFrenzyAbility : UStatusAbility
 		}
 		FloatTween = UFCTweenBPActionFloat::TweenFloat(-90, 90, 1, EFCEase::Linear, 0, 0, 0, 5, 0, true);
 		FloatTween.ApplyEasing.AddUFunction(this, n"SetRotation");
-		FloatTween.OnComplete.AddUFunction(this, n"ResetRotation");
+		FloatTween.OnComplete.AddUFunction(this, n"OnAbilityEnd");
 		FloatTween.Start();
 	}
 
@@ -37,6 +37,12 @@ class UFrenzyAbility : UStatusAbility
 	void SetRotation(float32 Rotation)
 	{
 		RootTransform.SetWorldRotation(FRotator(0, Rotation, 0));
+	}
+
+	void OnAbilityEnd() override
+	{
+		ResetRotation();
+		Super::OnAbilityEnd();
 	}
 
 	UFUNCTION()

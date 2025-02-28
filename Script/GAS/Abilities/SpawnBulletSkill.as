@@ -1,4 +1,4 @@
-class USpawnBulletSkill : UAbility
+class USpawnBulletSkill : UAttackAbility
 {
 	UPROPERTY(Category = Attributes, EditAnywhere)
 	FVector OffsetLocation;
@@ -6,6 +6,7 @@ class USpawnBulletSkill : UAbility
 	void ActivateAbilityChild(AActor OtherActor) override
 	{
 		SpawnBullet(AbilitySystem.GetOwner().GetActorLocation(), AbilitySystem.GetOwner().GetActorRotation());
+		OnAbilityEnd();
 	}
 
 	void SpawnBullet(FVector Location, FRotator Rotation)
@@ -15,7 +16,8 @@ class USpawnBulletSkill : UAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.ProjectileData = AbilityData;
-			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
+			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags());
+			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack) * AbilitySystem.GetValue(SkillAttrSet::SkillAttackModifier);
 		}
 	}
 };

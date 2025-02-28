@@ -9,8 +9,8 @@ struct FProjectileSpec
 	UPROPERTY()
 	float32 Atk = ProjectileSpec::UNINIT_VALUE;
 
-	UPROPERTY()
-	bool bIsPiercable = false;
+	// UPROPERTY()
+	// bool bIsPiercable = false;
 
 	UPROPERTY(meta = (Categories = "Status"))
 	FGameplayTagContainer EffectTags;
@@ -18,7 +18,7 @@ struct FProjectileSpec
 	FProjectileSpec& opAssign(FBallDT Other)
 	{
 		Atk = Other.Atk;
-		bIsPiercable = Other.bIsPiercable;
+		// bIsPiercable = Other.bIsPiercable;
 		EffectTags = Other.EffectTags;
 		return this;
 	}
@@ -38,9 +38,10 @@ struct FProjectileSpec
 	FProjectileSpec& opAssign(FWeaponDT Other)
 	{
 		Atk = Other.Attack;
-		if (Other.EffectTags.HasTagExact(GameplayTags::Effect_Piercing))
+		if (Other.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
 		{
-			bIsPiercable = true;
+			// bIsPiercable = true;
+			EffectTags.AddTag(GameplayTags::Status_Neutral_Piercing);
 		}
 		EffectTags = Other.EffectTags.Filter(
 			GameplayTags::Status_Negative.GetSingleTagContainer());
@@ -49,9 +50,10 @@ struct FProjectileSpec
 
 	FProjectileSpec& opAssign(FAbilityDT Other)
 	{
-		if (Other.AbilityTags.HasTagExact(GameplayTags::Effect_Piercing))
+		if (Other.AbilityTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
 		{
-			bIsPiercable = true;
+			// bIsPiercable = true;
+			EffectTags.AddTag(GameplayTags::Status_Neutral_Piercing);
 		}
 		EffectTags = Other.AbilityTags.Filter(
 			GameplayTags::Status_Negative.GetSingleTagContainer());

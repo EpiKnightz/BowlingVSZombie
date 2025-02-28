@@ -37,9 +37,6 @@ struct FBallDT
 	float32 Bounciness = 0.8;
 
 	UPROPERTY()
-	bool bIsPiercable = false;
-
-	UPROPERTY()
 	FGameplayTagContainer EffectTags;
 
 	UPROPERTY()

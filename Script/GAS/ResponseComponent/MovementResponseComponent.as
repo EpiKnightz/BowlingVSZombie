@@ -138,7 +138,7 @@ class UMovementResponseComponent : UResponseComponent
 			{
 				// This bounciness will be multiplier to the already existing bounciness of Movement Component. (default is 0.8)
 				float Bounciness = AbilitySystem.GetValue(MovementAttrSet::Bounciness);
-				MovementComp.Velocity *= AbilitySystem.GetValue(MovementAttrSet::Bounciness);
+				MovementComp.Velocity *= Bounciness;
 				MovementResponse.DOnAddForce.ExecuteIfBound(ImpactVelocity);
 				// Print("ActorBounce: " + Hit.GetActor().GetName() + " with " + ImpactVelocity.ToString() + " result in:" + MovementComp.Velocity.ToString(), 100);
 			}

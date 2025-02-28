@@ -93,8 +93,7 @@ class UUICard : UUserWidget
 			FAbilityDT AbilityData = DGetAbilityDataFromTag.Execute(Tag);
 			if (AbilityData.AbilityID.IsValid())
 			{
-				FName TriggerName = AbilityData.AbilityID.GetCurrentNameOnly();
-				if (TriggerName != n"OnAttackCooldown")
+				if (!AbilityData.TriggerClass.Get().IsChildOf(UTriggerOnAttackCooldown))
 				{
 					FString AbilityKey = AbilityData.Name;
 					AbilityKey.RemoveSpacesInline();

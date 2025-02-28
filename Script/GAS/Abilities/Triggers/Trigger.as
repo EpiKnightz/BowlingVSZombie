@@ -10,6 +10,7 @@ class UTrigger
 		return true;
 	}
 
+	// Called when trigger is disabled
 	void StopTrigger()
 	{}
 };

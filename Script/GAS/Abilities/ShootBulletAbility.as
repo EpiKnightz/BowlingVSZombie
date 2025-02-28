@@ -1,14 +1,5 @@
 class UShootBulletAbility : UAttackAbility
 {
-	bool SetupAbilityChild() override
-	{
-		if (GetAttackRespComp())
-		{
-			return true;
-		}
-		return false;
-	}
-
 	void ActivateAbilityChild(AActor OtherActor) override
 	{
 		if (IsValid(AttackResponsePtr))
@@ -37,15 +28,8 @@ class UShootBulletAbility : UAttackAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.ProjectileData = AbilityData;
+			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
 			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
-		}
-	}
-
-	void StopAbility() override
-	{
-		if (IsValid(AttackResponsePtr))
-		{
-			AttackResponsePtr.EOnAnimHitNotify.UnbindObject(this);
 		}
 	}
 };

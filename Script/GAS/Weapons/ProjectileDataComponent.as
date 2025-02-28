@@ -7,4 +7,12 @@ class UProjectileDataComponent : UActorComponent
 	{
 		ProjectileData.Atk = iAtk;
 	}
+
+	void AddEffects(FGameplayTagContainer NewEffects)
+	{
+		if (NewEffects.Num() > 0)
+		{
+			ProjectileData.EffectTags.AppendTags(NewEffects);
+		}
+	}
 };
