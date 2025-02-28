@@ -76,9 +76,6 @@ class AZombie : AHumanlite
 	float delayMove = 2.f;
 	bool bIsAttacking = false;
 
-	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
-
 	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
 
 	UPROPERTY(DefaultComponent)
@@ -102,9 +99,6 @@ class AZombie : AHumanlite
 		AnimateInst = Cast<UZombieAnimInst>(BodyMesh.GetAnimInstance());
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
-		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 

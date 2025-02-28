@@ -156,7 +156,18 @@ class UWeapon : UStaticMeshComponent
 			UAdditiveMod WeaponAtkMod = NewObject(this, UAdditiveMod);
 			WeaponAtkMod.SetupOnce(1, Data.Attack);
 			AbilitySys.AddModifier(AttackAttrSet::Attack, WeaponAtkMod);
+			AbilitySys.AddGameplayTags(Data.EffectTags);
 		}
+	}
+
+	UFUNCTION()
+	void RemoveWeapon()
+	{
+		// auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+		// if (IsValid(AbilitySys))
+		// {
+		// 	AbilitySys.RemoveModifier(AttackAttrSet::Attack, this, 1);
+		// }
 	}
 
 	UFUNCTION()

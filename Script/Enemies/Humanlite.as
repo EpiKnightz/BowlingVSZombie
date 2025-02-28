@@ -57,6 +57,9 @@ class AHumanlite : AActor
 	UWidgetComponent HPWorldWidget;
 	UUIHPBar HPBarWidget;
 
+	UPROPERTY(DefaultComponent)
+	ULiteAbilitySystem AbilitySystem;
+
 	protected UFCTweenBPActionFloat FloatTween;
 	protected UColorOverlay ColorOverlay;
 	protected FLinearColor DamageColor = FLinearColor::Red;
@@ -72,7 +75,7 @@ class AHumanlite : AActor
 		ColorOverlay.SetupDynamicMaterial(BodyMesh.GetMaterial(0));
 		BodyMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 		HeadMesh.SetMaterial(0, ColorOverlay.DynamicMat);
-		AccessoryMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+		// AccessoryMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -80,6 +83,10 @@ class AHumanlite : AActor
 	{
 		HPBarWidget = Cast<UUIHPBar>(HPWorldWidget.GetWidget());
 		StatusBarWidget = Cast<UUIStatusBar>(StatusWorldWidget.GetWidget());
+
+		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
+		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
+		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 	}
 
 	void SetMeshes(USkeletalMesh InBodyMesh, UStaticMesh InHeadMesh, UStaticMesh InAccMesh)

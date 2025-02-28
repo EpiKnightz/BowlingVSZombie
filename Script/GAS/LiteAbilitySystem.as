@@ -47,9 +47,11 @@ struct FModifierContainer
 class ULiteAbilitySystem : ULiteAbilitySystemComponent
 {
 	private FGameplayTagContainer ActorTags;
+	private TMap<int, FGameplayTag> TempTags;
+	private int CurrentTempKey = 0;
 
-	FVoidEvent EOnActorTagAdded;
-	FVoidEvent EOnActorTagRemoved;
+	FGTagContainerEvent EOnActorTagAdded;
+	FGameplayTagEvent EOnActorTagRemoved;
 	FNameFloatEvent EOnPostSetCurrentValue;
 	FNameFloatEvent EOnPostCalculation;
 	FNameFloatEvent EOnPostSetBaseValue;
@@ -65,7 +67,46 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 		{
 			// Already check for uniqueness above so just add fast
 			ActorTags.AddTagFast(Tag);
-			EOnActorTagAdded.Broadcast();
+			EOnActorTagAdded.Broadcast(Tag.GetSingleTagContainer());
+		}
+	}
+
+	UFUNCTION()
+	void AddGameplayTags(FGameplayTagContainer Tags)
+	{
+		ActorTags.AppendTags(Tags);
+		EOnActorTagAdded.Broadcast(Tags);
+	}
+
+	UFUNCTION()
+	void AddTempGameplayTags(FGameplayTagContainer Tags)
+	{
+		for (int i = 0; i < Tags.Num(); i++)
+		{
+			AddTempGameplayTag(Tags.GameplayTags[i]);
+		}
+	}
+
+	UFUNCTION()
+	int AddTempGameplayTag(FGameplayTag Tag)
+	{
+		if (!ActorTags.HasTag(Tag))
+		{
+			CurrentTempKey++;
+			TempTags.Add(CurrentTempKey, Tag);
+			EOnActorTagAdded.Broadcast(Tag.GetSingleTagContainer());
+			return CurrentTempKey;
+		}
+		return -1;
+	}
+
+	UFUNCTION()
+	void RemoveTempGameplayTag(int Key)
+	{
+		if (TempTags.Contains(Key))
+		{
+			EOnActorTagRemoved.Broadcast(TempTags[Key]);
+			TempTags.Remove(Key);
 		}
 	}
 
@@ -75,13 +116,33 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 		if (ActorTags.HasTag(Tag))
 		{
 			ActorTags.RemoveTag(Tag);
-			EOnActorTagRemoved.Broadcast();
+			EOnActorTagRemoved.Broadcast(Tag);
 		}
+	}
+
+	UFUNCTION()
+	FGameplayTagContainer GetCurrentActorTags()
+	{
+		FGameplayTagContainer CurrentTags = ActorTags;
+		TArray<FGameplayTag> TempTagsArray;
+		TempTags.GetValues(TempTagsArray);
+		if (TempTagsArray.Num() > 0)
+		{
+			for (int i = 0; i < TempTagsArray.Num(); i++)
+			{
+				if (!CurrentTags.HasTagExact(TempTagsArray[i]))
+				{
+					CurrentTags.AddTag(TempTagsArray[i]);
+				}
+			}
+		}
+		return CurrentTags;
 	}
 
 	UFUNCTION()
 	bool CheckForConditionalTag(FGameplayTag TagToCheck)
 	{
+		// Hmm maybe check for tags in temp tags?
 		return ActorTags.HasTag(TagToCheck);
 	}
 

@@ -23,31 +23,31 @@ struct FSurvivorDT
 	UPROPERTY()
 	int Cost = 100;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 HP = 100;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 InitialRage = 0;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 RageRegen = 4;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 RageBonus = 10;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 Atk = 10;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 Speed = 0;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 Accel = 0;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 AttackCooldown = 1.f;
 
-	UPROPERTY()
+	UPROPERTY(Category = BaseStats)
 	float32 Bounciness = 0.05;
 
 	UPROPERTY()

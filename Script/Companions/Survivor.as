@@ -19,9 +19,6 @@ class ASurvivor : AHumanlite
 	UWidgetComponent RageWorldWidget;
 	UUIRageBar RageBarWidget;
 
-	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
-
 	default TargetResponseComponent.TargetType = ETargetType::Survivor;
 
 	UPROPERTY(DefaultComponent)
@@ -59,15 +56,15 @@ class ASurvivor : AHumanlite
 		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
 		AnimateInst.OnMontageEnded.AddUFunction(this, n"OnMontageEnded");
 
-		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
 		AbilitySystem.RegisterAttrSet(URageAttrSet);
 		AbilitySystem.RegisterAttrSet(USkillAttrSet);
 		AbilitySystem.SetBaseValue(MovementAttrSet::Accel, 0);
+		AbilitySystem.EOnActorTagAdded.AddUFunction(this, n"OnActorTagAdded");
+		AbilitySystem.EOnActorTagRemoved.AddUFunction(this, n"OnActorTagRemoved");
 
 		AttackResponseComponent.Initialize(AbilitySystem);
 		AttackResponseComponent.SetupAttack(n"PlayAttackAnim");
+		AttackResponseComponent.EOnBeginOverlapEvent.AddUFunction(RageResponseComponent, n"OnBeginOverlap");
 		TargetResponseComponent.Initialize(AbilitySystem);
 		DamageResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.Initialize(AbilitySystem);
@@ -155,6 +152,8 @@ class ASurvivor : AHumanlite
 		AttackResponseComponent.DGetAttackRotation.BindUFunction(this, n"GetAttackRotation");
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(Weapon, n"AttackHitCue");
 		AttackResponseComponent.DGetSocketLocation.BindUFunction(this, n"GetSocketLocation");
+		AbilitySystem.AddGameplayTags(DataRow.EffectTags);
+
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
@@ -165,6 +164,7 @@ class ASurvivor : AHumanlite
 	{
 		if (IsValid(Weapon))
 		{
+			// Weapon.RemoveWeapon();
 			Weapon.ForceDestroyComponent();
 			Weapon = nullptr;
 		}
@@ -351,6 +351,24 @@ class ASurvivor : AHumanlite
 		// {
 		// AttackResponseComponent.EOnAnimEndNotify.Broadcast();
 		//}
+	}
+
+	UFUNCTION()
+	private void OnActorTagAdded(FGameplayTagContainer TagContainer)
+	{
+		if (TagContainer.HasTagExact(GameplayTags::Description_Weapon_DualWield))
+		{
+			AnimateInst.DualWieldRate = 1;
+		}
+	}
+
+	UFUNCTION()
+	private void OnActorTagRemoved(FGameplayTag Tag)
+	{
+		if (Tag.MatchesTag(GameplayTags::Description_Weapon_DualWield))
+		{
+			AnimateInst.DualWieldRate = 0;
+		}
 	}
 
 	void PlayDeadAnim(int AnimIndex) override
