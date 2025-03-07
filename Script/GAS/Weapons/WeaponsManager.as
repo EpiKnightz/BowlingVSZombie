@@ -51,23 +51,23 @@ class AWeaponsManager : AActor
 	}
 
 	UFUNCTION()
-	FWeaponDT CreateWeaponFromTag(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr)
+	FWeaponDT CreateWeaponFromTag(FGameplayTag WeaponTag, AActor Target, UWeapon& WeaponPtr, bool bIsMainWeapon = true)
 	{
 		FWeaponDT WeaponData;
 		if (WeaponsMap.Find(WeaponTag, WeaponData))
 		{
-			CreateWeapon(WeaponData, Target, WeaponPtr);
+			CreateWeapon(WeaponData, Target, WeaponPtr, bIsMainWeapon);
 		}
 		else
 		{
-			PrintError("CreateRandomWeapon: Weapon Tag not found");
+			PrintError("CreateWeaponFromTag: Weapon Tag not found");
 		}
 		return WeaponData;
 	}
 
 	// IMPORTANT: WeaponPtr should be nullptr
 	UFUNCTION()
-	void CreateWeapon(FWeaponDT WeaponData, AActor Target, UWeapon& WeaponPtr)
+	void CreateWeapon(FWeaponDT WeaponData, AActor Target, UWeapon& WeaponPtr, bool bIsMainWeapon = true)
 	{
 		if (WeaponPtr != nullptr)
 		{
@@ -75,15 +75,17 @@ class AWeaponsManager : AActor
 			return;
 		}
 
+		FName WeaponName = FName("Weapon_" + bIsMainWeapon);
+
 		if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Range))
 		{
-			WeaponPtr = UWeaponGun::Create(Target, WeaponData.WeaponID.TagName);
+			WeaponPtr = UWeaponGun::Create(Target, WeaponName);
 		}
 		else if (WeaponData.WeaponID.MatchesTag(GameplayTags::Weapon_Melee))
 		{
-			WeaponPtr = UWeaponSword::Create(Target, WeaponData.WeaponID.TagName);
+			WeaponPtr = UWeaponSword::Create(Target, WeaponName);
 		}
-		WeaponPtr.SetData(WeaponData);
-		WeaponPtr.Setup();
+		WeaponPtr.SetData(WeaponData, bIsMainWeapon);
+		WeaponPtr.Setup(bIsMainWeapon);
 	}
 };

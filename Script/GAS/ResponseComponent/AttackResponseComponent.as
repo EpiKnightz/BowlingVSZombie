@@ -7,6 +7,8 @@ class UAttackResponseComponent : UResponseComponent
 
 	FVectorReturnDelegate DGetAttackLocation;
 	FRotatorReturnDelegate DGetAttackRotation;
+	FVectorReturnDelegate DGetOffhandAttackLocation;
+	// FRotatorReturnDelegate DGetOffhandAttackRotation;
 
 	FVoidEvent EOnAnimHitNotify;
 	FVoidEvent EOnAnimEndNotify;
@@ -44,6 +46,12 @@ class UAttackResponseComponent : UResponseComponent
 			return true;
 		}
 		return false;
+	}
+
+	UFUNCTION()
+	bool IsDualWield()
+	{
+		return AbilitySystem.HasTag(GameplayTags::Description_Weapon_DualWield);
 	}
 
 	UFUNCTION()

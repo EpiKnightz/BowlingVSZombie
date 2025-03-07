@@ -8,7 +8,8 @@ class ASurvivor : AHumanlite
 	default BodyMesh.SetRelativeLocationAndRotation(FVector(0, 0, -50), FRotator(0, 90, 0));
 
 	// Static mesh component
-	UWeapon Weapon;
+	UWeapon MainWeapon;
+	UWeapon OffWeapon;
 
 	UCustomAnimInst AnimateInst;
 
@@ -40,6 +41,7 @@ class ASurvivor : AHumanlite
 	default MovementComp.Bounciness = 0.8;
 
 	private EDragState DragState;
+	private FGameplayTag StruckType = GameplayTags::Description;
 
 	FTagAbilitySystemDelegate DRegisterAbilities;
 	FVoidDelegate DRankUpTarget;
@@ -99,6 +101,7 @@ class ASurvivor : AHumanlite
 			RageWorldWidget.SetVisibility(false);
 		}
 		RageResponseComponent.EOnRageChange.AddUFunction(RageBarWidget, n"SetRageBar");
+		RageResponseComponent.EOnRageHighlightCue.AddUFunction(RageBarWidget, n"HighlightRageBarAnim");
 
 		auto AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 		if (IsValid(AbilitiesManager))
@@ -146,11 +149,13 @@ class ASurvivor : AHumanlite
 		SetBodyScale(DataRow.BodyScale);
 		SetHeadScale(DataRow.HeadScale);
 
+		ChangeStruckType(DataRow.DescriptionTags.Filter(GameplayTags::Description_StruckType.GetSingleTagContainer()));
 		Collider.OnComponentHit.AddUFunction(this, n"OnHit");
 
 		AttackResponseComponent.DGetAttackLocation.BindUFunction(this, n"GetAttackLocation");
+		AttackResponseComponent.DGetOffhandAttackLocation.BindUFunction(this, n"GetOffhandAttackLocation");
 		AttackResponseComponent.DGetAttackRotation.BindUFunction(this, n"GetAttackRotation");
-		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(Weapon, n"AttackHitCue");
+		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(MainWeapon, n"AttackHitCue");
 		AttackResponseComponent.DGetSocketLocation.BindUFunction(this, n"GetSocketLocation");
 		AbilitySystem.AddGameplayTags(DataRow.EffectTags);
 
@@ -160,18 +165,66 @@ class ASurvivor : AHumanlite
 		AddAbilities(DataRow.AbilitiesTags);
 	}
 
+	UFUNCTION()
+	void ChangeStruckType(FGameplayTagContainer StruckTypeTag)
+	{
+		if (StruckTypeTag.IsValid() && StruckTypeTag.Num() == 1)
+		{
+			StruckType = StruckTypeTag.First();
+			if (StruckType.MatchesTag(GameplayTags::Description_StruckType))
+			{
+				SetCollisionResponse();
+				return;
+			}
+		}
+		StruckType = GameplayTags::Description;
+		PrintError("ChangeStruckType: invalid StruckTypeTag");
+	}
+
+	void SetCollisionResponse(bool bIgnore = false)
+	{
+		if (bIgnore)
+		{
+			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Ignore);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Survivor, ECollisionResponse::ECR_Overlap);
+		}
+		else
+		{
+			ECollisionResponse ColResp = ECollisionResponse::ECR_Overlap;
+			if (StruckType == GameplayTags::Description_StruckType_Bounce)
+			{
+				ColResp = ECollisionResponse::ECR_Block;
+			}
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ColResp);
+			Collider.SetCollisionResponseToChannel(ECollisionChannel::Survivor, ColResp);
+		}
+	}
+
 	void ChangeWeapon(FGameplayTag WeaponTag)
 	{
-		if (IsValid(Weapon))
+		if (IsValid(MainWeapon))
 		{
-			// Weapon.RemoveWeapon();
-			Weapon.ForceDestroyComponent();
-			Weapon = nullptr;
+			// More fun this way
+			// MainWeapon.RemoveWeaponAbility();
+			MainWeapon.ForceDestroyComponent();
+			MainWeapon = nullptr;
 		}
 		AWeaponsManager WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
 		if (IsValid(WeaponsManager))
 		{
-			WeaponsManager.CreateWeaponFromTag(WeaponTag, this, Weapon);
+			WeaponsManager.CreateWeaponFromTag(WeaponTag, this, MainWeapon);
+		}
+		if (AbilitySystem.HasTag(GameplayTags::Description_Weapon_DualWield))
+		{
+			if (IsValid(OffWeapon))
+			{
+				OffWeapon.ForceDestroyComponent();
+				OffWeapon = nullptr;
+			}
+			WeaponsManager.CreateWeaponFromTag(WeaponTag, this, OffWeapon, false);
 		}
 	}
 
@@ -193,6 +246,12 @@ class ASurvivor : AHumanlite
 		DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
 	}
 
+	UFUNCTION()
+	void OnNewCardAdded()
+	{
+		DamageResponseComponent.EOnNewCardAdded.Broadcast();
+	}
+
 	void RegisterDragEvents(bool bEnabled = true)
 	{
 		ABowlingPawn Pawn = Cast<ABowlingPawn>(Gameplay::GetPlayerPawn(0));
@@ -200,10 +259,7 @@ class ASurvivor : AHumanlite
 		if (bEnabled)
 		{
 			DragState = EDragState::Dragging;
-			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Ignore);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Overlap);
+			SetCollisionResponse(true);
 			Pawn.EOnTouchHold.AddUFunction(this, n"OnDragged");
 			Pawn.EOnHoldReleased.AddUFunction(this, n"OnDragReleased");
 		}
@@ -212,9 +268,7 @@ class ASurvivor : AHumanlite
 			DragState = EDragState::None;
 			Pawn.EOnTouchHold.UnbindObject(this);
 			Pawn.EOnHoldReleased.UnbindObject(this);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Block);
-			Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion, ECollisionResponse::ECR_Block);
+			SetCollisionResponse();
 		}
 	}
 
@@ -254,14 +308,15 @@ class ASurvivor : AHumanlite
 			RegisterDragEvents(false);
 			EnableSurvivor();
 			DamageResponseComponent.EOnEnterTheBattlefield.Broadcast();
+			EOnDragReleased.Broadcast();
 		}
 		else
 		{
 			DRankUpTarget.Execute();
 			RegisterDragEvents(false);
+			EOnDragReleased.Broadcast();
 			DestroyActor();
 		}
-		EOnDragReleased.Broadcast();
 	}
 
 	UFUNCTION()
@@ -306,6 +361,12 @@ class ASurvivor : AHumanlite
 			}
 		}
 		OnHit(nullptr, OtherActor, nullptr, FVector::ZeroVector, FHitResult());
+		if (IsValid(OtherTargetComp)
+			&& OtherTargetComp.TargetType == ETargetType::Bowling
+			&& StruckType == GameplayTags::Description_StruckType_Absorb)
+		{
+			OtherActor.DestroyActor();
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -340,7 +401,7 @@ class ASurvivor : AHumanlite
 		{
 			// float PlayRate = AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
 			// PlayRate = Weapon.AttackAnim.PlayLength > PlayRate ? Weapon.AttackAnim.PlayLength / PlayRate : 1;
-			AnimateInst.Montage_Play(Weapon.AttackAnim);
+			AnimateInst.Montage_Play(MainWeapon.AttackAnim);
 		}
 	}
 
@@ -436,7 +497,13 @@ class ASurvivor : AHumanlite
 	UFUNCTION()
 	FVector GetAttackLocation()
 	{
-		return Weapon.GetSocketLocation(n"Muzzle");
+		return MainWeapon.GetSocketLocation(n"Muzzle");
+	}
+
+	UFUNCTION()
+	FVector GetOffhandAttackLocation()
+	{
+		return OffWeapon.GetSocketLocation(n"Muzzle");
 	}
 
 	UFUNCTION()

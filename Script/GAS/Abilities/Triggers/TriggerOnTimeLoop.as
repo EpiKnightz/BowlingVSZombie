@@ -9,7 +9,8 @@ class UTriggerOnTimeLoop : UTriggerOnAttackCooldown
 		if (IsValid(DmgRespComp))
 		{
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
-			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnEnterTheBattlefield");
+			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnFirstActivation");
+			DmgRespComp.EOnNewCardAdded.AddUFunction(this, n"OnFirstActivation");
 			TriggerCooldown = TriggerParam;
 			Ability.AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
 			return true;

@@ -16,10 +16,11 @@ class UWeapon : UStaticMeshComponent
 	protected UColorOverlay ColorOverlay;
 	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 	protected AActor Target;
-	// bool bIsRightHand = true;
 
 	FActorDelegate DOnTargetChosen;
 	FVoidEvent EOnDragReleased;
+
+	int BasicAttackID = -1;
 
 	// APostProcessVolume PPV;
 
@@ -30,15 +31,15 @@ class UWeapon : UStaticMeshComponent
 
 	// Only called from child classes
 	// This is because different weapons have different sockets
-	void Setup(bool RightHand = true)
+	void Setup(bool MainHand = true)
 	{
 	}
 
-	protected void SetupInner(FString AttachLocation, bool bIsRightHand = true)
+	protected void SetupInner(FString AttachLocation, bool bIsMainHand = true)
 	{
 		// PPV = Gameplay::GetActorOfClass(APostProcessVolume);
 		auto CompanionSkeleton = USkeletalMeshComponent::Get(Owner);
-		FName HandName = bIsRightHand ? FName("Right" + AttachLocation) : FName("Left" + AttachLocation);
+		FName HandName = bIsMainHand ? FName("Right" + AttachLocation) : FName("Left" + AttachLocation);
 		if (IsValid(CompanionSkeleton))
 		{
 			AttachTo(CompanionSkeleton, HandName);
@@ -139,35 +140,45 @@ class UWeapon : UStaticMeshComponent
 	}
 
 	UFUNCTION()
-	void SetData(FWeaponDT Data)
+	void SetData(FWeaponDT Data, bool bIsMainWeapon = true)
 	{
 		StaticMesh = Data.WeaponMesh;
-		ShakeStyle = Data.ShakeStyle;
-		WeaponVFX = Data.WeaponVFX;
-		AttackAnim = Data.AttackAnim;
 
-		auto AbilitySys = ULiteAbilitySystem::Get(Owner);
-		if (IsValid(AbilitySys))
+		if (bIsMainWeapon)
 		{
-			Gameplay::GetActorOfClass(AAbilitiesManager)
-				.RegisterAbilities(Data.WeaponAbilities, AbilitySys);
-			// 18-2-25: I decided that everytime a weapon is equipped, the attack value is added to the base value
-			// Still considering if using modifier or straight up adding is better
-			UAdditiveMod WeaponAtkMod = NewObject(this, UAdditiveMod);
-			WeaponAtkMod.SetupOnce(1, Data.Attack);
-			AbilitySys.AddModifier(AttackAttrSet::Attack, WeaponAtkMod);
-			AbilitySys.AddGameplayTags(Data.EffectTags);
+			ShakeStyle = Data.ShakeStyle;
+			WeaponVFX = Data.WeaponVFX;
+			AttackAnim = Data.AttackAnim;
+
+			auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+			if (IsValid(AbilitySys))
+			{
+				// IMPORTANT: Only the basic attack id is saved. Don't remove other ids
+				BasicAttackID = Gameplay::GetActorOfClass(AAbilitiesManager)
+									.RegisterAbilitiesFirstID(Data.WeaponAbilities, AbilitySys);
+
+				// 18-2-25: I decided that everytime a weapon is equipped, the attack value is added to the base value
+				// Still considering if using modifier or straight up adding is better
+				UAdditiveMod WeaponAtkMod = NewObject(this, UAdditiveMod);
+				WeaponAtkMod.SetupOnce(1, Data.Attack);
+				AbilitySys.AddModifier(AttackAttrSet::Attack, WeaponAtkMod);
+				AbilitySys.AddGameplayTags(Data.EffectTags);
+			}
 		}
 	}
 
 	UFUNCTION()
-	void RemoveWeapon()
+	void RemoveWeaponAbility()
 	{
-		// auto AbilitySys = ULiteAbilitySystem::Get(Owner);
-		// if (IsValid(AbilitySys))
-		// {
-		// 	AbilitySys.RemoveModifier(AttackAttrSet::Attack, this, 1);
-		// }
+		if (BasicAttackID != -1)
+		{
+			auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+			if (IsValid(AbilitySys))
+			{
+				// 	AbilitySys.RemoveModifier(AttackAttrSet::Attack, this, 1);
+				AbilitySys.DeregAbility(BasicAttackID);
+			}
+		}
 	}
 
 	UFUNCTION()

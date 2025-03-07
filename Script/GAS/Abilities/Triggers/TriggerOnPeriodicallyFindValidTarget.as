@@ -13,7 +13,8 @@ class UTriggerOnPeriodicallyFindValidTarget : UTrigger
 		if (IsValid(DmgRespComp))
 		{
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
-			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnEnterTheBattlefield");
+			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnFirstActivation");
+			DmgRespComp.EOnNewCardAdded.AddUFunction(this, n"OnFirstActivation");
 			TriggerCooldown = TriggerParam;
 			return true;
 		}
@@ -21,11 +22,12 @@ class UTriggerOnPeriodicallyFindValidTarget : UTrigger
 	}
 
 	UFUNCTION()
-	void OnEnterTheBattlefield()
+	void OnFirstActivation()
 	{
 		// Activate one time, then set timer for subsequent activation
 		PeriodicActivation();
 		System::SetTimer(this, n"PeriodicActivation", TriggerCooldown, true);
+		// Note: This mean the trigger cooldown won't be affected by the cooldown modifier
 	}
 
 	UFUNCTION()

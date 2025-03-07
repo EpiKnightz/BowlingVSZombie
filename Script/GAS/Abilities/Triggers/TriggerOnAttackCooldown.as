@@ -9,7 +9,8 @@ class UTriggerOnAttackCooldown : UTrigger
 		if (IsValid(DmgRespComp))
 		{
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
-			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnEnterTheBattlefield");
+			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnFirstActivation");
+			DmgRespComp.EOnNewCardAdded.AddUFunction(this, n"OnFirstActivation");
 			TriggerCooldown = Ability.AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
 			Ability.AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
 			return true;
@@ -18,7 +19,7 @@ class UTriggerOnAttackCooldown : UTrigger
 	}
 
 	UFUNCTION()
-	void OnEnterTheBattlefield()
+	void OnFirstActivation()
 	{
 		// Activate one time, then set timer for subsequent activation
 		PeriodicActivation();

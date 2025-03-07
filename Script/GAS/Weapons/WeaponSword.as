@@ -1,8 +1,8 @@
 class UWeaponSword : UWeapon
 {
-	void Setup(bool RightHand = true) override
+	void Setup(bool MainHand = true) override
 	{
-		SetupInner("Hand", RightHand);
+		SetupInner("Hand", MainHand);
 	}
 
 	void AttackHitCue() override

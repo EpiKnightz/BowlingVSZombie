@@ -13,6 +13,7 @@ class UDamageResponseComponent : UResponseComponent
 	FVoidEvent EOnDeadCue;
 
 	FVoidEvent EOnEnterTheBattlefield;
+	FVoidEvent EOnNewCardAdded;
 
 	bool bIsDead = false;
 
