@@ -115,6 +115,7 @@ class AZombie : AHumanlite
 		AttackResponseComponent.SetupAttack(n"StartAttacking");
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 		AttackResponseComponent.EOnAnimEndNotify.AddUFunction(this, n"OnAttackEndNotify");
+		AnimateInst.OnAllMontageInstancesEnded.AddUFunction(this, n"OnAllMontageInstancesEnded");
 
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
@@ -147,8 +148,8 @@ class AZombie : AHumanlite
 
 		SetMoveSpeed(DataRow.Speed);
 		delayMove /= AnimateInst.AnimPlayRate;
-		System::SetTimer(this, n"EmergeDone", delayMove, false);
 		System::SetTimer(this, n"InitMovement", delayMove, false);
+		System::SetTimer(this, n"EmergeDone", delayMove, false);
 
 		SetBodyScale(DataRow.BodyScale);
 		SetHeadScale(DataRow.HeadScale);
@@ -218,12 +219,7 @@ class AZombie : AHumanlite
 				else
 				{
 					// Start Attacking was called if there is a new target
-					if (!CheckForNewTarget())
-					{
-						StopAttacking();
-						RemoveTarget();
-						RestartMove();
-					}
+					OnAttackEndNotify();
 				}
 			}
 
@@ -480,6 +476,15 @@ class AZombie : AHumanlite
 	}
 
 	UFUNCTION()
+	private void OnAllMontageInstancesEnded()
+	{
+		if (!bIsAttacking)
+		{
+			OnAttackEndNotify();
+		}
+	}
+
+	UFUNCTION()
 	FVector GetAttackLocation()
 	{
 		FVector Result = GetMainHand().GetSocketLocation(n"Muzzle");
@@ -566,7 +571,7 @@ class AZombie : AHumanlite
 		}
 		else if (AnimateInst.AtkType == EAttackType::Staff)
 		{
-			FindNearestTarget(OverlappingActors, EObjectTypeQuery::Enemy);
+			FindNearestTarget(OverlappingActors, EObjectTypeQuery::Enemy); // Healing staff
 		}
 		else
 		{
@@ -665,7 +670,11 @@ class AZombie : AHumanlite
 		ResetRotation();
 		MovementResponseComponent.SetIsAccelable(true);
 		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
-		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		SetActorTickEnabled(true);
+		if (!bIsAttacking)
+		{
+			MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		}
 	}
 
 	// Called when being bounced/added force by something else
@@ -697,7 +706,10 @@ class AZombie : AHumanlite
 	{
 		delayMove = 0;
 		SetActorTickEnabled(true);
-		MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		if (AnimateInst.bIsEmergeDone == false && !bIsAttacking)
+		{
+			MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+		}
 	}
 
 	void ThrowToGroundTween(float Length, bool bRandomizeY = false)
