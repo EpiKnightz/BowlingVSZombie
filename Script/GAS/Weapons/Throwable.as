@@ -11,6 +11,8 @@ class AThrowable : ABullet
 	default DamageRangeMesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	default DamageRangeMesh.SetCollisionObjectType(ECollisionChannel::Projectile);
 
+	default MovementComp.Velocity = FVector(-1, 0, 0);
+
 	UPROPERTY()
 	float MaxHeight = 500;
 
@@ -67,7 +69,7 @@ class AThrowable : ABullet
 	void OnFlyOutEnd()
 	{
 		DealDamage(nullptr);
-		OnBulletImpact();
+		OnBulletImpactCue();
 	}
 
 	bool DealDamage(AActor OtherActor) override

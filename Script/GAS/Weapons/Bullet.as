@@ -38,10 +38,8 @@ class ABullet : AProjectile
 	UFUNCTION()
 	private void ActorBeginHit(UPrimitiveComponent HitComponent, AActor OtherActor, UPrimitiveComponent OtherComp, FVector NormalImpulse, const FHitResult&in Hit)
 	{
-		if (!DealDamage(OtherActor))
-		{
-			OnBulletImpact();
-		}
+		DealDamage(OtherActor);
+		OnBulletImpactCue(); // Need to test in case a piercing bullet get Hit
 	}
 
 	bool DealDamage(AActor OtherActor)
@@ -75,7 +73,7 @@ class ABullet : AProjectile
 	// 	}
 	// }
 
-	void OnBulletImpact()
+	void OnBulletImpactCue()
 	{
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
 		if (!ProjectileDataComp.ProjectileData.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
@@ -89,7 +87,7 @@ class ABullet : AProjectile
 	{
 		if (DealDamage(OtherActor))
 		{
-			OnBulletImpact();
+			OnBulletImpactCue();
 		}
 	}
 
