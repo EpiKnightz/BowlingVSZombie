@@ -22,6 +22,11 @@ class UFreezeStatus : UStatusComponent
 			StatusResponse.DChangeOverlayColor.ExecuteIfBound(FLinearColor::Blue, true);
 		}
 
+		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
+		if (IsValid(DamageResponse))
+		{
+			DamageResponse.EOnHitCue.AddUFunction(this, n"EndStatusEffect");
+		}
 		// FString FunctionName = "ResetOverlayColor";
 		// System::ClearTimer(GetOwner(), FunctionName);
 	}
@@ -49,6 +54,7 @@ class UFreezeStatus : UStatusComponent
 		auto DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (IsValid(DamageResponse))
 		{
+			DamageResponse.EOnHitCue.Unbind(this, n"EndStatusEffect");
 			DamageResponse.DOnTakeHit.ExecuteIfBound(FindAttrValue(PrimaryAttrSet::FullDamage));
 		}
 
