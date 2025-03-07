@@ -1,4 +1,8 @@
 
+const int LOW_COMBO_THRESHOLD = 10;
+const int MID_COMBO_THRESHOLD = 30;
+const int HIGH_COMBO_THRESHOLD = 50;
+
 class UUIZombieGameplay : UUserWidget
 {
 	UPROPERTY(BindWidget)
@@ -32,7 +36,7 @@ class UUIZombieGameplay : UUserWidget
 	UWidgetAnimation ComboAnim;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
-	UWidgetAnimation ComboHighAnim;
+	UWidgetAnimation ComboEpicAnim;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation AttentionAnim;
@@ -57,6 +61,13 @@ class UUIZombieGameplay : UUserWidget
 
 	UPROPERTY(BindWidget)
 	UProgressBar AttentionBar;
+
+	UPROPERTY(Category = Attributes)
+	FColor LowComboColor;  // White
+	UPROPERTY(Category = Attributes)
+	FColor MidComboColor;  // Yellow
+	UPROPERTY(Category = Attributes)
+	FColor HighComboColor; // Purple
 
 	FVoidEvent EOnAttentionClicked;
 
@@ -159,17 +170,29 @@ class UUIZombieGameplay : UUserWidget
 		{
 			ComboText.SetCurrentValue(NewValue);
 
-			if (NewValue < 10)
+			if (NewValue < HIGH_COMBO_THRESHOLD)
 			{
+				if (NewValue < LOW_COMBO_THRESHOLD)
+				{
+					ComboText.SetColorAndOpacity(LowComboColor);
+				}
+				else if (NewValue < MID_COMBO_THRESHOLD)
+				{
+					ComboText.SetColorAndOpacity(MidComboColor);
+				}
+				else
+				{
+					ComboText.SetColorAndOpacity(HighComboColor);
+				}
 				PlayAnimation(ComboAnim);
 			}
 			else
 			{
-				if (NewValue == 10)
+				if (NewValue == HIGH_COMBO_THRESHOLD)
 				{
 					StopAnimation(ComboAnim);
 				}
-				PlayAnimation(ComboHighAnim);
+				PlayAnimation(ComboEpicAnim);
 			}
 		}
 	}
