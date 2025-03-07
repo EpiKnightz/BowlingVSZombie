@@ -41,16 +41,46 @@ class AAbilitiesManager : AActor
 	}
 
 	UFUNCTION()
-	void RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
+	TArray<int> RegisterAbilitiesRetIDs(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	{
+		TArray<int> RegisterID;
+		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
+		{
+			RegisterID.Add(RegisterSingleAbility(AbilityID, AbilitySystem));
+		}
+		return RegisterID;
+	}
+
+	UFUNCTION()
+	int RegisterAbilitiesFirstID(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	{
+		int RegisterID = -1;
+		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
+		{
+			if (RegisterID == -1)
+			{
+				RegisterID = RegisterSingleAbility(AbilityID, AbilitySystem);
+			}
+			else
+			{
+				RegisterSingleAbility(AbilityID, AbilitySystem);
+			}
+		}
+		return RegisterID;
+	}
+
+	UFUNCTION()
+	int RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
 	{
 		FAbilityDT AbilityData = GetAbilityData(AbilityID);
 		if (AbilityData.AbilityClass.IsValid())
 		{
-			AbilitySystem.RegisterAbility(AbilityData.AbilityClass, AbilityID);
+			return AbilitySystem.RegisterAbility(AbilityData.AbilityClass, AbilityID);
 		}
 		else
 		{
 			PrintError("RegisterSingleAbility: " + AbilityID + " not found");
+			return -1;
 		}
 	}
 };

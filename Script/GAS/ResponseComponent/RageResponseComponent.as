@@ -4,6 +4,7 @@ class URageResponseComponent : UResponseComponent
 {
 	float CurrentRage = 0;
 	FFloatEvent EOnRageChange;
+	FVoidEvent EOnRageHighlightCue;
 	FVoidEvent EOnRageFull;
 	FVoidEvent EOnRageReset;
 	bool bIsRageSkillCasting = false;
@@ -38,19 +39,21 @@ class URageResponseComponent : UResponseComponent
 	void AddBonusRage()
 	{
 		AddRage(AbilitySystem.GetValue(RageAttrSet::RageBonus));
+		EOnRageHighlightCue.Broadcast();
 	}
 
 	UFUNCTION()
 	void AddRage(float Value)
 	{
-		if (CurrentRage < 100)
+		if (CurrentRage < MAX_RAGE)
 		{
 			CurrentRage = Math::Clamp(CurrentRage + Value, 0, MAX_RAGE);
 			EOnRageChange.Broadcast(CurrentRage / MAX_RAGE);
 			if (CurrentRage >= MAX_RAGE)
 			{
-				EOnRageFull.Broadcast();
 				bIsRageSkillCasting = true;
+				EOnRageFull.Broadcast();
+				// EOnRageHighlightCue.Broadcast();
 			}
 		}
 	}
@@ -59,7 +62,7 @@ class URageResponseComponent : UResponseComponent
 	void OnRageSkillEnd()
 	{
 		// Note becareful with Rage reducing effect
-		if (!bIsRageSkillCasting)
+		if (bIsRageSkillCasting)
 		{
 			bIsRageSkillCasting = false;
 			CurrentRage = 0;

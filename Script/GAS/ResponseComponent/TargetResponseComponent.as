@@ -33,6 +33,18 @@ class UTargetResponseComponent : UResponseComponent
 	};
 
 	UFUNCTION()
+	bool IsZombie(AActor OtherActor)
+	{
+		auto TargetRC = UTargetResponseComponent::Get(OtherActor);
+		if (IsValid(TargetRC)
+			&& TargetRC.TargetType == ETargetType::Zombie)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	UFUNCTION()
 	bool IsPierceable(AActor OtherActor)
 	{
 		auto TargetRC = UTargetResponseComponent::Get(OtherActor);

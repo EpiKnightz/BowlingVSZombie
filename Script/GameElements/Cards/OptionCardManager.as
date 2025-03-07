@@ -190,10 +190,12 @@ class AOptionCardManager : AActor
 			if (SelectedCardData.CardType == ECardType::Weapon)
 			{
 				Survivor.ChangeWeapon(SelectedCardData.ItemID);
+				Survivor.OnNewCardAdded();
 			}
 			else if (SelectedCardData.CardType == ECardType::Ability)
 			{
 				Survivor.AddAbility(SelectedCardData.ItemID);
+				Survivor.OnNewCardAdded();
 			}
 		}
 	}

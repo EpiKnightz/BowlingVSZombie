@@ -102,6 +102,7 @@ class UStatusComponent : UActorComponent
 				EOnStackChanged.Broadcast(InitTimes);
 				break;
 			case EStackingRule::Refreshable:
+				InitTimes = 1;
 				SetCurrentDuration(StatusData.Duration);
 				break;
 			case EStackingRule::StackAndRefreshable:

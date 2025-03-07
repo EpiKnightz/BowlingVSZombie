@@ -1,6 +1,6 @@
 const float HEAD_BASE_SCALE = 1 / 2.54;
-const float COLLIDER_BASE_HEIGHT = 100;
-const float COLLIDER_BASE_RADIUS = 50;
+const float COLLIDER_BASE_HEIGHT = 110;
+const float COLLIDER_BASE_RADIUS = 55;
 
 class AHumanlite : AActor
 {
@@ -24,7 +24,7 @@ class AHumanlite : AActor
 	// default HeadMesh.Setrelat(FVector::OneVector * 0.4);
 	default HeadMesh.SetRelativeRotation(FRotator(90, -180, 0));
 
-	UPROPERTY(DefaultComponent, Attach = HeadMesh, AttachSocket = "HEAD_CONTAINER") // , AttachSocket = RightHand
+	UPROPERTY(DefaultComponent, Attach = HeadMesh, AttachSocket = "HEAD_CONTAINER")
 	UStaticMeshComponent AccessoryMesh;
 	default AccessoryMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
 	default AccessoryMesh.CollisionProfileName = n"NoCollision";
@@ -109,8 +109,8 @@ class AHumanlite : AActor
 	{
 		// BodyMesh.SetRelativeScale3D(Scale);
 		SetActorScale3D(Scale);
-		// Collider.CapsuleHalfHeight = COLLIDER_BASE_HEIGHT * Scale.Z;
-		// Collider.CapsuleRadius = COLLIDER_BASE_RADIUS * (Scale.X > Scale.Y ? Scale.X : Scale.Y);
+		Collider.CapsuleHalfHeight = COLLIDER_BASE_HEIGHT * Scale.Z;
+		Collider.CapsuleRadius = COLLIDER_BASE_RADIUS * (Scale.X > Scale.Y ? Scale.X : Scale.Y);
 	}
 
 	void SetTempScale(FVector Scale)
