@@ -1,7 +1,7 @@
 class UFrenzyAbility : UStatusAbility
 {
-	UPROPERTY(BlueprintReadWrite)
-	FGameplayTagContainer StatusEffectTags;
+	// UPROPERTY(BlueprintReadWrite)
+	TArray<FGameplayTag> StatusEffectTags;
 
 	protected UFCTweenBPActionFloat FloatTween;
 
@@ -20,14 +20,14 @@ class UFrenzyAbility : UStatusAbility
 
 	void ActivateAbilityChild(AActor Target) override
 	{
-
-		StatusResponsePtr.ApplyStatusEffect(StatusEffectTags);
+		AbilityData.AbilityParams.GetKeys(StatusEffectTags);
+		StatusResponsePtr.ApplyStatusEffect(GameplayTag::MakeGameplayTagContainerFromArray(StatusEffectTags));
 		if (IsValid(FloatTween) && FloatTween.IsValid())
 		{
 			FloatTween.Stop();
 			FloatTween.ApplyEasing.Clear();
 		}
-		FloatTween = UFCTweenBPActionFloat::TweenFloat(-90, 90, 1, EFCEase::Linear, 0, 0, 0, 5, 0, true);
+		FloatTween = UFCTweenBPActionFloat::TweenFloat(-90, 90, 1, EFCEase::Linear, 0, 0, 0, int(AbilityData.TriggerParam / 2), 0, true);
 		FloatTween.ApplyEasing.AddUFunction(this, n"SetRotation");
 		FloatTween.OnComplete.AddUFunction(this, n"OnAbilityEnd");
 		FloatTween.Start();

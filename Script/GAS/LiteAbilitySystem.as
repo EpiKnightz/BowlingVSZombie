@@ -121,6 +121,12 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	bool HasTag(FGameplayTag Tag)
+	{
+		return GetCurrentActorTags().HasTag(Tag);
+	}
+
+	UFUNCTION()
 	FGameplayTagContainer GetCurrentActorTags()
 	{
 		FGameplayTagContainer CurrentTags = ActorTags;

@@ -1,12 +1,13 @@
 class UAddEffectAbility : UAttackAbility
 {
-	UPROPERTY(BlueprintReadWrite)
+	// UPROPERTY(BlueprintReadWrite)
 	TArray<FGameplayTag> StatusEffectTags;
 
 	private TArray<int> TempKeys;
 
 	void ActivateAbilityChild(AActor Target) override
 	{
+		AbilityData.AbilityParams.GetKeys(StatusEffectTags);
 		for (int i = 0; i < StatusEffectTags.Num(); i++)
 		{
 			int TagKey = AbilitySystem.AddTempGameplayTag(StatusEffectTags[i]);

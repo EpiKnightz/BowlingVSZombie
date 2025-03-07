@@ -25,10 +25,13 @@ struct FAbilityDT
 	TSubclassOf<UTrigger> TriggerClass;
 
 	UPROPERTY()
+	float TriggerParam = 0;
+
+	UPROPERTY()
 	TSubclassOf<UAbility> AbilityClass;
 
 	UPROPERTY()
-	float TriggerParam = 0;
+	TMap<FGameplayTag, float> AbilityParams;
 
 	UPROPERTY()
 	TSubclassOf<AActor> ActorTemplate;

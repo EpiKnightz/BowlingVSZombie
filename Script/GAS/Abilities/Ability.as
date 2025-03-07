@@ -79,12 +79,12 @@ class UAbility : ULiteAbilityBase
 		}
 	}
 
-	UFUNCTION()
+	UFUNCTION(BlueprintOverride)
 	void RemoveAbility()
 	{
 		// Be careful with calling onabilityend here
 		Trigger.StopTrigger();
 		OnAbilityEnd();
-		AbilitySystem.DeregAbility(Key);
+		// AbilitySystem.DeregAbility(Key);
 	}
 };
