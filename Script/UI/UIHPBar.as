@@ -34,6 +34,7 @@ class UUIHPBar : UUserWidget
 	{
 		if (HPBar.IsVisible())
 		{
+			StopAllAnimations();
 			PlayAnimation(FadeOutAnimation);
 		}
 	}

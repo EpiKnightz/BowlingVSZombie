@@ -152,7 +152,7 @@ class ABowling : AProjectile
 	{
 		Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy,
 											   bPierce ? ECollisionResponse::ECR_Overlap : ECollisionResponse::ECR_Block);
-		Collider.SetCollisionResponseToChannel(ECollisionChannel::Companion,
+		Collider.SetCollisionResponseToChannel(ECollisionChannel::Survivor,
 											   bPierce ? ECollisionResponse::ECR_Overlap : ECollisionResponse::ECR_Block);
 	}
 
