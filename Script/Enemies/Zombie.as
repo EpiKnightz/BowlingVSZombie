@@ -73,7 +73,7 @@ class AZombie : AHumanlite
 	FNameEvent EOnZombDie;
 	FFloatNameDelegate DOnZombieReach;
 
-	float delayMove = 2.f;
+	float DelayMove = 2.f;
 	bool bIsAttacking = false;
 
 	private UDamageResponseComponent Target; // Or maybe allow multiple target here? would that be easier?
@@ -147,9 +147,9 @@ class AZombie : AHumanlite
 		AbilitySystem.ImportData(Data);
 
 		SetMoveSpeed(DataRow.Speed);
-		delayMove /= AnimateInst.AnimPlayRate;
-		System::SetTimer(this, n"InitMovement", delayMove, false);
-		System::SetTimer(this, n"EmergeDone", delayMove, false);
+		DelayMove /= AnimateInst.AnimPlayRate;
+		System::SetTimer(this, n"InitMovement", DelayMove, false);
+		System::SetTimer(this, n"EmergeDone", DelayMove, false);
 
 		SetBodyScale(DataRow.BodyScale);
 		SetHeadScale(DataRow.HeadScale);
@@ -199,8 +199,8 @@ class AZombie : AHumanlite
 	UFUNCTION(BlueprintOverride)
 	void Tick(float DeltaSeconds)
 	{
-		delayMove -= DeltaSeconds;
-		if (delayMove <= 0)
+		DelayMove -= DeltaSeconds;
+		if (DelayMove <= 0)
 		{
 
 			FVector loc = GetActorLocation();
@@ -515,7 +515,7 @@ class AZombie : AHumanlite
 	{
 		if (RemoveTarget())
 		{
-			delayMove = WAIT_TARGET_DEAD_TIME;
+			DelayMove = WAIT_TARGET_DEAD_TIME;
 		}
 	}
 
@@ -613,7 +613,7 @@ class AZombie : AHumanlite
 		AnimateInst.Montage_Play(DamageAnim);
 		FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
 		MovementComp.StopMovementImmediately();
-		delayMove = DAMAGE_DELAY;
+		DelayMove = DAMAGE_DELAY;
 		InterruptAttacking();
 	}
 
@@ -647,7 +647,7 @@ class AZombie : AHumanlite
 	{
 		AnimateInst.StopSlotAnimation();
 		AnimateInst.Montage_Play(DeadAnims[AnimIndex], 1);
-		delayMove = DeadAnims[AnimIndex].GetPlayLength();
+		DelayMove = DeadAnims[AnimIndex].GetPlayLength();
 	}
 
 	void SetAttackCooldown(float Value)
@@ -704,7 +704,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	void InitMovement()
 	{
-		delayMove = 0;
+		DelayMove = 0;
 		SetActorTickEnabled(true);
 		if (AnimateInst.bIsEmergeDone == false && !bIsAttacking)
 		{

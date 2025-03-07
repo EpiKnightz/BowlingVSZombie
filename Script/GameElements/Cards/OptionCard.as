@@ -47,7 +47,7 @@ class AOptionCard : AActor
 	protected UColorOverlay ColorOverlay;
 	protected AActor Target;
 	private ASurvivor SpawnedSurvivor;
-	private AActor SpawnedWeapon;
+	private AActor SpawnedWeaponActor;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -95,29 +95,42 @@ class AOptionCard : AActor
 			}
 			case ECardType::Weapon:
 			{
-				SpawnedWeapon = SpawnActor(AActor);
+				SpawnedWeaponActor = SpawnActor(AActor);
 				UWeapon WeaponPtr;
-				FWeaponDT WeaponData = OptionCardManager.DCreateWeaponFromTag.ExecuteIfBound(iCardData.ItemID, SpawnedWeapon, WeaponPtr);
+				FWeaponDT WeaponData = OptionCardManager.DCreateWeaponFromTag.ExecuteIfBound(iCardData.ItemID, SpawnedWeaponActor, WeaponPtr);
 				if (WeaponData.IsValid())
 				{
 					CardData = WeaponData;
 					CardWidget.SetWeaponData(WeaponData);
-					SpawnedWeapon.ActorEnableCollision = true;
+					SpawnedWeaponActor.ActorEnableCollision = true;
 					FRotator NewRotation = WeaponTransform.Rotation.Rotator();
 					if (CardData.ItemID.MatchesTag(GameplayTags::Weapon_Range))
 					{
 						// Range weapon handle are different, so need to rotate it
 						NewRotation -= FRotator(0, 90, 0);
-						SpawnedWeapon.SetActorScale3D(WeaponTransform.Scale3D * 1.25);
+						SpawnedWeaponActor.SetActorScale3D(WeaponTransform.Scale3D * 1.35);
 					}
 					else if (CardData.ItemID.MatchesTag(GameplayTags::Weapon_Melee))
 					{
-						SpawnedWeapon.SetActorScale3D(WeaponTransform.Scale3D);
+						SpawnedWeaponActor.SetActorScale3D(WeaponTransform.Scale3D);
 					}
-					SpawnedWeapon.SetActorLocationAndRotation(WeaponTransform.Location, NewRotation);
-					SpawnedWeapon.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
+					SpawnedWeaponActor.SetActorLocationAndRotation(WeaponTransform.Location, NewRotation);
+					SpawnedWeaponActor.AttachToActor(this, NAME_None, EAttachmentRule::KeepRelative);
 					WeaponPtr.DOnTargetChosen.BindUFunction(OptionCardManager, n"OnTargetChosen");
 					WeaponPtr.EOnDragReleased.AddUFunction(OptionCardManager, n"OnAnyDragReleased");
+
+					if (WeaponData.EffectTags.HasTagExact(GameplayTags::Description_Weapon_DualWield))
+					{
+						auto WeaponMesh = UStaticMeshComponent::Create(this);
+						WeaponMesh.SetStaticMesh(WeaponPtr.StaticMesh);
+						NewRotation += FRotator(180, 270, 0);
+						if (CardData.ItemID.MatchesTag(GameplayTags::Weapon_Range))
+						{
+							WeaponMesh.SetWorldScale3D(WeaponTransform.Scale3D * 1.35);
+						}
+						WeaponMesh.SetRelativeLocationAndRotation(FVector(WeaponTransform.Location.X, -WeaponTransform.Location.Y, 3.5),
+																  NewRotation);
+					}
 				}
 				break;
 			}
@@ -162,13 +175,13 @@ class AOptionCard : AActor
 				}
 				case ECardType::Weapon:
 				{
-					UWeapon WeaponPtr = UWeapon::Get(SpawnedWeapon);
+					UWeapon WeaponPtr = UWeapon::Get(SpawnedWeaponActor);
 					if (IsValid(WeaponPtr))
 					{
-						SpawnedWeapon.DetachFromActor();
+						SpawnedWeaponActor.DetachFromActor();
 						WeaponPtr.ResetTransform();
 						WeaponPtr.RegisterDragEvents();
-						SpawnedWeapon = nullptr;
+						SpawnedWeaponActor = nullptr;
 						OnFinished();
 					}
 					break;
@@ -268,9 +281,9 @@ class AOptionCard : AActor
 		{
 			SpawnedSurvivor.DestroyActor();
 		}
-		if (IsValid(SpawnedWeapon))
+		if (IsValid(SpawnedWeaponActor))
 		{
-			SpawnedWeapon.DestroyActor();
+			SpawnedWeaponActor.DestroyActor();
 		}
 		TextWidget.SetVisibility(false);
 		Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));

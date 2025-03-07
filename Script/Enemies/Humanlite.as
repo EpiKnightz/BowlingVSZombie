@@ -1,6 +1,6 @@
 const float HEAD_BASE_SCALE = 1 / 2.54;
-const float COLLIDER_BASE_HEIGHT = 110;
-const float COLLIDER_BASE_RADIUS = 55;
+const float COLLIDER_BASE_HEIGHT = 100;
+const float COLLIDER_BASE_RADIUS = 50;
 
 class AHumanlite : AActor
 {
