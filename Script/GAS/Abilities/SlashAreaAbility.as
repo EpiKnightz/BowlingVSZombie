@@ -19,7 +19,9 @@ class USlashAreaAbility : UAttackAbility
 			traceObjectTypes.Add(EObjectTypeQuery::Enemy);
 			TArray<AActor> ignoreActors;
 			TArray<AActor> outActors;
-			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), 165, traceObjectTypes, nullptr, ignoreActors, outActors);
+			float Range;
+			AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_Range, Range);
+			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), Range, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 			for (AActor overlappedActor : outActors)
 			{

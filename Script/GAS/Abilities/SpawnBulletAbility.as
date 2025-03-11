@@ -1,10 +1,11 @@
-class USpawnBulletAbility : UAbility
+class USpawnBulletAbility : USkillAbility
 {
 	UPROPERTY(Category = Attributes, EditAnywhere)
 	FVector OffsetLocation;
 
 	float RepeatParam, DelayParam = 0;
 	int RepeatCount = 0;
+	float SkillAttack = 0;
 
 	void ActivateAbilityChild(AActor OtherActor) override
 	{
@@ -12,6 +13,7 @@ class USpawnBulletAbility : UAbility
 			&& AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_Delay, DelayParam))
 		{
 			RepeatCount = 0;
+			SkillAttack = CalculateSkillAttack();
 			RepeatSpawn();
 		}
 		else
@@ -44,20 +46,7 @@ class USpawnBulletAbility : UAbility
 			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
 			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
 
-			float BaseSkillAttack, SkillAttackModifier = 0;
-			if (!AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_BaseSkillAttack, BaseSkillAttack))
-			{
-				// PrintWarning("Missing BaseSkillAttack");
-				BaseSkillAttack = 0;
-			}
-			BaseSkillAttack += AbilitySystem.GetValue(AttackAttrSet::Attack);
-			if (!AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_SkillAttackModifier, SkillAttackModifier))
-			{
-				// PrintWarning("Missing SkillAttackModifier");
-				SkillAttackModifier = 0;
-			}
-			SkillAttackModifier += AbilitySystem.GetValue(SkillAttrSet::SkillAttackModifier);
-			ProjDataComp.ProjectileData.Atk = float32(BaseSkillAttack * SkillAttackModifier);
+			ProjDataComp.ProjectileData.Atk = float32(SkillAttack);
 		}
 		return Actor;
 	}
