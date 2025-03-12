@@ -19,9 +19,10 @@ class USlashAreaAbility : UAttackAbility
 			traceObjectTypes.Add(EObjectTypeQuery::Enemy);
 			TArray<AActor> ignoreActors;
 			TArray<AActor> outActors;
-			float Range;
-			AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_Range, Range);
-			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), Range, traceObjectTypes, nullptr, ignoreActors, outActors);
+			// AbilitySystem.SetBaseValue(AttackAttrSet::AttackRange, 165);
+			float radius = AbilitySystem.GetValue(AttackAttrSet::AttackRange);
+			// Print("SlashAreaAbility: OnAnimHitNotify" + radius);
+			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), AbilitySystem.GetValue(AttackAttrSet::AttackRange), traceObjectTypes, nullptr, ignoreActors, outActors);
 
 			for (AActor overlappedActor : outActors)
 			{

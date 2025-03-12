@@ -45,6 +45,6 @@ class UAttackAttrSet : ULiteAttrSet
 				NewValue = MIN_ATTACK_COOLDOWN;
 			}
 		}
-		return true;
+		return false;
 	}
 };

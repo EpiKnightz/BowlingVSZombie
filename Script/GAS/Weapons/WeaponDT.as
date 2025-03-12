@@ -29,6 +29,9 @@ struct FWeaponDT
 	float AttackRating = 3;
 
 	UPROPERTY()
+	float AttackRange = 100;
+
+	UPROPERTY()
 	UStaticMesh WeaponMesh;
 
 	UPROPERTY()

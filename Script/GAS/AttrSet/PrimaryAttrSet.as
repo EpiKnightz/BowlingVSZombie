@@ -50,7 +50,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 		{
 			if (NewValue == HP.GetCurrentValue())
 			{
-				return true;
+				return true; // Mean skip recalculation
 			}
 			NewValue = Math::Clamp(NewValue, 0.0f, MaxHP.GetCurrentValue());
 		}
@@ -62,7 +62,7 @@ class UPrimaryAttrSet : ULiteAttrSet
 	{
 		if (AttrName == Damage.AttributeName)
 		{
-			Print("Damage: " + Damage.GetCurrentValue());
+			// Print("Damage: " + Damage.GetCurrentValue());
 			HP.SetCurrentValue(Math::Clamp(HP.GetCurrentValue() - Damage.GetCurrentValue(), 0.0f, MaxHP.GetCurrentValue()));
 			Damage.Initialize(0);
 			// Print("HP: " + HP.GetCurrentValue());

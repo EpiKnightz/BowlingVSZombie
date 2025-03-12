@@ -42,7 +42,7 @@ class UMovementAttrSet : ULiteAttrSet
 		{
 			if (NewValue == MoveSpeed.GetCurrentValue())
 			{
-				return true;
+				return true; // Mean skip recalculation
 			}
 		}
 		return false;

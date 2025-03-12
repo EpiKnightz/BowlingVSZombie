@@ -163,6 +163,8 @@ class UWeapon : UStaticMeshComponent
 				WeaponAtkMod.SetupOnce(1, Data.Attack);
 				AbilitySys.AddModifier(AttackAttrSet::Attack, WeaponAtkMod);
 				AbilitySys.AddGameplayTags(Data.EffectTags);
+
+				AbilitySys.SetBaseValue(AttackAttrSet::AttackRange, Data.AttackRange);
 			}
 		}
 	}

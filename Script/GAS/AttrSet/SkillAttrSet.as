@@ -45,6 +45,6 @@ class USkillAttrSet : ULiteAttrSet
 				NewValue = MIN_SKILL_COOLDOWN;
 			}
 		}
-		return true;
+		return false;
 	}
 };
