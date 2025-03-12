@@ -87,6 +87,7 @@ class AHumanlite : AActor
 		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
 		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
 		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
+		AbilitySystem.RegisterAttrSet(UWeaknessAttrSet);
 	}
 
 	void SetMeshes(USkeletalMesh InBodyMesh, UStaticMesh InHeadMesh, UStaticMesh InAccMesh)

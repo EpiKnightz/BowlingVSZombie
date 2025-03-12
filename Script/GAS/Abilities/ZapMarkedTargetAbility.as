@@ -1,6 +1,6 @@
 class UZapMarkedTargetAbility : USkillAbility
 {
-	TArray<FFloat2BoolDelegate> TakeHitArray;
+	TArray<FFloatTag2BoolDelegate> TakeHitArray;
 
 	bool SetupAbilityChild() override
 	{
@@ -18,7 +18,7 @@ class UZapMarkedTargetAbility : USkillAbility
 	{
 		if (TakeHitArray.Num() > 0)
 		{
-			for (FFloat2BoolDelegate Delegate : TakeHitArray)
+			for (FFloatTag2BoolDelegate Delegate : TakeHitArray)
 			{
 				Delegate.ExecuteIfBound(CalculateSkillAttack());
 			}

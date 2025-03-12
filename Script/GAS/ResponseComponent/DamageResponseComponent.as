@@ -1,7 +1,7 @@
 class UDamageResponseComponent : UResponseComponent
 {
-	FFloat2BoolDelegate DOnTakeHit;
-	FFloat2BoolDelegate DOnTakeDamage;
+	FFloatTag2BoolDelegate DOnTakeHit;
+	FFloatTag2BoolDelegate DOnTakeDamage;
 	FFloat2BoolDelegate DOnHPRemoval;
 	FFloat2BoolDelegate DOnHPPercentRemoval;
 	FFloatDelegate DOnDmgReceivedBoost;
@@ -29,7 +29,7 @@ class UDamageResponseComponent : UResponseComponent
 
 	// Take Hit -> Take Damage -> Check is Alive -> DamageCue/Dead Cue
 	UFUNCTION()
-	bool TakeHit(float Damage)
+	bool TakeHit(float Damage, FGameplayTag Element = GameplayTags::Description_Element_Void)
 	{
 		if (!bIsDead)
 		{
@@ -40,7 +40,7 @@ class UDamageResponseComponent : UResponseComponent
 
 			if (Damage > 0)
 			{
-				TakeDamage(Damage);
+				TakeDamage(Damage, Element);
 				// should not apply status here. Only return true value if the damage is taken.
 				// AbilitySystem.ApplyStatusEffects(StatusEffect);
 				return true;
@@ -54,11 +54,11 @@ class UDamageResponseComponent : UResponseComponent
 	}
 
 	UFUNCTION()
-	private bool TakeDamage(float Damage)
+	private bool TakeDamage(float Damage, FGameplayTag Element = GameplayTags::Description_Element_Void)
 	{
 		if (!bIsDead)
 		{
-			AbilitySystem.SetBaseValue(PrimaryAttrSet::Damage, Damage);
+			AbilitySystem.SetBaseValue(PrimaryAttrSet::Damage, CalculateWeakness(Damage, Element));
 			// AbilitySystem.Calculate(PrimaryAttrSet::Damage);
 			if (CheckIsAlive())
 			{
@@ -72,6 +72,27 @@ class UDamageResponseComponent : UResponseComponent
 			}
 		}
 		return false;
+	}
+
+	UFUNCTION()
+	float CalculateWeakness(float Damage, FGameplayTag Element)
+	{
+		if (Element == GameplayTags::Description_Element_Void)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::VoidWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Fire)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::FireWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Water)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::WaterWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Forest)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::ForestWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Earth)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::EarthWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Aether)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::AetherWeaknessMultiplier);
+		else if (Element == GameplayTags::Description_Element_Nether)
+			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::NetherWeaknessMultiplier);
+		else
+			return Damage;
 	}
 
 	UFUNCTION()

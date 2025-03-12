@@ -69,7 +69,7 @@ class USpinAbility : USkillAbility
 			UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
 			if (IsValid(DamageResponse))
 			{
-				DamageResponse.DOnTakeHit.ExecuteIfBound(CalculateSkillAttack());
+				DamageResponse.DOnTakeHit.ExecuteIfBound(CalculateSkillAttack(), GameplayTags::Description_Element_Aether);
 				auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
 				if (IsValid(StatusResponse))
 				{

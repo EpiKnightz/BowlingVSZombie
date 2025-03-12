@@ -4,6 +4,7 @@ delegate int FInt2IntDelegate(int Value);
 delegate float FFloat2FloatDelegate(float Value);
 delegate float32 FFloat2Float32Delegate(float32 Value);
 delegate bool FFloat2BoolDelegate(float Value);
+delegate bool FFloatTag2BoolDelegate(float Value, FGameplayTag Tag = GameplayTags::Description_Element_Void);
 delegate void FVoidDelegate();
 delegate void FNameDelegate(FName Name);
 delegate void FIntNameDelegate(int Value, FName Name);

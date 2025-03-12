@@ -1,6 +1,6 @@
 class URuptureStatus : UStatusComponent
 {
-	FFloat2BoolDelegate DOnOldApplyDamage;
+	FFloatTag2BoolDelegate DOnOldApplyDamage;
 	float extraDamage;
 
 	void DoInitChildren() override
@@ -22,7 +22,7 @@ class URuptureStatus : UStatusComponent
 	}
 
 	UFUNCTION()
-	bool CustomApplyDamage(float iDamage)
+	bool CustomApplyDamage(float iDamage, FGameplayTag Element)
 	{
 		return DOnOldApplyDamage.ExecuteIfBound(iDamage + extraDamage);
 	}
