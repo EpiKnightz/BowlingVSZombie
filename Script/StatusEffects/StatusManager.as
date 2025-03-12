@@ -6,6 +6,8 @@ class AStatusManager : AActor
 	UPROPERTY(BlueprintReadWrite)
 	UDataTable EffectDataTable;
 
+	FTagStatusCompEvent EOnStatusApplied;
+
 	TMap<FGameplayTag, FStatusDT> EffectMap;
 
 	UFUNCTION(BlueprintOverride)
@@ -84,6 +86,7 @@ class AStatusManager : AActor
 			}
 			statusComp.Init(EffectData);
 			DRC.EOnDeadCue.AddUFunction(statusComp, n"EndStatusEffect");
+			EOnStatusApplied.Broadcast(EffectTag, statusComp);
 			return true;
 		}
 		return false;

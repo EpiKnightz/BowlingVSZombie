@@ -54,6 +54,7 @@ event void FNameFloat32Event(FName Name, float32 Value);
 event void FHitResultEvent(FHitResult HitResult);
 event void FGTagContainerEvent(FGameplayTagContainer TagContainer);
 event void FGameplayTagEvent(FGameplayTag Tag);
+event void FTagStatusCompEvent(FGameplayTag Tag, UStatusComponent Target);
 event void FCardDTEvent(FCardDT Value);
 event void FBowlingEvent(ABowling& Bowling);
 event void FZombieEvent(AZombie& Bowling);

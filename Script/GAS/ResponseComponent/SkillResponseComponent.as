@@ -13,6 +13,7 @@ class USkillResponseComponent : UResponseComponent
 		return true;
 	}
 
+	// Do this really needed?
 	UFUNCTION()
 	private void OnRemoveSkillCooldownModifier(const UObject Object, int ID)
 	{

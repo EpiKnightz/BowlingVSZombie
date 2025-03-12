@@ -70,6 +70,11 @@ class USpinAbility : USkillAbility
 			if (IsValid(DamageResponse))
 			{
 				DamageResponse.DOnTakeHit.ExecuteIfBound(CalculateSkillAttack());
+				auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
+				if (IsValid(StatusResponse))
+				{
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+				}
 			}
 		}
 	}

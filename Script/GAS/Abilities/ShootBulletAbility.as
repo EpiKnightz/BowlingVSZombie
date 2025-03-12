@@ -33,7 +33,7 @@ class UShootBulletAbility : UAttackAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.ProjectileData = AbilityData;
-			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
+			// ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
 			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
 			ProjDataComp.ProjectileData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
 		}

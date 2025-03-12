@@ -65,10 +65,6 @@ class UStatusComponent : UActorComponent
 		{
 			StatusInitCue();
 			Activate(true);
-			if (InitTimes == 0)
-			{
-				SetCurrentDuration(StatusData.Duration);
-			}
 			Stacking();
 			DoInitChildren();
 			EOnInitStatusEffect.Broadcast();
@@ -94,10 +90,15 @@ class UStatusComponent : UActorComponent
 			case EStackingRule::None:
 				if (InitTimes == 0)
 				{
+					SetCurrentDuration(StatusData.Duration);
 					InitTimes = 1;
 				}
 				break;
 			case EStackingRule::Stackable:
+				if (InitTimes == 0)
+				{
+					SetCurrentDuration(StatusData.Duration);
+				}
 				InitTimes++;
 				EOnStackChanged.Broadcast(InitTimes);
 				break;
@@ -172,6 +173,11 @@ class UStatusComponent : UActorComponent
 	UFUNCTION()
 	void StatusInitCue()
 	{
+		if (InitTimes == 0)
+		{
+			DAddStatusUI.ExecuteIfBound(this, StatusData.Icon);
+		}
+
 		if (!IsValid(StatusData.StatusVFX))
 		{
 			return;
@@ -190,10 +196,6 @@ class UStatusComponent : UActorComponent
 		}
 		StatusEffectComp.SetCastShadow(true);
 		StatusEffectComp.SetActive(true);
-		if (InitTimes == 0)
-		{
-			DAddStatusUI.ExecuteIfBound(this, StatusData.Icon);
-		}
 	}
 
 	UFUNCTION()

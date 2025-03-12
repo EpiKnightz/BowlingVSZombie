@@ -29,6 +29,11 @@ class USlashAreaAbility : UAttackAbility
 				if (IsValid(DamageResponse))
 				{
 					DamageResponse.DOnTakeHit.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack));
+					auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
+					if (IsValid(StatusResponse))
+					{
+						StatusResponse.DOnApplyStatus.ExecuteIfBound(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+					}
 				}
 			}
 		}
