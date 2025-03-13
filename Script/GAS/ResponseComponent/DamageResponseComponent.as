@@ -77,22 +77,24 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	float CalculateWeakness(float Damage, FGameplayTag Element)
 	{
-		if (Element == GameplayTags::Description_Element_Void)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::VoidWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Fire)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::FireWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Water)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::WaterWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Forest)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::ForestWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Earth)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::EarthWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Aether)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::AetherWeaknessMultiplier);
-		else if (Element == GameplayTags::Description_Element_Nether)
-			return Damage * AbilitySystem.GetValue(WeaknessAttrSet::NetherWeaknessMultiplier);
-		else
-			return Damage;
+		if (AbilitySystem.HasAttrSet(WeaknessAttrSet::VoidWeaknessMultiplier))
+		{
+			if (Element == GameplayTags::Description_Element_Void)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::VoidWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Fire)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::FireWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Water)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::WaterWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Forest)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::ForestWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Earth)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::EarthWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Aether)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::AetherWeaknessMultiplier);
+			else if (Element == GameplayTags::Description_Element_Nether)
+				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::NetherWeaknessMultiplier);
+		}
+		return Damage;
 	}
 
 	UFUNCTION()

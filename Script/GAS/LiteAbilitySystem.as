@@ -336,6 +336,12 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	}
 
 	UFUNCTION()
+	bool HasAttrSet(FName AttrName)
+	{
+		return GetSetIdx(AttrName) >= 0;
+	}
+
+	UFUNCTION()
 	void ImportData(TMap<FName, float32> Data)
 	{
 		int ImportCount = 0;
