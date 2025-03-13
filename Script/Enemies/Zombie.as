@@ -424,9 +424,9 @@ class AZombie : AHumanlite
 		AnimateInst.OnMontageEnded.Clear();
 		if (AttackAnim.Num() > 0)
 		{
-			SetActorRotation(FRotator::MakeFromX(Target.GetOwner().GetActorLocation()
-												 - GetActorLocation())
-							 + FRotator(0, -90, 0));
+			SetActorRotation(FRotator(0,
+									  FRotator::MakeFromX(Target.GetOwner().GetActorLocation() - GetActorLocation()).ZYaw - 90,
+									  0));
 			int random = Math::RandRange(0, AttackAnim.Num() - 1);
 			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(AttackAttrSet::AttackCooldown));
 		}
@@ -442,9 +442,9 @@ class AZombie : AHumanlite
 	{
 		if (IsValid(Target))
 		{
-			SetActorRotation(FRotator::MakeFromX(Target.GetOwner().GetActorLocation()
-												 - GetActorLocation())
-							 + FRotator(0, -90, 0));
+			SetActorRotation(FRotator(0,
+									  FRotator::MakeFromX(Target.GetOwner().GetActorLocation() - GetActorLocation()).ZYaw - 90,
+									  0));
 			if (IsMelee())
 			{
 				Target.TakeHit(AbilitySystem.GetValue(AttackAttrSet::Attack));
@@ -667,13 +667,16 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	void RestartMove()
 	{
-		ResetRotation();
-		MovementResponseComponent.SetIsAccelable(true);
-		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
-		SetActorTickEnabled(true);
-		if (!bIsAttacking)
+		if (AbilitySystem.GetValue(MovementAttrSet::MoveSpeed) > 0)
 		{
-			MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+			ResetRotation();
+			MovementResponseComponent.SetIsAccelable(true);
+			AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
+			SetActorTickEnabled(true);
+			if (!bIsAttacking)
+			{
+				MovementResponseComponent.InitForce(FVector(1, 0, 0), 1);
+			}
 		}
 	}
 

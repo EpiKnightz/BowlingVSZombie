@@ -69,6 +69,7 @@ class UMovementResponseComponent : UResponseComponent
 		}
 		else
 		{
+			MovementComp.StopMovementImmediately();
 			MovementComp.Deactivate();
 		}
 	}
@@ -93,7 +94,8 @@ class UMovementResponseComponent : UResponseComponent
 	}
 
 	UFUNCTION()
-	private void OnChangeMoveSpeedModifier(UModifier Modifier){
+	private void OnChangeMoveSpeedModifier(UModifier Modifier)
+	{
 		AbilitySystem.AddModifier(MovementAttrSet::MoveSpeed, Modifier);
 	}
 	UFUNCTION()

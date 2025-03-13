@@ -192,10 +192,13 @@ class ASurvivor : AHumanlite
 		}
 		else
 		{
+			Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			ECollisionResponse ColResp = ECollisionResponse::ECR_Overlap;
 			if (StruckType == GameplayTags::Description_StruckType_Bounce)
 			{
 				ColResp = ECollisionResponse::ECR_Block;
+				MovementResponseComponent.SetIsAccelable(true);
+				MovementResponseComponent.SetIsBouncable(true);
 			}
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Block);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ColResp);
@@ -298,7 +301,7 @@ class ASurvivor : AHumanlite
 		Gameplay::SetGlobalTimeDilation(1);
 		if (!DRankUpTarget.IsBound())
 		{
-			Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			// Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			SetActorLocation(FVector(
 				Math::Clamp(GetActorLocation().X, SURVIVOR_MIN_X, SURVIVOR_MAX_X),
 				Math::Clamp(GetActorLocation().Y, -SURVIVOR_Y_LIMIT, SURVIVOR_Y_LIMIT),

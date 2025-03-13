@@ -2,12 +2,13 @@ class UFreezeStatus : UStatusComponent
 {
 	void DoInitChildren() override
 	{
-		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
-		if (IsValid(SpeedResponse))
+		auto MovementResponse = UMovementResponseComponent::Get(GetOwner());
+		if (IsValid(MovementResponse))
 		{
 			UMultiplierMod SpeedMod = NewObject(this, UMultiplierMod);
 			SpeedMod.SetupOnce(ModID, 0);
-			SpeedResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
+			MovementResponse.DOnChangeMoveSpeedModifier.ExecuteIfBound(SpeedMod);
+			MovementResponse.EnableMovement(false);
 		}
 
 		auto AttackResponse = UAttackResponseComponent::Get(GetOwner());
@@ -33,10 +34,11 @@ class UFreezeStatus : UStatusComponent
 
 	void EndStatusEffect() override
 	{
-		auto SpeedResponse = UMovementResponseComponent::Get(GetOwner());
-		if (IsValid(SpeedResponse))
+		auto MovementResponse = UMovementResponseComponent::Get(GetOwner());
+		if (IsValid(MovementResponse))
 		{
-			SpeedResponse.DOnRemoveMoveSpeedModifier.ExecuteIfBound(this, ModID);
+			MovementResponse.EnableMovement(true);
+			MovementResponse.DOnRemoveMoveSpeedModifier.ExecuteIfBound(this, ModID);
 		}
 
 		auto AttackResponse = UAttackResponseComponent::Get(GetOwner());

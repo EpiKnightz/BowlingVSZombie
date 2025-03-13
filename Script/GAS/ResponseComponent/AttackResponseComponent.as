@@ -74,6 +74,11 @@ class UAttackResponseComponent : UResponseComponent
 		}
 	}
 
+	bool IsAttackPaused()
+	{
+		return DBackupPlayAttackAnim.IsBound();
+	}
+
 	UFUNCTION()
 	private void OnRemoveAttackCooldownModifier(const UObject Object, int ID)
 	{

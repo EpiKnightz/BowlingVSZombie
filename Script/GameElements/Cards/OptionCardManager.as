@@ -124,6 +124,11 @@ class AOptionCardManager : AActor
 
 	FCardDT GetRandomCard(ECardType ForceCardType = ECardType::None)
 	{
+		if (CardInventory.IsEmpty())
+		{
+			PrintWarning("CardInventory is empty");
+			return FCardDT();
+		}
 		int NewSpawnedID = Math::RandRange(0, CardInventory.Num() - 1);
 		// Retry until we get a different ID, or exceeded MAX_RANDOM_RETRY
 		int CurrentRetry = 0;
@@ -136,8 +141,36 @@ class AOptionCardManager : AActor
 			NewSpawnedID = Math::RandRange(0, CardInventory.Num() - 1);
 			CurrentRetry++;
 		}
+		if (CurrentRetry >= MAX_RANDOM_RETRY)
+		{
+			int ManualOffset = LastSpawnedID < CardInventory.Num() / 2.0 ? 1 : -1;
+			if (ForceCardType == ECardType::None
+				|| CardInventory[LastSpawnedID + ManualOffset].CardType == ForceCardType)
+			{
+				NewSpawnedID = LastSpawnedID + ManualOffset;
+			}
+			else
+			{
+				if (ManualOffset > 0
+					&& LastSpawnedID > 0
+					&& CardInventory[LastSpawnedID - ManualOffset].CardType == ForceCardType)
+				{
+					NewSpawnedID = LastSpawnedID - ManualOffset;
+				}
+				else if (ManualOffset < 0
+						 && LastSpawnedID < CardInventory.Num() - 1
+						 && CardInventory[LastSpawnedID - ManualOffset].CardType == ForceCardType)
+				{
+					NewSpawnedID = LastSpawnedID - ManualOffset;
+				}
+				else
+				{
+					Print("Random failed to find a card");
+				}
+			}
+		}
 		LastSpawnedID = NewSpawnedID;
-		return CardInventory.Num() > 0 ? CardInventory[NewSpawnedID] : FCardDT();
+		return CardInventory[NewSpawnedID];
 	}
 
 	UFUNCTION()
