@@ -16,6 +16,7 @@ class UDamageResponseComponent : UResponseComponent
 	FVoidEvent EOnNewCardAdded;
 
 	bool bIsDead = false;
+	bool bIsKnockbackResisted = false;
 
 	bool InitChild() override
 	{
@@ -33,9 +34,15 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			if (Damage > 0)
+			if (Damage > (AbilitySystem.HasAttrSet(MovementAttrSet::KnockbackResistance) ? AbilitySystem.GetValue(MovementAttrSet::KnockbackResistance) : 0))
 			{
 				EOnHitCue.Broadcast();
+			}
+			else
+			{
+				bIsKnockbackResisted = true;
+				// System::SetTimer(this, n"ResetKnockbackResistance", 0.05f, false);
+				System::SetTimerForNextTick(this, "ResetKnockbackResistance");
 			}
 
 			if (Damage > 0)
@@ -156,6 +163,23 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		float HP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
 		return (HP > 0 && HP < AbilitySystem.GetValue(PrimaryAttrSet::MaxHP));
+	}
+
+	UFUNCTION()
+	void ResetKnockbackResistance()
+	{
+		bIsKnockbackResisted = false;
+	}
+
+	UFUNCTION()
+	bool IsKnockbackResisted()
+	{
+		if (bIsKnockbackResisted)
+		{
+			bIsKnockbackResisted = false;
+			return true;
+		}
+		return false;
 	}
 
 	UFUNCTION()

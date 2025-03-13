@@ -53,6 +53,9 @@ struct FZombieDT
 	float32 Bounciness = 0.05;
 
 	UPROPERTY(Category = BaseStats)
+	float32 KnockbackResistance = 10;
+
+	UPROPERTY(Category = BaseStats)
 	float32 AttackRange = 50;
 
 	UPROPERTY(Category = BaseStats)

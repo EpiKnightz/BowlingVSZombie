@@ -13,6 +13,7 @@ class UMovementResponseComponent : UResponseComponent
 	FVoidDelegate DOnStopTimeReached;
 	FVoidEvent EOnStopCue;
 	FVoidEvent EOnDeaccelTick;
+	FBoolReturnDelegate DIsKnockbackResisted;
 
 	UProjectileMovementComponent MovementComp;
 
@@ -120,7 +121,7 @@ class UMovementResponseComponent : UResponseComponent
 	UFUNCTION()
 	private void AddForce(FVector VelocityVector)
 	{
-		if (!VelocityVector.IsZero() && bIsBouncable)
+		if (!VelocityVector.IsZero() && bIsBouncable && !DIsKnockbackResisted.ExecuteIfBound())
 		{
 			EOnPreAddForceCue.Broadcast(VelocityVector);
 			MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(MovementAttrSet::Bounciness);

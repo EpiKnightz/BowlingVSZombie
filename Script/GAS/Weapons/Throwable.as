@@ -40,8 +40,22 @@ class AThrowable : ABullet
 		}
 		FloatTween = UFCTweenBPActionFloat::TweenFloat(OriginalZ, MaxHeight, 0.5, EFCEase::OutSine, );
 		FloatTween.ApplyEasing.AddUFunction(this, n"FlyTrajectory");
+		FloatTween.OnComplete.AddUFunction(this, n"FlyTrajectoryEnd");
 		FloatTween.Start();
-		System::SetTimer(this, n"FlyOut", 1.001, false);
+		// System::SetTimer(this, n"FlyOut", 1.001, false);
+	}
+
+	UFUNCTION()
+	private void FlyTrajectory(float32 Value)
+	{
+		FVector NewLoc = GetActorLocation();
+		SetActorLocation(FVector(NewLoc.X, NewLoc.Y, Value));
+	}
+
+	UFUNCTION()
+	private void FlyTrajectoryEnd()
+	{
+		System::SetTimerForNextTick(this, "FlyOut");
 	}
 
 	UFUNCTION()
@@ -56,13 +70,6 @@ class AThrowable : ABullet
 		FloatTween.ApplyEasing.AddUFunction(this, n"FlyTrajectory");
 		FloatTween.OnComplete.AddUFunction(this, n"OnFlyOutEnd");
 		FloatTween.Start();
-	}
-
-	UFUNCTION()
-	private void FlyTrajectory(float32 Value)
-	{
-		FVector NewLoc = GetActorLocation();
-		SetActorLocation(FVector(NewLoc.X, NewLoc.Y, Value));
 	}
 
 	UFUNCTION()

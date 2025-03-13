@@ -3,9 +3,11 @@ namespace MovementAttrSet
 	const FName MoveSpeed = n"MoveSpeed";
 	const FName Accel = n"Accel";
 	const FName Bounciness = n"Bounciness";
+	const FName KnockbackResistance = n"KnockbackResistance";
 	const FName FullMoveSpeed = n"MovementAttrSet.MoveSpeed";
 	const FName FullAccel = n"MovementAttrSet.Accel";
 	const FName FullBounciness = n"MovementAttrSet.Bounciness";
+	const FName FullKnockbackResistance = n"MovementAttrSet.KnockbackResistance";
 }
 class UMovementAttrSet : ULiteAttrSet
 {
@@ -19,12 +21,17 @@ class UMovementAttrSet : ULiteAttrSet
 	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
 	FAngelscriptGameplayAttributeData Bounciness;
 
+	// KnockbackResistance will prevent knockback from hit if the damage is lower than the resistance.
+	UPROPERTY(BlueprintReadWrite, Category = "Movement Attribute")
+	FAngelscriptGameplayAttributeData KnockbackResistance;
+
 	UMovementAttrSet()
 	{
 		MoveSpeed.Initialize(150);
 		// MaxSpeed.Initialize(100);
 		Accel.Initialize(10);
 		Bounciness.Initialize(0.8);
+		KnockbackResistance.Initialize(10);
 		InitDelegates();
 	}
 

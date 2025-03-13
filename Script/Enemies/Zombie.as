@@ -120,6 +120,7 @@ class AZombie : AHumanlite
 		MovementResponseComponent.Initialize(AbilitySystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
+		MovementResponseComponent.DIsKnockbackResisted.BindUFunction(DamageResponseComponent, n"IsKnockbackResisted");
 		// Temporary
 		MovementResponseComponent.StopLifeTime = 0;
 
@@ -138,6 +139,7 @@ class AZombie : AHumanlite
 		Data.Add(MovementAttrSet::MoveSpeed, DataRow.Speed);
 		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
 		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
+		Data.Add(MovementAttrSet::KnockbackResistance, DataRow.KnockbackResistance);
 
 		PhaseResponseComponent.SetupPhaseData(DataRow.NumberOfPhases,
 											  DataRow.Lv1Modifiers,
@@ -172,6 +174,10 @@ class AZombie : AHumanlite
 	{
 		if (AttrName == MovementAttrSet::MoveSpeed)
 		{
+			if (MovementComp.MaxSpeed == 0 && Value > 0)
+			{
+				OnAttackEndNotify();
+			}
 			SetMoveSpeed(Value);
 		}
 		if (AttrName == AttackAttrSet::AttackCooldown)
@@ -620,7 +626,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void HealCue()
 	{
-		// Print("HealCue");
+		Print("HealCue");
 	}
 
 	// void TakeDamageCue() override
