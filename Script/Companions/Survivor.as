@@ -3,7 +3,8 @@ const float SURVIVOR_MAX_X = 685;
 const float SURVIVOR_MIN_X = -1200;
 class ASurvivor : AHumanlite
 {
-	default Collider.SetCollisionProfileName(n"Companion");
+	default Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	default Collider.SetCollisionProfileName(n"NoCollision");
 	default Collider.BodyInstance.bNotifyRigidBodyCollision = true;
 	default BodyMesh.SetRelativeLocationAndRotation(FVector(0, 0, -50), FRotator(0, 90, 0));
 
@@ -52,8 +53,6 @@ class ASurvivor : AHumanlite
 	void BeginPlay()
 	{
 		Super::BeginPlay();
-
-		Collider.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		AnimateInst = Cast<UCustomAnimInst>(BodyMesh.GetAnimInstance());
 		AnimateInst.OnMontageEnded.AddUFunction(this, n"OnMontageEnded");
@@ -126,7 +125,7 @@ class ASurvivor : AHumanlite
 	}
 
 	UFUNCTION()
-	void SetData(FSurvivorDT DataRow)
+	void SetData(FSurvivorDT DataRow, bool bFirstInit = false)
 	{
 		TargetResponseComponent.SetID(DataRow.SurvivorID);
 		TMap<FName, float32> Data;
@@ -149,7 +148,7 @@ class ASurvivor : AHumanlite
 		SetBodyScale(DataRow.BodyScale);
 		SetHeadScale(DataRow.HeadScale);
 
-		ChangeStruckType(DataRow.DescriptionTags.Filter(GameplayTags::Description_StruckType.GetSingleTagContainer()));
+		ChangeStruckType(DataRow.DescriptionTags.Filter(GameplayTags::Description_StruckType.GetSingleTagContainer()), bFirstInit);
 		Collider.OnComponentHit.AddUFunction(this, n"OnHit");
 
 		AttackResponseComponent.DGetAttackLocation.BindUFunction(this, n"GetAttackLocation");
@@ -166,14 +165,17 @@ class ASurvivor : AHumanlite
 	}
 
 	UFUNCTION()
-	void ChangeStruckType(FGameplayTagContainer StruckTypeTag)
+	void ChangeStruckType(FGameplayTagContainer StruckTypeTag, bool bFirstInit = false)
 	{
 		if (StruckTypeTag.IsValid() && StruckTypeTag.Num() == 1)
 		{
 			StruckType = StruckTypeTag.First();
 			if (StruckType.MatchesTag(GameplayTags::Description_StruckType))
 			{
-				SetCollisionResponse();
+				if (!bFirstInit)
+				{
+					SetCollisionResponse();
+				}
 				return;
 			}
 		}
@@ -186,6 +188,7 @@ class ASurvivor : AHumanlite
 		if (bIgnore)
 		{
 			Collider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			Collider.SetCollisionObjectType(ECollisionChannel::Survivor);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Enemy, ECollisionResponse::ECR_Ignore);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Ignore);
 			Collider.SetCollisionResponseToChannel(ECollisionChannel::Survivor, ECollisionResponse::ECR_Overlap);
@@ -193,6 +196,7 @@ class ASurvivor : AHumanlite
 		else
 		{
 			Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			Collider.SetCollisionObjectType(ECollisionChannel::Survivor);
 			ECollisionResponse ColResp = ECollisionResponse::ECR_Overlap;
 			if (StruckType == GameplayTags::Description_StruckType_Bounce)
 			{

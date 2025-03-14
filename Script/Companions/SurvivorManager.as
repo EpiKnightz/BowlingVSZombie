@@ -116,7 +116,7 @@ class ASurvivorManager : AActor
 	void SpawnSurvivor(ASurvivor& SpawnedActor, FSurvivorDT& SurvivorData)
 	{
 		SpawnedActor = SpawnActor(SurvivorTemplate);
-		SpawnedActor.SetData(SurvivorData);
+		SpawnedActor.SetData(SurvivorData, true);
 		SpawnedActor.DGetRankedSurvivorData.BindUFunction(this, n"GetRankedSurvivorData");
 		SpawnedSurvivorList.Add(SpawnedActor.GetName());
 		EOnGameStateChanged.AddUFunction(SpawnedActor, n"EnableSurvivor");
