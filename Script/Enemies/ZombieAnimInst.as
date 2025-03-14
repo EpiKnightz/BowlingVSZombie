@@ -40,7 +40,7 @@ class UZombieAnimInst : UCustomAnimInst
 
 	bool IsMirroredHand()
 	{
-		if (AtkType == EAttackType::Staff)
+		if (AtkType == EAttackType::Area)
 		{
 			return !bIsMirror;
 		}

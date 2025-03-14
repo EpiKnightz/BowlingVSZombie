@@ -8,6 +8,6 @@ class UBurnStatus : UDoTStatus
 
 	bool ActionPerInterval() override
 	{
-		return DamageResponse.DOnHPRemoval.ExecuteIfBound(DamagePerInterval);
+		return DamageResponse.DOnTakeHit.ExecuteIfBound(DamagePerInterval, GameplayTags::Description_Element_Fire);
 	}
 };

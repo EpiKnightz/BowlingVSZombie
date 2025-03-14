@@ -38,11 +38,11 @@ class UWeapon : UStaticMeshComponent
 	protected void SetupInner(FString AttachLocation, bool bIsMainHand = true)
 	{
 		// PPV = Gameplay::GetActorOfClass(APostProcessVolume);
-		auto CompanionSkeleton = USkeletalMeshComponent::Get(Owner);
+		auto SkeletonMesh = USkeletalMeshComponent::Get(Owner);
 		FName HandName = bIsMainHand ? FName("Right" + AttachLocation) : FName("Left" + AttachLocation);
-		if (IsValid(CompanionSkeleton))
+		if (IsValid(SkeletonMesh))
 		{
-			AttachTo(CompanionSkeleton, HandName);
+			AttachTo(SkeletonMesh, HandName);
 		}
 
 		ColorOverlay = NewObject(this, UColorOverlay);

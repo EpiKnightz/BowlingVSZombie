@@ -18,6 +18,8 @@ class UDamageResponseComponent : UResponseComponent
 	bool bIsDead = false;
 	bool bIsKnockbackResisted = false;
 
+	TMap<FGameplayTag, FName> WeaknessMap;
+
 	bool InitChild() override
 	{
 		DOnTakeHit.BindUFunction(this, n"TakeHit");
@@ -25,6 +27,13 @@ class UDamageResponseComponent : UResponseComponent
 		DOnHPRemoval.BindUFunction(this, n"RemoveHP");
 		DOnHPPercentRemoval.BindUFunction(this, n"RemoveHPPercent");
 		DOnIsAlive.BindUFunction(this, n"CheckIsAlive");
+		WeaknessMap.Add(GameplayTags::Description_Element_Void, WeaknessAttrSet::VoidWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Fire, WeaknessAttrSet::FireWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Water, WeaknessAttrSet::WaterWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Forest, WeaknessAttrSet::ForestWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Earth, WeaknessAttrSet::EarthWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Aether, WeaknessAttrSet::AetherWeaknessMultiplier);
+		WeaknessMap.Add(GameplayTags::Description_Element_Nether, WeaknessAttrSet::NetherWeaknessMultiplier);
 		return true;
 	}
 
@@ -38,7 +47,7 @@ class UDamageResponseComponent : UResponseComponent
 			{
 				EOnHitCue.Broadcast();
 			}
-			else
+			else if (Damage > 0)
 			{
 				bIsKnockbackResisted = true;
 				// System::SetTimer(this, n"ResetKnockbackResistance", 0.05f, false);
@@ -86,20 +95,7 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (AbilitySystem.HasAttrSet(WeaknessAttrSet::VoidWeaknessMultiplier))
 		{
-			if (Element == GameplayTags::Description_Element_Void)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::VoidWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Fire)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::FireWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Water)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::WaterWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Forest)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::ForestWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Earth)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::EarthWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Aether)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::AetherWeaknessMultiplier);
-			else if (Element == GameplayTags::Description_Element_Nether)
-				return Damage * AbilitySystem.GetValue(WeaknessAttrSet::NetherWeaknessMultiplier);
+			return Damage * AbilitySystem.GetValue(WeaknessMap[Element]);
 		}
 		return Damage;
 	}

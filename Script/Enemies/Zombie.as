@@ -14,11 +14,10 @@ enum EAttackType
 	Melee,
 	MeleeAndShield,
 	GunAndShield,
-	Pistol,
 	Gun,
 	DualWieldMelee,
 	DualWieldGun,
-	Staff,
+	Area,
 }
 
 class AZombie : AHumanlite
@@ -162,7 +161,7 @@ class AZombie : AHumanlite
 											   DataRow.AttackRange,
 											   RANGE_COLLIDER_SIZE));
 		}
-		if (DataRow.AttackType == EAttackType::Staff)
+		if (DataRow.AttackType == EAttackType::Area)
 		{
 			System::SetTimer(this, n"PeriodicCheck", DataRow.AttackCooldown, true);
 		}
@@ -285,10 +284,15 @@ class AZombie : AHumanlite
 		switch (iAtkType)
 		{
 			case EAttackType::Melee:
-			case EAttackType::Staff:
+			case EAttackType::Area:
+			{
+				MainSocket += "Hand";
+				break;
+			}
 			case EAttackType::DualWieldMelee:
 			{
 				MainSocket += "Hand";
+				OffSocket += "Hand";
 				break;
 			}
 			case EAttackType::MeleeAndShield:
@@ -379,12 +383,12 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	bool OverlapActor(AActor OtherActor)
 	{
-		if (TargetResponseComponent.IsTargetable(OtherActor, AnimateInst.AtkType == EAttackType::Staff))
+		if (TargetResponseComponent.IsTargetable(OtherActor, AnimateInst.AtkType == EAttackType::Area))
 		{
 			Target = UDamageResponseComponent::Get(OtherActor);
 			if (IsValid(Target) && !bIsAttacking)
 			{
-				if (AnimateInst.AtkType == EAttackType::Staff && !Target.IsDamaged())
+				if (AnimateInst.AtkType == EAttackType::Area && !Target.IsDamaged()) // Healing staff
 				{
 					RemoveTarget();
 					return false;
@@ -394,7 +398,7 @@ class AZombie : AHumanlite
 					Target.EOnDeadCue.AddUFunction(this, n"StopAttacking");
 					Target.EOnDeadCue.AddUFunction(this, n"RemoveTargetWhenDead");
 					auto TargetMoveRes = UMovementResponseComponent::Get(OtherActor);
-					if (IsValid(TargetMoveRes))
+					if (IsValid(TargetMoveRes)) // If the target move away, interrupt attacking
 					{
 						TargetMoveRes.EOnPostAddForce.AddUFunction(this, n"InterruptAttacking");
 					}
@@ -457,7 +461,7 @@ class AZombie : AHumanlite
 			}
 			else
 			{
-				if (AnimateInst.AtkType == EAttackType::Staff)
+				if (AnimateInst.AtkType == EAttackType::Area)
 				{
 					auto SceneComp = USceneComponent::Get(Target.GetOwner());
 					URangeAttackComponent::Get(this).SpawnBullet(GetAttackLocation(), GetActorRotation(), SceneComp);
@@ -575,7 +579,7 @@ class AZombie : AHumanlite
 		{
 			Collider.GetOverlappingActors(OverlappingActors, ClassFilter);
 		}
-		else if (AnimateInst.AtkType == EAttackType::Staff)
+		else if (AnimateInst.AtkType == EAttackType::Area)
 		{
 			FindNearestTarget(OverlappingActors, EObjectTypeQuery::Enemy); // Healing staff
 		}
@@ -611,6 +615,8 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	void TakeHitCue()
 	{
+		// Need to move this vfx to bullet/bowling
+		// Replace this with blood vfx instead
 		Niagara::SpawnSystemAtLocation(SmackVFX, GetActorLocation());
 
 		System::ClearTimer(this, "EmergeDone");
@@ -629,10 +635,14 @@ class AZombie : AHumanlite
 		Print("HealCue");
 	}
 
-	// void TakeDamageCue() override
-	// {
-	// 	Super::TakeDamageCue();
-	// }
+	void TakeDamageCue() override
+	{
+		if (!IsEmergeDone())
+		{
+			TakeHitCue();
+		}
+		Super::TakeDamageCue();
+	}
 
 	void DeadCue() override
 	{
@@ -708,6 +718,12 @@ class AZombie : AHumanlite
 		{
 			AnimateInst.bIsEmergeDone = true;
 		}
+	}
+
+	UFUNCTION()
+	bool IsEmergeDone()
+	{
+		return AnimateInst.bIsEmergeDone;
 	}
 
 	UFUNCTION()

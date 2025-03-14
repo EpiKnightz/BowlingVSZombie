@@ -1,14 +1,3 @@
-enum ESocketType
-// ESocketType is an enumeration of socket types that can be equipped on a character
-{
-	None,
-	Hand,
-	Shield,
-	Pistol,
-	Gun,
-	DualWield
-}
-
 enum EZombieType
 {
 	Normal,
