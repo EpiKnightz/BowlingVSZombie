@@ -16,11 +16,11 @@ class UWeapon : UStaticMeshComponent
 	protected UColorOverlay ColorOverlay;
 	protected FLinearColor CachedOverlayColor = FLinearColor::Transparent;
 	protected AActor Target;
+	protected int BasicAttackID = -1;
+	FGameplayTag WeaponID;
 
 	FActorDelegate DOnTargetChosen;
 	FVoidEvent EOnDragReleased;
-
-	int BasicAttackID = -1;
 
 	// APostProcessVolume PPV;
 
@@ -146,6 +146,7 @@ class UWeapon : UStaticMeshComponent
 
 		if (bIsMainWeapon)
 		{
+			WeaponID = Data.WeaponID;
 			ShakeStyle = Data.ShakeStyle;
 			WeaponVFX = Data.WeaponVFX;
 			AttackAnim = Data.AttackAnim;

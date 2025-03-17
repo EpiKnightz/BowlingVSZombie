@@ -43,8 +43,6 @@ class ABowling : AProjectile
 	UPROPERTY(DefaultComponent)
 	UMultiplierResponseComponent MultiplierResponseComponent;
 
-	UPROPERTY(DefaultComponent)
-	UTargetResponseComponent TargetResponseComponent;
 	default TargetResponseComponent.TargetType = ETargetType::Bowling;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
@@ -96,7 +94,7 @@ class ABowling : AProjectile
 	UFUNCTION()
 	void SetData(FBallDT Data)
 	{
-		ProjectileDataComp.ProjectileData = Data;
+		ProjectileDataComp.SetBallData(Data);
 		BowlingMesh.StaticMesh = Data.BowlingMesh;
 		if (IsValid(Data.StatusVFX))
 		{
@@ -106,7 +104,7 @@ class ABowling : AProjectile
 
 		RotatingComp.RotationRate = BASE_ROTATION_RATE * Data.BowlingSpeed;
 
-		SetPiercable(ProjectileDataComp.ProjectileData.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing));
+		SetPiercable(ProjectileDataComp.GetEffects().HasTagExact(GameplayTags::Status_Neutral_Piercing));
 	}
 
 	UFUNCTION()
@@ -120,7 +118,7 @@ class ABowling : AProjectile
 			{
 				float Damage = TargetResponseComponent.IsSameTeam(OtherActor) ?
 								   0 :
-								   MultiplierResponseComponent.DCaluclateMultiplier.Execute(ProjectileDataComp.ProjectileData.Atk);
+								   MultiplierResponseComponent.DCaluclateMultiplier.Execute(ProjectileDataComp.GetAttack());
 				// This is because the atk should already been buff/debuff at spawned time.
 				DamageResponse.DOnTakeHit.ExecuteIfBound(Damage);
 				if (Damage > 0)
@@ -128,7 +126,7 @@ class ABowling : AProjectile
 					auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 					if (IsValid(StatusResponse))
 					{
-						StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+						StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.GetEffects());
 					}
 				}
 			}
@@ -162,7 +160,7 @@ class ABowling : AProjectile
 	UFUNCTION()
 	private void OnInitForceCue()
 	{
-		if (!ProjectileDataComp.ProjectileData.EffectTags.IsEmpty())
+		if (!ProjectileDataComp.GetEffects().IsEmpty())
 		{
 			EffectSystem.Activate();
 		}

@@ -7,6 +7,12 @@ class AProjectile : AActor
 	UPROPERTY(DefaultComponent)
 	UProjectileDataComponent ProjectileDataComp;
 
-	// UPROPERTY(BlueprintReadOnly, Category = "Stats")
-	// FProjectileData ProjectileData;
+	UPROPERTY(DefaultComponent)
+	UTargetResponseComponent TargetResponseComponent;
+	default TargetResponseComponent.TargetType = ETargetType::Untargetable;
+
+	void RangeToLifeTime(float Range)
+	{
+		SetLifeSpan(Range / MovementComp.InitialSpeed);
+	}
 };

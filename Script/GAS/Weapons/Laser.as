@@ -17,10 +17,6 @@ class ALaser : AProjectile
 
 	default InitialLifeSpan = 5.25;
 
-	UPROPERTY(DefaultComponent)
-	UTargetResponseComponent TargetResponseComponent;
-	default TargetResponseComponent.TargetType = ETargetType::Untargetable;
-
 	UPROPERTY(BlueprintReadWrite, Category = Attributes)
 	float LaserLifeTime = 5;
 	UPROPERTY(BlueprintReadWrite, Category = Attributes)
@@ -74,13 +70,13 @@ class ALaser : AProjectile
 		for (AActor overlappedActor : OutActors)
 		{
 			UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
-			if (IsValid(DamageResponse) && ProjectileDataComp.ProjectileData.Atk != ProjectileSpec::UNINIT_VALUE)
+			if (IsValid(DamageResponse) && ProjectileDataComp.GetAttack() != ProjectileSpec::UNINIT_VALUE)
 			{
-				DamageResponse.DOnTakeHit.ExecuteIfBound(ProjectileDataComp.ProjectileData.Atk);
+				DamageResponse.DOnTakeHit.ExecuteIfBound(ProjectileDataComp.GetAttack());
 				auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.GetEffects());
 				}
 				OnBulletImpact();
 			}
@@ -93,12 +89,6 @@ class ALaser : AProjectile
 	private void DeactivateLaser()
 	{
 		System::ClearTimer(this, "TraceForHit");
-	}
-
-	UFUNCTION() // Currently unused anywhere
-	void SetData(FWeaponDT WeaponData)
-	{
-		ProjectileDataComp.ProjectileData = WeaponData;
 	}
 
 	void OnBulletImpact()

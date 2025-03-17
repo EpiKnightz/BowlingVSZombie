@@ -42,11 +42,20 @@ class USpawnBulletAbility : USkillAbility
 		if (IsValid(Actor))
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
-			ProjDataComp.ProjectileData = AbilityData;
+			ProjDataComp.SetAbilityData(AbilityData);
 			// ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
 			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+			ProjDataComp.SetAttack(float32(SkillAttack));
 
-			ProjDataComp.ProjectileData.Atk = float32(SkillAttack);
+			auto HostTargetResponse = UTargetResponseComponent::Get(AbilitySystem.GetOwner());
+			if (IsValid(HostTargetResponse))
+			{
+				auto BulletTargetResponse = UTargetResponseComponent::Get(Actor);
+				if (IsValid(BulletTargetResponse))
+				{
+					BulletTargetResponse.GetInfoFromHost(HostTargetResponse, AbilityData.AbilityID);
+				}
+			}
 		}
 		return Actor;
 	}

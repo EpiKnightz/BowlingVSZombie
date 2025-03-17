@@ -9,8 +9,8 @@ struct FProjectileSpec
 	UPROPERTY()
 	float32 Atk = ProjectileSpec::UNINIT_VALUE;
 
-	// UPROPERTY()
-	// bool bIsPiercable = false;
+	UPROPERTY()
+	float Range = 50000;
 
 	UPROPERTY(meta = (Categories = "Status"))
 	FGameplayTagContainer EffectTags;

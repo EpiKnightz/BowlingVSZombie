@@ -12,27 +12,23 @@ class ABullet : AProjectile
 	default MovementComp.ProjectileGravityScale = 0;
 	default MovementComp.Velocity = FVector(0, 1, 0);
 
-	UPROPERTY(DefaultComponent)
-	UTargetResponseComponent TargetResponseComponent;
-	default TargetResponseComponent.TargetType = ETargetType::Untargetable;
-
 	UPROPERTY(BlueprintReadWrite, Category = VFX)
 	UNiagaraSystem HitVFX;
 
 	UPROPERTY(BlueprintReadWrite, Category = SFX)
 	UFMODEvent FiredSFX;
 
+	UPROPERTY(BlueprintReadWrite, Category = SFX)
+	UFMODEvent HitSFX;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
-		FMODBlueprint::PlayEventAtLocation(this, FiredSFX, GetActorTransform(), true);
+		if (IsValid(FiredSFX))
+		{
+			FMODBlueprint::PlayEventAtLocation(this, FiredSFX, GetActorTransform(), true);
+		}
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
-	}
-
-	UFUNCTION() // Currently unused anywhere
-	void SetData(FWeaponDT WeaponData)
-	{
-		ProjectileDataComp.ProjectileData = WeaponData;
 	}
 
 	UFUNCTION()
@@ -47,15 +43,16 @@ class ABullet : AProjectile
 		if (TargetResponseComponent.IsTargetable(OtherActor))
 		{
 			auto DamageResponse = UDamageResponseComponent::Get(OtherActor);
+			float Attack = ProjectileDataComp.GetProjectileData().Atk;
 			if (IsValid(DamageResponse)
-				&& ProjectileDataComp.ProjectileData.Atk != ProjectileSpec::UNINIT_VALUE)
+				&& Attack != ProjectileSpec::UNINIT_VALUE)
 			{
 				// This is because the atk should already been buff/debuff at spawned
-				DamageResponse.DOnTakeHit.ExecuteIfBound(ProjectileDataComp.ProjectileData.Atk);
+				DamageResponse.DOnTakeHit.ExecuteIfBound(Attack);
 				auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.ProjectileData.EffectTags);
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(ProjectileDataComp.GetProjectileData().EffectTags);
 				}
 				return true;
 			}
@@ -75,8 +72,12 @@ class ABullet : AProjectile
 
 	void OnBulletImpactCue()
 	{
+		if (IsValid(HitSFX))
+		{
+			FMODBlueprint::PlayEventAtLocation(this, HitSFX, GetActorTransform(), true);
+		}
 		Niagara::SpawnSystemAtLocation(HitVFX, GetActorLocation());
-		if (!ProjectileDataComp.ProjectileData.EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
+		if (!ProjectileDataComp.GetProjectileData().EffectTags.HasTagExact(GameplayTags::Status_Neutral_Piercing))
 		{
 			DestroyActor();
 		}

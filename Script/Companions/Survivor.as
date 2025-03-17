@@ -132,7 +132,7 @@ class ASurvivor : AHumanlite
 		Data.Add(PrimaryAttrSet::MaxHP, DataRow.HP);
 		Data.Add(MovementAttrSet::MoveSpeed, DataRow.Speed);
 		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
-		Data.Add(AttackAttrSet::Attack, DataRow.Atk);
+		Data.Add(AttackAttrSet::Attack, DataRow.Attack);
 		Data.Add(AttackAttrSet::AttackCooldown, DataRow.AttackCooldown);
 		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
 		Data.Add(RageAttrSet::InitialRage, DataRow.InitialRage);
@@ -196,7 +196,7 @@ class ASurvivor : AHumanlite
 		else
 		{
 			Collider.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			Collider.SetCollisionObjectType(ECollisionChannel::Survivor);
+			Collider.SetCollisionProfileName(n"Survivor");
 			ECollisionResponse ColResp = ECollisionResponse::ECR_Overlap;
 			if (StruckType == GameplayTags::Description_StruckType_Bounce)
 			{
@@ -214,8 +214,11 @@ class ASurvivor : AHumanlite
 	{
 		if (IsValid(MainWeapon))
 		{
-			// More fun this way
-			// MainWeapon.RemoveWeaponAbility();
+			if (WeaponTag == MainWeapon.WeaponID) // Duplicate weapon, don't need to change
+			{
+				return;
+			}
+			MainWeapon.RemoveWeaponAbility();
 			MainWeapon.ForceDestroyComponent();
 			MainWeapon = nullptr;
 		}

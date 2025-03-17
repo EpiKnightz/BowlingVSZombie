@@ -18,6 +18,20 @@ class UTargetResponseComponent : UResponseComponent
 	}
 
 	UFUNCTION()
+	void GetInfoFromHost(UTargetResponseComponent Host, FGameplayTag AltID = FGameplayTag())
+	{
+		TargetType = Host.TargetType;
+		if (AltID.IsValid())
+		{
+			TargetID = AltID;
+		}
+		else
+		{
+			TargetID = Host.TargetID;
+		}
+	}
+
+	UFUNCTION()
 	bool IsTargetable(AActor OtherActor, bool bTargetAlly = false)
 	{
 		auto TargetRC = UTargetResponseComponent::Get(OtherActor);

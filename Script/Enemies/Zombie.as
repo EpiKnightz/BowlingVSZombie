@@ -227,22 +227,26 @@ class AZombie : AHumanlite
 					OnAttackEndNotify();
 				}
 			}
-
-			if (loc.Z <= ENDSCREEN_Z_LIMIT
-				|| loc.X > ENDSCREEN_X_LIMIT
-				|| loc.Y > ENDSCREEN_Y_LIMIT
-				|| loc.Y < -ENDSCREEN_Y_LIMIT)
-			{
-				if (!DamageResponseComponent.bIsDead) // If not dead, meaning the zomb goes to end screen, Deal dmg to player
-				{
-					DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack), GetName());
-				}
-				DestroyActor();
-			}
+			CheckBattlefieldBounds(loc);
 		}
 		else if (AnimateInst.AnimMoveSpeed > 0)
 		{
 			AnimateInst.SetMoveSpeed(0);
+		}
+	}
+
+	void CheckBattlefieldBounds(FVector Location)
+	{
+		if (Location.Z <= ENDSCREEN_Z_LIMIT
+			|| Location.Y > ENDSCREEN_Y_LIMIT
+			|| Location.Y < -ENDSCREEN_Y_LIMIT)
+		{
+			DestroyActor();
+		}
+		if (Location.X > ENDSCREEN_X_LIMIT)
+		{
+			DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack), GetName());
+			DestroyActor();
 		}
 	}
 
