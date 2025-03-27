@@ -8,6 +8,15 @@ enum ECardType
 	Bowling
 }
 
+enum ERarity
+{
+	Null = -1,
+	Silver = 0,
+	Gold = 1,
+	Epic = 2,
+	Mythic = 3
+}
+
 struct FCardDT
 {
 	UPROPERTY()
@@ -27,6 +36,9 @@ struct FCardDT
 
 	UPROPERTY()
 	int Cost = 0;
+
+	UPROPERTY()
+	ERarity Rarity = ERarity::Silver;
 
 	UPROPERTY()
 	FGameplayTagContainer DescriptionTags;

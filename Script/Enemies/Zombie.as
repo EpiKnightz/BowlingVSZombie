@@ -636,7 +636,7 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	private void HealCue()
 	{
-		Print("HealCue");
+		// Print("HealCue");
 	}
 
 	void TakeDamageCue() override

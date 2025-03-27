@@ -16,6 +16,17 @@ class UUICard : UUserWidget
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_4;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor SilverColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor GoldColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor EpicColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor MythicColor;
+	UPROPERTY(BlueprintReadOnly, Category = Rarity)
+	FLinearColor CurrentColor = FLinearColor::White;
+
 	UPROPERTY(meta = (BindWidget))
 	UImage StruckTypeIcon;
 	FName StruckTypeName;
@@ -81,6 +92,8 @@ class UUICard : UUserWidget
 
 		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_RageRegen.GetSingleTagContainer());
 		RAGEIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnRAGEClicked");
+
+		CurrentColor = FLinearColor::Gray;
 	}
 
 	FString GenDescFromTags(FGameplayTagContainer AbilitiesTags)
