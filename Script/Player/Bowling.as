@@ -44,6 +44,7 @@ class ABowling : AProjectile
 	UMultiplierResponseComponent MultiplierResponseComponent;
 
 	default TargetResponseComponent.TargetType = ETargetType::Bowling;
+	default InitialLifeSpan = 0;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent WorldWidget;
@@ -120,9 +121,12 @@ class ABowling : AProjectile
 								   0 :
 								   MultiplierResponseComponent.DCaluclateMultiplier.Execute(ProjectileDataComp.GetAttack());
 				// This is because the atk should already been buff/debuff at spawned time.
-				DamageResponse.DOnTakeHit.ExecuteIfBound(Damage);
-				if (Damage > 0)
+				// This if = Damage > 0
+				if (DamageResponse.DOnTakeHit.ExecuteIfBound(Damage))
 				{
+					// TODO: Change to other sfx
+					// FMODBlueprint::PlayEvent2D(this, HitSFX, true);
+
 					auto StatusResponse = UStatusResponseComponent::Get(OtherActor);
 					if (IsValid(StatusResponse))
 					{
@@ -131,8 +135,6 @@ class ABowling : AProjectile
 				}
 			}
 		}
-		// TODO: Change to other sfx
-		// FMODBlueprint::PlayEvent2D(this, HitSFX, true);
 	}
 
 	UFUNCTION(BlueprintOverride)

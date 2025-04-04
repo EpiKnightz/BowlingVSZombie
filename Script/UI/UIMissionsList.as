@@ -1,0 +1,3 @@
+class UUITasks : UUserWidget
+{
+}
