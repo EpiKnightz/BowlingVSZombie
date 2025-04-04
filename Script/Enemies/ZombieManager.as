@@ -57,6 +57,7 @@ class AZombieManager : AActor
 	FFTextDelegate DShowBossMsg;
 	FVoidDelegate DOnClearedAllZombies;
 	FZombieEvent EOnZombieSpawned;
+	FFloatNameDelegate DAddZombieKillMission;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -290,6 +291,8 @@ class AZombieManager : AActor
 		if (SpawnedZombieList.Num() > 0)
 		{
 			SpawnedZombieList.Remove(zombieNameToRemove);
+			// TODO: For testing only, add progress to mission. Do this after the match is over instead;
+			DAddZombieKillMission.ExecuteIfBound(1, n"ZombieKill");
 			if (SpawnedZombieList.Num() == 0 && CurrentLevelProgress >= 1)
 			{
 				System::SetTimer(this, n"GameEnd", 3, false);

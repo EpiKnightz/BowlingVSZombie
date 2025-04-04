@@ -65,6 +65,7 @@ class ABowlingGameMode : AGameMode
 	AAbilitiesManager AbilitiesManager;
 	AStatusManager StatusManager;
 	AUIManager UIManager;
+	AMissionManager MissionManager;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
 	ELevelType LevelType = ELevelType::Standard;
@@ -78,6 +79,7 @@ class ABowlingGameMode : AGameMode
 		WeaponsManager = Gameplay::GetActorOfClass(AWeaponsManager);
 		AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 		UIManager = Gameplay::GetActorOfClass(AUIManager);
+		MissionManager = Gameplay::GetActorOfClass(AMissionManager);
 
 		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :
@@ -200,6 +202,7 @@ class ABowlingGameMode : AGameMode
 		ZombieManager.DShowBossMsg.BindUFunction(UserWidget, n"UpdateBossText");
 		ZombieManager.DOnClearedAllZombies.BindUFunction(this, n"Win");
 		ZombieManager.EOnZombieSpawned.AddUFunction(PowerManager, n"ApplyZombiePower");
+		ZombieManager.DAddZombieKillMission.BindUFunction(MissionManager, n"AddProgressToMissionTag");
 
 		BoostManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 		BoostManager.Setup(StatusManager);
