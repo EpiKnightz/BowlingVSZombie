@@ -60,8 +60,10 @@ event void FCardDTEvent(FCardDT Value);
 event void FBowlingEvent(ABowling& Bowling);
 event void FZombieEvent(AZombie& Bowling);
 event void FSurvivorEvent(ASurvivor& Bowling);
+event void FAchivementDataArrayEvent(TArray<FAchievementData> Data);
+event void FAchivementStateArrayEvent(TArray<FAchievementStates> States);
+event void FAchivementArrayEvent(TArray<FAchievementData> Data, TArray<FAchievementStates> States);
 
 namespace Utilities
 {
-
 }

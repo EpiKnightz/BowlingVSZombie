@@ -5,12 +5,25 @@ class AMissionManager : AActor
 
 	private UAchievementSubSystem AchievementSystem;
 
+	FAchivementArrayEvent EOnTutorialMissionUpdate;
+
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
 	{
 		AchievementSystem = UAchievementSubSystem::Get();
 		// TODO: Only for testing
 		AchievementSystem.ResetAchievementStates();
+	}
+
+	UFUNCTION()
+	void UpdateTutorialMission()
+	{
+		TArray<FAchievementData> MissionArray;
+		TArray<FAchievementStates> MissionStateArray;
+		if (AchievementSystem.GetAllAchievementWithTag(n"Tutorial", MissionArray, MissionStateArray) > 0)
+		{
+			EOnTutorialMissionUpdate.Broadcast(MissionArray, MissionStateArray);
+		}
 	}
 
 	UFUNCTION()
