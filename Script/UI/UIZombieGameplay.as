@@ -252,7 +252,7 @@ class UUIZombieGameplay : UUserWidget
 	UFUNCTION(BlueprintCallable)
 	void OnNextLevelClicked()
 	{
-		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).NextLevel();
+		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).ShowBoardUI();
 	}
 
 	UFUNCTION(BlueprintCallable)
