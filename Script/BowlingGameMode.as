@@ -29,6 +29,9 @@ class ABowlingGameMode : AGameMode
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
 	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UUIBoard> UITest;
+
+	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIShop> UIShop;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -66,6 +69,7 @@ class ABowlingGameMode : AGameMode
 	AStatusManager StatusManager;
 	AUIManager UIManager;
 	AMissionManager MissionManager;
+	AFMODAmbientSound BackgroundMusic;
 	UBowlingGameInstance GameInst;
 	EGameStatus GameStatus = EGameStatus::PreGame;
 	ELevelType LevelType = ELevelType::Standard;
@@ -80,12 +84,15 @@ class ABowlingGameMode : AGameMode
 		AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 		UIManager = Gameplay::GetActorOfClass(AUIManager);
 		MissionManager = Gameplay::GetActorOfClass(AMissionManager);
+		BackgroundMusic = Gameplay::GetActorOfClass(AFMODAmbientSound);
 
-		int ConfigRow = GameInst.CurrentLevel > LevelConfigsDT.Num() ?
+		BackgroundMusic.AudioComponent.SetVolume(0.25);
+
+		int ConfigRow = GameInst.GetCurrentLevel() > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :
-							GameInst.CurrentLevel - 1;
+							GameInst.GetCurrentLevel() - 1;
 		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
-		RunHP = GameInst.CurrentRunHP;
+		RunHP = GameInst.GetCurrentRunHP();
 		LevelType = LevelConfigsData.LevelType;
 
 		switch (LevelType)
@@ -121,7 +128,7 @@ class ABowlingGameMode : AGameMode
 		AddCardsToPool(WishingPoolData);
 
 		UserWidget.SetWishingPoolData(WishingPoolData);
-		UserWidget.SetInventoryCoin(GameInst.RunCoinTotal);
+		UserWidget.SetInventoryCoin(GameInst.GetRunCoinTotal());
 	}
 
 	void SetupBossGame()
@@ -142,7 +149,7 @@ class ABowlingGameMode : AGameMode
 		AddCardsToPool(ShopItemsData);
 
 		UserWidget.SetShopData(ShopItemsData);
-		UserWidget.SetInventoryCoin(GameInst.RunCoinTotal);
+		UserWidget.SetInventoryCoin(GameInst.GetRunCoinTotal());
 	}
 
 	void AddCardsToPool(TArray<FCardDT>& Pool)
@@ -177,7 +184,7 @@ class ABowlingGameMode : AGameMode
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 
-		// Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
+		Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		EOnUpdateHP.AddUFunction(UserWidget, n"UpdateHP");
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
@@ -186,6 +193,7 @@ class ABowlingGameMode : AGameMode
 		EOnEndGame.AddUFunction(OptionCardManager, n"OnEndGame");
 		EOnEndGame.AddUFunction(SurvivorManager, n"OnEndGame");
 		EOnEndGame.AddUFunction(UserWidget, n"OnEndGame");
+		EOnEndGame.AddUFunction(this, n"OnEndGame");
 
 		// Reset UI;
 		DOnUpdateScore.ExecuteIfBound(Score);
@@ -264,7 +272,7 @@ class ABowlingGameMode : AGameMode
 		LatentInfo.Linkage = 0;
 		LatentInfo.UUID = 1;
 
-		switch (GameInst.CurrentLevel)
+		switch (GameInst.GetCurrentLevel())
 		{
 			case 1:
 				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
@@ -283,9 +291,9 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION()
 	void PlayOpeningSequence()
 	{
-		if (GameInst.CurrentLevel <= OpeningSequenceAssets.Num() && OpeningSequenceAssets[GameInst.CurrentLevel - 1] != nullptr)
+		if (GameInst.GetCurrentLevel() <= OpeningSequenceAssets.Num() && OpeningSequenceAssets[GameInst.GetCurrentLevel() - 1] != nullptr)
 		{
-			PlaySequence(OpeningSequenceAssets[GameInst.CurrentLevel - 1]);
+			PlaySequence(OpeningSequenceAssets[GameInst.GetCurrentLevel() - 1]);
 		}
 	}
 
@@ -308,7 +316,7 @@ class ABowlingGameMode : AGameMode
 
 	void PopulatePowerAndCards()
 	{
-		for (FCardDT Card : GameInst.CurrentCardInventory)
+		for (FCardDT Card : GameInst.GetCurrentCardInventory())
 		{
 			switch (Card.CardType)
 			{
@@ -439,6 +447,18 @@ class ABowlingGameMode : AGameMode
 	}
 
 	UFUNCTION()
+	private void UpdateMissionList(TArray<FAchievementData> Missions)
+	{
+	}
+
+	UFUNCTION()
+	private void OnEndGame()
+	{
+
+		BackgroundMusic.AudioComponent.Stop();
+	}
+
+	UFUNCTION()
 	void Win()
 	{
 		// TODO: Test. Make a proper endgame sequence here
@@ -463,8 +483,18 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION(BlueprintCallable)
 	void NextLevel()
 	{
-		GameInst.CurrentLevel++;
+		GameInst.SetCurrentLevel(GameInst.GetCurrentLevel() + 1);
 		RestartGame();
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void ShowBoardUI()
+	{
+		UUIBoard TestUserWidget = Cast<UUIBoard>(WidgetBlueprint::CreateWidget(UITest, Gameplay::GetPlayerController(0)));
+		// TestUserWidget.SetAnchorsInViewport(FAnchors(0.5, 0));
+		TestUserWidget.AddToViewport();
+		MissionManager.EOnTutorialMissionUpdate.AddUFunction(TestUserWidget, n"UpdateMissionList");
+		MissionManager.UpdateTutorialMission();
 	}
 
 	UFUNCTION()
