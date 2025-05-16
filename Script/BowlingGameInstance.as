@@ -18,12 +18,44 @@ class UBowlingGameInstance : UGameInstance
 	UFUNCTION(BlueprintOverride)
 	void Init()
 	{
-#if EDITOR
+		LoadSaveRun();
+		// #if EDITOR
+		// 		RunData.CurrentLevel = 1;
+		// 		RunData.MaxRunHP = 100;
+		// 		RunData.CurrentRunHP = 100;
+		// 		RunData.RunCoinTotal = 200;
+		// 		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
+		// #endif
+	}
+
+	void LoadSaveRun(bool bCreateNewIfFailed = true)
+	{
+		USaveRun SaveRun = Cast<USaveRun>(Gameplay::LoadGameFromSlot("SaveRun", 0));
+		if (IsValid(SaveRun))
+		{
+			RunData = SaveRun.RunData;
+		}
+		else if (bCreateNewIfFailed)
+		{
+			CreateSaveRun();
+		}
+	}
+
+	void CreateSaveRun()
+	{
 		RunData.CurrentLevel = 1;
 		RunData.MaxRunHP = 100;
 		RunData.CurrentRunHP = 100;
-		// RunCoinTotal = 200;
-#endif
+		RunData.RunCoinTotal = 200;
+		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
+		SaveRun();
+	}
+
+	void SaveRun()
+	{
+		USaveRun SaveRun = Gameplay::CreateSaveGameObject(USaveRun);
+		SaveRun.RunData = RunData;
+		Gameplay::AsyncSaveGameToSlot(SaveRun, "SaveRun", 0); // Might need to handle saving delegate/error here
 	}
 
 	UFUNCTION()

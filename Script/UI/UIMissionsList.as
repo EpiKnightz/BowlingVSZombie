@@ -36,7 +36,6 @@ class UUIMissionsList : UUserWidget
 				MissionTexts.Add(Missions[i].Key, MissionText);
 			}
 		}
-		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
 
 	UFUNCTION()

@@ -41,7 +41,7 @@ class ABowlingGameMode : AGameMode
 	UDataTable LevelConfigsDT;
 
 	UPROPERTY()
-	FLevelConfigsDT LevelConfigsData;
+	FLevelConfigsDT TutorialConfigsData;
 
 	UPROPERTY()
 	TArray<ULevelSequence> OpeningSequenceAssets;
@@ -87,13 +87,14 @@ class ABowlingGameMode : AGameMode
 		BackgroundMusic = Gameplay::GetActorOfClass(AFMODAmbientSound);
 
 		BackgroundMusic.AudioComponent.SetVolume(0.25);
+		// Load save here, if there is no save, create a new one
 
 		int ConfigRow = GameInst.GetCurrentLevel() > LevelConfigsDT.Num() ?
 							LevelConfigsDT.Num() - 1 :
 							GameInst.GetCurrentLevel() - 1;
-		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), LevelConfigsData);
+		LevelConfigsDT.FindRow(FName("Item_" + ConfigRow), TutorialConfigsData);
 		RunHP = GameInst.GetCurrentRunHP();
-		LevelType = LevelConfigsData.LevelType;
+		LevelType = TutorialConfigsData.LevelType;
 
 		switch (LevelType)
 		{
@@ -154,19 +155,19 @@ class ABowlingGameMode : AGameMode
 
 	void AddCardsToPool(TArray<FCardDT>& Pool)
 	{
-		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.SurvivorsPoolConfig.ItemTags)
 		{
 			Pool.Add(FCardDT(SurvivorManager.GetSurvivorData(Item)));
 		}
-		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.WeaponsPoolConfig.ItemTags)
 		{
 			Pool.Add(FCardDT(WeaponsManager.GetWeaponData(Item)));
 		}
-		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.AbilitiesPoolConfig.ItemTags)
 		{
 			Pool.Add(FCardDT(AbilitiesManager.GetAbilityData(Item)));
 		}
-		for (auto Item : LevelConfigsData.PowerPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.PowerPoolConfig.ItemTags)
 		{
 			Pool.Add(FCardDT(PowerManager.GetPowerData(Item)));
 		}
@@ -184,7 +185,6 @@ class ABowlingGameMode : AGameMode
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 
-		Widget::SetInputMode_GameAndUIEx(Gameplay::GetPlayerController(0));
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		EOnUpdateHP.AddUFunction(UserWidget, n"UpdateHP");
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
@@ -230,24 +230,24 @@ class ABowlingGameMode : AGameMode
 		OptionCardManager.EOnDisableCardSpawn.AddUFunction(UserWidget, n"DisableCardSpawnUI");
 		UserWidget.EOnAttentionClicked.AddUFunction(OptionCardManager, n"OnAttentionClicked");
 
-		ZombieManager.SpawnSize = LevelConfigsData.SpawnSize;
-		ZombieManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		BoostManager.SpawnSequenceDT = LevelConfigsData.SpawnSequenceDT;
-		BowlingPawn.ItemPoolConfig = LevelConfigsData.BowlingsPoolConfig;
+		ZombieManager.SpawnSize = TutorialConfigsData.SpawnSize;
+		ZombieManager.SpawnSequenceDT = TutorialConfigsData.SpawnSequenceDT;
+		BoostManager.SpawnSequenceDT = TutorialConfigsData.SpawnSequenceDT;
+		BowlingPawn.ItemPoolConfig = TutorialConfigsData.BowlingsPoolConfig;
 
-		for (auto Item : LevelConfigsData.SurvivorsPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.SurvivorsPoolConfig.ItemTags)
 		{
 			FCardDT CardDT(Item, ECardType::Survivor);
 			OptionCardManager.AddCard(CardDT);
 			GameInst.AddCardToInventory(CardDT);
 		}
-		for (auto Item : LevelConfigsData.WeaponsPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.WeaponsPoolConfig.ItemTags)
 		{
 			FCardDT CardDT(Item, ECardType::Weapon);
 			OptionCardManager.AddCard(CardDT);
 			GameInst.AddCardToInventory(CardDT);
 		}
-		for (auto Item : LevelConfigsData.AbilitiesPoolConfig.ItemTags)
+		for (auto Item : TutorialConfigsData.AbilitiesPoolConfig.ItemTags)
 		{
 			FCardDT CardDT(Item, ECardType::Ability);
 			OptionCardManager.AddCard(CardDT);
@@ -256,10 +256,10 @@ class ABowlingGameMode : AGameMode
 
 		PopulatePowerAndCards();
 
-		if (LevelConfigsData.Delay > 0)
+		if (TutorialConfigsData.Delay > 0)
 		{
 			PauseGame();
-			System::SetTimer(this, n"StartGame", LevelConfigsData.Delay, false);
+			System::SetTimer(this, n"StartGame", TutorialConfigsData.Delay, false);
 		}
 		else
 		{
@@ -367,7 +367,7 @@ class ABowlingGameMode : AGameMode
 		{
 			case EGameStatus::Win:
 			{
-				FGameplayTag Reward = LevelConfigsData.GetRandomReward();
+				FGameplayTag Reward = TutorialConfigsData.GetRandomReward();
 				FCardDT RewardCard;
 				if (Reward.MatchesTag(GameplayTags::Power))
 				{
@@ -468,7 +468,7 @@ class ABowlingGameMode : AGameMode
 		RewardChest.DOnRewardCollected.BindUFunction(this, n"PostEndgameEvents");
 		GameStatus = EGameStatus::Win;
 		EndGame();
-		//  Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
+		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
 
 	UFUNCTION()
@@ -477,13 +477,14 @@ class ABowlingGameMode : AGameMode
 		GameStatus = EGameStatus::Lose;
 		EndGame();
 		PostEndgameEvents();
-		// Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
+		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
 
 	UFUNCTION(BlueprintCallable)
 	void NextLevel()
 	{
 		GameInst.SetCurrentLevel(GameInst.GetCurrentLevel() + 1);
+		GameInst.SaveRun();
 		RestartGame();
 	}
 

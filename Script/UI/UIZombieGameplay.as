@@ -252,6 +252,7 @@ class UUIZombieGameplay : UUserWidget
 	UFUNCTION(BlueprintCallable)
 	void OnNextLevelClicked()
 	{
+		this.RemoveFromParent();
 		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).ShowBoardUI();
 	}
 
