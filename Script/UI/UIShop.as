@@ -14,9 +14,10 @@ class UUIShop : UUserWidget
 	TArray<UUIShopItem> ShopItems;
 	TArray<FCardDT> ShopData;
 	int CurrentIndex = 0;
+	int CurrentMapPosition = -1;
 
 	FCardDTEvent EOnShopItemBought;
-	FVoidDelegate DLeaveShop;
+	FIntDelegate DLeaveShop;
 	FIntEvent EOnCoinChanged;
 
 	UFUNCTION(BlueprintOverride)
@@ -37,7 +38,7 @@ class UUIShop : UUserWidget
 	UFUNCTION()
 	void OnLeaveShop()
 	{
-		DLeaveShop.ExecuteIfBound();
+		DLeaveShop.ExecuteIfBound(CurrentMapPosition);
 	}
 
 	UFUNCTION()

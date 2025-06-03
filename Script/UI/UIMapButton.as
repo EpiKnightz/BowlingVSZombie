@@ -4,14 +4,21 @@ class UUIMapButton : UUserWidget
 	UButton ButtonBuilding;
 	UPROPERTY(BindWidget)
 	UImage ZombieMark;
+	UPROPERTY(BindWidget)
+	UImage ClearMark;
 
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation PopupAnim;
+	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation ClearAnim;
 
 	UPROPERTY()
 	UTexture2D Active;
 	UPROPERTY()
 	UTexture2D Inactive;
+
+	private int CurrentMapPosition = -1;
+	private EMapElement CurrentMapElementType = EMapElement::None;
 
 	UFUNCTION(BlueprintOverride)
 	void Construct()
@@ -23,9 +30,13 @@ class UUIMapButton : UUserWidget
 	UFUNCTION()
 	private void OnClicked()
 	{
-		SetActive(false);
-		// Temp: TODO: Replace with UIMap.OnMapButtonClicked
-		Cast<ABowlingGameMode>(Gameplay::GetGameMode()).NextLevel();
+		// SetActive(false);
+		//  Temp: TODO: Replace with UIMap.OnMapButtonClicked
+		auto GameInst = Cast<UBowlingGameInstance>(GameInstance);
+		if (IsValid(GameInst))
+		{
+			GameInst.NextLevel(CurrentMapPosition);
+		}
 	}
 
 	UFUNCTION()
@@ -39,10 +50,41 @@ class UUIMapButton : UUserWidget
 		}
 	}
 
+	void SetLock(bool bLocked = false)
+	{
+		ButtonBuilding.SetVisibility(bLocked ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Visible);
+	}
+
+	UFUNCTION()
+	void SetClear(bool bCleared = false, bool bPlayAnim = true)
+	{
+		if (ZombieMark.IsVisible())
+		{
+			ClearMark.SetVisibility(bCleared ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+			if (bCleared && bPlayAnim)
+			{
+				PlayAnimation(ClearAnim);
+			}
+		}
+		else if (CurrentMapElementType != EMapElement::Store)
+		{
+			SetActive(false, false);
+		}
+	}
+
+	UFUNCTION(BlueprintOverride)
+	void OnAnimationFinished(const UWidgetAnimation Animation)
+	{
+		if (Animation == ClearAnim && CurrentMapElementType != EMapElement::Store)
+		{
+			SetActive(false, false);
+		}
+	}
+
 	UFUNCTION()
 	void SetZombieMark(bool bActive, UTexture2D ZombieIcon = nullptr, float AnimDelay = 0, float32 IconSize = NORMAL_ICON_SIZE)
 	{
-		ZombieMark.SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+		ZombieMark.SetVisibility(bActive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden);
 		if (bActive)
 		{
 			FSlateBrush Brush;
@@ -75,8 +117,10 @@ class UUIMapButton : UUserWidget
 	}
 
 	UFUNCTION()
-	void SetData(FMapElementDT Row)
+	void SetData(FMapElementDT Row, int MapPosition)
 	{
+		CurrentMapPosition = MapPosition;
+		CurrentMapElementType = Row.Type;
 		ChangeImage(Row.Icon, Row.InactiveIcon);
 	}
 };

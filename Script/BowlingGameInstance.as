@@ -1,11 +1,15 @@
 struct FRunData
 {
-	int CurrentLevel = 1;
 	TArray<FCardDT> CurrentCardInventory;
 	int RunCoinTotal;
 	float CurrentRunHP;
 	float MaxRunHP = 100;
 	FGameplayTagContainer RunTags;
+
+	// Map data
+	int InitialSeed = -1;
+	int CurrentLevel = 0;
+	TArray<int> ClearedLevels;
 }
 
 class UBowlingGameInstance : UGameInstance
@@ -15,17 +19,25 @@ class UBowlingGameInstance : UGameInstance
 	FRunData RunData;
 	FIntEvent EOnCoinChange;
 
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UUIBoard> UIBoard;
+
 	UFUNCTION(BlueprintOverride)
 	void Init()
 	{
 		LoadSaveRun();
-		// #if EDITOR
-		// 		RunData.CurrentLevel = 1;
-		// 		RunData.MaxRunHP = 100;
-		// 		RunData.CurrentRunHP = 100;
-		// 		RunData.RunCoinTotal = 200;
-		// 		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
-		// #endif
+		// CreateSaveRun();
+	}
+
+	void ResetSave()
+	{
+		RunData.CurrentLevel = 0;
+		RunData.MaxRunHP = 100;
+		RunData.CurrentRunHP = 100;
+		RunData.RunCoinTotal = 200;
+		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
+		RunData.ClearedLevels.Empty();
+		SaveRun();
 	}
 
 	void LoadSaveRun(bool bCreateNewIfFailed = true)
@@ -43,11 +55,7 @@ class UBowlingGameInstance : UGameInstance
 
 	void CreateSaveRun()
 	{
-		RunData.CurrentLevel = 1;
-		RunData.MaxRunHP = 100;
-		RunData.CurrentRunHP = 100;
-		RunData.RunCoinTotal = 200;
-		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
+		ResetSave();
 		SaveRun();
 	}
 
@@ -58,10 +66,17 @@ class UBowlingGameInstance : UGameInstance
 		Gameplay::AsyncSaveGameToSlot(SaveRun, "SaveRun", 0); // Might need to handle saving delegate/error here
 	}
 
+	void SaveSeed(int Seed)
+	{
+		RunData.InitialSeed = Seed;
+		SaveRun();
+	}
+
 	UFUNCTION()
 	void AddCardToInventory(FCardDT Reward)
 	{
 		RunData.CurrentCardInventory.AddUnique(Reward);
+		SaveRun();
 	}
 
 	UFUNCTION()
@@ -69,6 +84,7 @@ class UBowlingGameInstance : UGameInstance
 	{
 		RunData.CurrentCardInventory.AddUnique(Item);
 		ChangeInvCoinAmount(-Item.Cost);
+		SaveRun();
 	}
 
 	UFUNCTION()
@@ -76,12 +92,14 @@ class UBowlingGameInstance : UGameInstance
 	{
 		RunData.RunCoinTotal += CoinChanges;
 		EOnCoinChange.Broadcast(RunData.RunCoinTotal);
+		SaveRun();
 	}
 
 	UFUNCTION()
 	void SetRunHP(float HPAmount)
 	{
 		RunData.CurrentRunHP = Math::Clamp(HPAmount, 0, RunData.MaxRunHP);
+		SaveRun();
 	}
 
 	UFUNCTION()
@@ -106,6 +124,7 @@ class UBowlingGameInstance : UGameInstance
 	void SetCurrentLevel(int Level)
 	{
 		RunData.CurrentLevel = Level;
+		SaveRun();
 	}
 
 	UFUNCTION()
@@ -127,6 +146,13 @@ class UBowlingGameInstance : UGameInstance
 	}
 
 	UFUNCTION()
+	void CompleteLevel()
+	{
+		RunData.ClearedLevels.Add(RunData.CurrentLevel);
+		SaveRun();
+	}
+
+	UFUNCTION()
 	TArray<FCardDT> GetCurrentCardInventory()
 	{
 		return RunData.CurrentCardInventory;
@@ -136,5 +162,42 @@ class UBowlingGameInstance : UGameInstance
 	bool HasTag(FGameplayTag Tag)
 	{
 		return RunData.RunTags.HasTag(Tag);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	UUIBoard ShowBoardUI()
+	{
+		UUIBoard BoardWidget = Cast<UUIBoard>(WidgetBlueprint::CreateWidget(UIBoard, Gameplay::GetPlayerController(0)));
+		BoardWidget.AddToViewport();
+		return BoardWidget;
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void NextLevel(int NextLevel = -1)
+	{
+		if (NextLevel == -1)
+		{
+			SetCurrentLevel(GetCurrentLevel() + 1);
+		}
+		else
+		{
+			SetCurrentLevel(NextLevel);
+		}
+		SaveRun();
+		StartActionMap();
+	}
+
+	UFUNCTION()
+	void StartActionMap()
+	{
+		AGameMode GameMode = Cast<AGameMode>(Gameplay::GetGameMode());
+		if (IsValid(GameMode) && GameMode.IsA(ABowlingGameMode))
+		{
+			GameMode.RestartGame();
+		}
+		else
+		{
+			Gameplay::OpenLevel(n"M_ActionPhaseFinal");
+		}
 	}
 };

@@ -29,7 +29,7 @@ class ABowlingGameMode : AGameMode
 	TSubclassOf<UUIZombieGameplay> UIZombie;
 
 	UPROPERTY(BlueprintReadWrite)
-	TSubclassOf<UUIBoard> UITest;
+	TSubclassOf<UUIBoard> UIBoard;
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIShop> UIShop;
@@ -123,7 +123,7 @@ class ABowlingGameMode : AGameMode
 		UserWidget.DAddCardToInventory.BindUFunction(GameInst, n"AddCardToInventory");
 		UserWidget.DChangeCoinTotal.BindUFunction(GameInst, n"ChangeInvCoinAmount");
 		GameInst.EOnCoinChange.AddUFunction(UserWidget, n"InterpolateCoinChanges");
-		UserWidget.DLeaveRest.BindUFunction(this, n"NextLevel");
+		UserWidget.DLeaveRest.BindUFunction(GameInst, n"NextLevel");
 
 		TArray<FCardDT> WishingPoolData;
 		AddCardsToPool(WishingPoolData);
@@ -143,7 +143,7 @@ class ABowlingGameMode : AGameMode
 		UserWidget.AddToViewport();
 
 		UserWidget.EOnShopItemBought.AddUFunction(GameInst, n"OnShopItemBought");
-		UserWidget.DLeaveShop.BindUFunction(this, n"NextLevel");
+		UserWidget.DLeaveShop.BindUFunction(GameInst, n"NextLevel");
 		GameInst.EOnCoinChange.AddUFunction(UserWidget, n"InterpolateCoinChanges");
 
 		TArray<FCardDT> ShopItemsData;
@@ -185,6 +185,9 @@ class ABowlingGameMode : AGameMode
 		UUIZombieGameplay UserWidget = Cast<UUIZombieGameplay>(WidgetBlueprint::CreateWidget(UIZombie, Gameplay::GetPlayerController(0)));
 		UserWidget.AddToViewport();
 
+		// Testing
+		// ShowBoardUI();
+
 		DOnUpdateScore.BindUFunction(UserWidget, n"UpdateScore");
 		EOnUpdateHP.AddUFunction(UserWidget, n"UpdateHP");
 		EOnLose.AddUFunction(UserWidget, n"LoseUI");
@@ -214,6 +217,7 @@ class ABowlingGameMode : AGameMode
 
 		BoostManager.DOnWarning.BindUFunction(UserWidget, n"UpdateWarningText");
 		BoostManager.Setup(StatusManager);
+		BoostManager.DPlaySpecificSequence.BindUFunction(this, n"PlaySpecificSequence");
 
 		SurvivorManager.EOnSurvivorSpawned.AddUFunction(PowerManager, n"ApplySurvivorPower");
 
@@ -279,7 +283,7 @@ class ABowlingGameMode : AGameMode
 				break;
 			case 2:
 				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
-				PlayOpeningSequence();
+				// PlayOpeningSequence();
 				break;
 			case 3:
 				Gameplay::LoadStreamLevel(n"M_Level3", true, true, LatentInfo);
@@ -291,9 +295,19 @@ class ABowlingGameMode : AGameMode
 	UFUNCTION()
 	void PlayOpeningSequence()
 	{
-		if (GameInst.GetCurrentLevel() <= OpeningSequenceAssets.Num() && OpeningSequenceAssets[GameInst.GetCurrentLevel() - 1] != nullptr)
+		int Idx = GameInst.GetCurrentLevel() - 1;
+		if (GameInst.GetCurrentLevel() <= OpeningSequenceAssets.Num() && OpeningSequenceAssets[Idx] != nullptr)
 		{
-			PlaySequence(OpeningSequenceAssets[GameInst.GetCurrentLevel() - 1]);
+			PlaySequence(OpeningSequenceAssets[Idx]);
+		}
+	}
+
+	UFUNCTION()
+	void PlaySpecificSequence(int Idx)
+	{
+		if (Idx >= 0 && Idx < OpeningSequenceAssets.Num() && OpeningSequenceAssets[Idx] != nullptr)
+		{
+			PlaySequence(OpeningSequenceAssets[Idx]);
 		}
 	}
 
@@ -467,6 +481,7 @@ class ABowlingGameMode : AGameMode
 		auto RewardChest = SpawnActor(RewardChestBP);
 		RewardChest.DOnRewardCollected.BindUFunction(this, n"PostEndgameEvents");
 		GameStatus = EGameStatus::Win;
+		GameInst.CompleteLevel();
 		EndGame();
 		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
@@ -480,21 +495,25 @@ class ABowlingGameMode : AGameMode
 		Widget::SetInputMode_UIOnlyEx(Gameplay::GetPlayerController(0));
 	}
 
-	UFUNCTION(BlueprintCallable)
-	void NextLevel()
-	{
-		GameInst.SetCurrentLevel(GameInst.GetCurrentLevel() + 1);
-		GameInst.SaveRun();
-		RestartGame();
-	}
+	// UFUNCTION(BlueprintCallable)
+	// void NextLevel(int NextLevel = -1)
+	// {
+	// 	if (NextLevel == -1)
+	// 	{
+	// 		GameInst.SetCurrentLevel(GameInst.GetCurrentLevel() + 1);
+	// 	}
+	// 	else
+	// 	{
+	// 		GameInst.SetCurrentLevel(NextLevel);
+	// 	}
+	// 	GameInst.SaveRun();
+	// 	RestartGame();
+	// }
 
 	UFUNCTION(BlueprintCallable)
 	void ShowBoardUI()
 	{
-		UUIBoard TestUserWidget = Cast<UUIBoard>(WidgetBlueprint::CreateWidget(UITest, Gameplay::GetPlayerController(0)));
-		// TestUserWidget.SetAnchorsInViewport(FAnchors(0.5, 0));
-		TestUserWidget.AddToViewport();
-		MissionManager.EOnTutorialMissionUpdate.AddUFunction(TestUserWidget, n"UpdateMissionList");
+		MissionManager.EOnTutorialMissionUpdate.AddUFunction(GameInst.ShowBoardUI(), n"UpdateMissionList");
 		MissionManager.UpdateTutorialMission();
 	}
 

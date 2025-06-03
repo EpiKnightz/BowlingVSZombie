@@ -46,10 +46,13 @@ class UUIBoard : UUserWidget
 	UFUNCTION()
 	void OnIntroFinished()
 	{
-		PlayAnimation(NextAnim, 0, 0);
-		NextButton.SetVisibility(ESlateVisibility::Visible);
-		NextButton.OnClicked.AddUFunction(this, n"OnNextButtonClicked");
-		MissionList.OnMissionCompletedAnim.AddUFunction(this, n"OnMissionCompletedAnim");
+		if (NextButton.Visibility == ESlateVisibility::Visible)
+		{
+			PlayAnimation(NextAnim, 0, 0);
+			NextButton.SetVisibility(ESlateVisibility::Visible);
+			NextButton.OnClicked.AddUFunction(this, n"OnNextButtonClicked");
+			MissionList.OnMissionCompletedAnim.AddUFunction(this, n"OnMissionCompletedAnim");
+		}
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -71,17 +74,22 @@ class UUIBoard : UUserWidget
 		}
 	}
 
+	void SkipMission()
+	{
+		NextButton.SetVisibility(ESlateVisibility::Collapsed);
+		MissionList.SetVisibility(ESlateVisibility::Collapsed);
+		Map.Start();
+		Map.OnLeftClicked.AddUFunction(this, n"OnLeftRightClicked");
+		Map.OnRightClicked.AddUFunction(this, n"OnLeftRightClicked");
+		// Map.OnNextClicked.AddUFunction(this, n"OnNextClicked");
+	}
+
 	UFUNCTION()
 	private void OnNextButtonClicked()
 	{
 		StopAnimation(NextAnim);
-		NextButton.SetVisibility(ESlateVisibility::Collapsed);
-
 		PlayAnimation(PaperRipAnim);
-		Map.Start();
-		Map.OnLeftClicked.AddUFunction(this, n"OnLeftRightClicked");
-		Map.OnRightClicked.AddUFunction(this, n"OnLeftRightClicked");
-		Map.OnNextClicked.AddUFunction(this, n"OnNextClicked");
+		SkipMission();
 	}
 
 	UFUNCTION()

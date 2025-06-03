@@ -23,7 +23,9 @@ class UUIRest : UUserWidget
 	FFloatDelegate DRestoreRunHPAmount;
 	FCardDTDelegate DAddCardToInventory;
 	FIntDelegate DChangeCoinTotal;
-	FVoidDelegate DLeaveRest;
+	FIntDelegate DLeaveRest;
+
+	int CurrentMapPosition = -1;
 
 	UFUNCTION()
 	void RestoreRunHPPercent(float HPPercent)
@@ -74,6 +76,6 @@ class UUIRest : UUserWidget
 	UFUNCTION()
 	void OnLeaveRest()
 	{
-		DLeaveRest.ExecuteIfBound();
+		DLeaveRest.ExecuteIfBound(CurrentMapPosition);
 	}
 }

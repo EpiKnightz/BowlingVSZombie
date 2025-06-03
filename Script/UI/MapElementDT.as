@@ -8,6 +8,7 @@ enum EMapElement
 	Church,	  // Survivor
 	Elite,	  // Power?
 	Boss,	  // Mythic Power
+	None,	  // Error type
 };
 struct FMapElementDT
 {
