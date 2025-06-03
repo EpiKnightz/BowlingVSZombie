@@ -18,6 +18,10 @@ struct FItemPoolConfigDT
 
 	FGameplayTag GetRandomTag()
 	{
+		if (ItemTags.Num() == 0)
+		{
+			return FGameplayTag();
+		}
 		int Idx = ItemTags.Num() > 1 ? Math::RandRange(0, ItemTags.Num() - 1) : 0;
 		return ItemTags[Idx];
 	}

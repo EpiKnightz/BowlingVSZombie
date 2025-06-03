@@ -35,6 +35,7 @@ class ABoostManager : AActor
 	private int multipleSpawnCount = 0;
 
 	FFTextDelegate DOnWarning;
+	FIntDelegate DPlaySpecificSequence;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -91,6 +92,12 @@ class ABoostManager : AActor
 				else if (SpawnSequence[currentSequenceMilestone].SpawnType == ESpawnType::Zone)
 				{
 					SpawnZone();
+				}
+				else if (SpawnSequence[currentSequenceMilestone].SpawnType == ESpawnType::Cutscene)
+				{
+					DPlaySpecificSequence.ExecuteIfBound(int(SpawnSequence[currentSequenceMilestone].MinWaveCooldown));
+					countdown = 9999;
+					return;
 				}
 				countdown = Math::RandRange(SpawnSequence[currentSequenceMilestone].MinWaveCooldown, SpawnSequence[currentSequenceMilestone].MaxWaveCooldown);
 			}
@@ -160,7 +167,8 @@ class ABoostManager : AActor
 		for (int i = 0; i < SpawnSequence.Num(); i++)
 		{
 			if (SpawnSequence[i].SpawnType != ESpawnType::PowerUp
-				&& SpawnSequence[i].SpawnType != ESpawnType::Zone)
+				&& SpawnSequence[i].SpawnType != ESpawnType::Zone
+				&& SpawnSequence[i].SpawnType != ESpawnType::Cutscene)
 			{
 				SpawnSequence.RemoveAt(i);
 				--i;

@@ -2,7 +2,8 @@ enum ESpawnType
 {
 	Zombie,
 	PowerUp,
-	Zone
+	Zone,
+	Cutscene
 }
 
 struct FSpawnSequenceDT

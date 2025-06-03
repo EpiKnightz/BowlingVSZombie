@@ -11,7 +11,7 @@ struct FLevelConfigsDT
 	UPROPERTY()
 	int Level;
 
-	UPROPERTY()
+	UPROPERTY(meta = (MultiLine = true))
 	FText LevelDescription;
 
 	UPROPERTY()
