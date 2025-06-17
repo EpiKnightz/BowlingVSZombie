@@ -9,7 +9,7 @@ class UFrenzyAbility : UStatusAbility
 
 	bool SetupAbilityChild() override
 	{
-		RootTransform = (AbilitySystem.GetOwner().GetRootComponent());
+		RootTransform = (InteractSystem.GetOwner().GetRootComponent());
 		if (IsValid(RootTransform) && GetStatusRespComp())
 		{
 			return true;

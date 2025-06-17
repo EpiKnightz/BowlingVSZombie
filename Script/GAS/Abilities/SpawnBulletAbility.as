@@ -18,7 +18,7 @@ class USpawnBulletAbility : USkillAbility
 		}
 		else
 		{
-			SpawnBullet(AbilitySystem.GetOwner().GetActorLocation(), AbilitySystem.GetOwner().GetActorRotation());
+			SpawnBullet(InteractSystem.GetOwner().GetActorLocation(), InteractSystem.GetOwner().GetActorRotation());
 			OnAbilityEnd();
 		}
 	}
@@ -26,7 +26,7 @@ class USpawnBulletAbility : USkillAbility
 	UFUNCTION()
 	void RepeatSpawn()
 	{
-		SpawnBullet(AbilitySystem.GetOwner().GetActorLocation(), AbilitySystem.GetOwner().GetActorRotation());
+		SpawnBullet(InteractSystem.GetOwner().GetActorLocation(), InteractSystem.GetOwner().GetActorRotation());
 		RepeatCount++;
 		if (RepeatCount >= RepeatParam)
 		{
@@ -43,11 +43,11 @@ class USpawnBulletAbility : USkillAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.SetAbilityData(AbilityData);
-			// ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
-			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+			// ProjDataComp.AddEffects(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
+			ProjDataComp.AddEffects(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
 			ProjDataComp.SetAttack(float32(SkillAttack));
 
-			auto HostTargetResponse = UTargetResponseComponent::Get(AbilitySystem.GetOwner());
+			auto HostTargetResponse = UTargetResponseComponent::Get(InteractSystem.GetOwner());
 			if (IsValid(HostTargetResponse))
 			{
 				auto BulletTargetResponse = UTargetResponseComponent::Get(Actor);

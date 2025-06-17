@@ -3,9 +3,9 @@ class URemoveWeaponObj : UModifierObject
 	UPROPERTY()
 	bool bRemoveMainHand = true;
 
-	void AddToAbilitySystem(ULiteAbilitySystem& AbilitySystem) override
+	void AddToAbilitySystem(UInteractSystem& InteractSystem) override
 	{
-		AZombie Zomb = Cast<AZombie>(AbilitySystem.Owner);
+		AZombie Zomb = Cast<AZombie>(InteractSystem.Owner);
 		if (IsValid(Zomb))
 		{
 			Zomb.RemoveWeapon(bRemoveMainHand);

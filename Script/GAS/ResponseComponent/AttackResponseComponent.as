@@ -32,7 +32,7 @@ class UAttackResponseComponent : UResponseComponent
 	{
 		if (!AttackName.IsNone())
 		{
-			DPlayAttackAnim.BindUFunction(AbilitySystem.Owner, AttackName);
+			DPlayAttackAnim.BindUFunction(InteractSystem.Owner, AttackName);
 		}
 	}
 
@@ -51,7 +51,7 @@ class UAttackResponseComponent : UResponseComponent
 	UFUNCTION()
 	bool IsDualWield()
 	{
-		return AbilitySystem.HasTag(GameplayTags::Description_Weapon_DualWield);
+		return InteractSystem.HasTag(GameplayTags::Description_Weapon_DualWield);
 	}
 
 	UFUNCTION()
@@ -82,25 +82,25 @@ class UAttackResponseComponent : UResponseComponent
 	UFUNCTION()
 	private void OnRemoveAttackCooldownModifier(const UObject Object, int ID)
 	{
-		AbilitySystem.RemoveModifier(AttackAttrSet::AttackCooldown, Object, ID);
+		InteractSystem.RemoveModifier(AttackAttrSet::AttackCooldown, Object, ID);
 	}
 
 	UFUNCTION()
 	private void OnChangeAttackCooldownModifier(UModifier Modifier)
 	{
-		AbilitySystem.AddModifier(AttackAttrSet::AttackCooldown, Modifier);
+		InteractSystem.AddModifier(AttackAttrSet::AttackCooldown, Modifier);
 	}
 
 	UFUNCTION()
 	void OnChangeAttackModifier(UModifier Modifier)
 	{
-		AbilitySystem.AddModifier(AttackAttrSet::Attack, Modifier);
+		InteractSystem.AddModifier(AttackAttrSet::Attack, Modifier);
 	}
 
 	UFUNCTION()
 	void OnRemoveAttackModifier(const UObject Object, int ID)
 	{
-		AbilitySystem.RemoveModifier(AttackAttrSet::Attack, Object, ID);
+		InteractSystem.RemoveModifier(AttackAttrSet::Attack, Object, ID);
 	}
 
 	UFUNCTION()

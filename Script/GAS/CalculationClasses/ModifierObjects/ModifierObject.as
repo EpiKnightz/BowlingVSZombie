@@ -10,13 +10,13 @@ class UModifierObject : UDataAsset
 	protected int ID = 0;
 
 	UFUNCTION()
-	void AddToAbilitySystem(ULiteAbilitySystem& AbilitySystem)
+	void AddToAbilitySystem(UInteractSystem& InteractSystem)
 	{
 	}
 
 	UFUNCTION()
-	void RemoveFromAbilitySystem(ULiteAbilitySystem& AbilitySystem)
+	void RemoveFromAbilitySystem(UInteractSystem& InteractSystem)
 	{
-		AbilitySystem.RemoveModifier(AttributeName, this, ID);
+		InteractSystem.RemoveModifier(AttributeName, this, ID);
 	}
 };

@@ -33,11 +33,11 @@ class UShootBulletAbility : UAttackAbility
 		{
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			ProjDataComp.SetAbilityData(AbilityData);
-			// ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
-			ProjDataComp.AddEffects(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
-			ProjDataComp.SetAttack(AbilitySystem.GetValue(AttackAttrSet::Attack));
+			// ProjDataComp.AddEffects(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Ability.GetSingleTagContainer()));
+			ProjDataComp.AddEffects(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+			ProjDataComp.SetAttack(InteractSystem.GetValue(AttackAttrSet::Attack));
 
-			auto HostTargetResponse = UTargetResponseComponent::Get(AbilitySystem.GetOwner());
+			auto HostTargetResponse = UTargetResponseComponent::Get(InteractSystem.GetOwner());
 			if (IsValid(HostTargetResponse))
 			{
 				auto BulletTargetResponse = UTargetResponseComponent::Get(Actor);

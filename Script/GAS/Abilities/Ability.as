@@ -1,6 +1,6 @@
 class UAbility : ULiteAbilityBase
 {
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 
 	UTrigger Trigger;
 
@@ -12,8 +12,8 @@ class UAbility : ULiteAbilityBase
 	void PostRegisterAbility(const ULiteAbilitySystemComponent iAbilitySystem, int iKey, FGameplayTag iAbilityTag)
 	{
 		Key = iKey;
-		AbilitySystem = Cast<ULiteAbilitySystem>(iAbilitySystem);
-		if (IsValid(AbilitySystem))
+		InteractSystem = Cast<UInteractSystem>(iAbilitySystem);
+		if (IsValid(InteractSystem))
 		{
 			AbilitiesManager = Gameplay::GetActorOfClass(AAbilitiesManager);
 			if (IsValid(AbilitiesManager))
@@ -71,7 +71,7 @@ class UAbility : ULiteAbilityBase
 	{
 		if (AbilityData.AbilityTags.HasTagExact(GameplayTags::Description_Skill_Rage))
 		{
-			auto RageResponsePtr = URageResponseComponent::Get(AbilitySystem.GetOwner());
+			auto RageResponsePtr = URageResponseComponent::Get(InteractSystem.GetOwner());
 			if (IsValid(RageResponsePtr))
 			{
 				RageResponsePtr.OnRageSkillEnd();
@@ -85,6 +85,6 @@ class UAbility : ULiteAbilityBase
 		// Be careful with calling onabilityend here
 		Trigger.StopTrigger();
 		OnAbilityEnd();
-		// AbilitySystem.DeregAbility(Key);
+		// InteractSystem.DeregAbility(Key);
 	}
 };

@@ -9,13 +9,13 @@ class USkillAbility : UAbility
 			// PrintWarning("Missing BaseSkillAttack");
 			BaseSkillAttack = 0;
 		}
-		BaseSkillAttack += AbilitySystem.GetValue(AttackAttrSet::Attack);
+		BaseSkillAttack += InteractSystem.GetValue(AttackAttrSet::Attack);
 		if (!AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_SkillAttackModifier, SkillAttackModifier))
 		{
 			// PrintWarning("Missing SkillAttackModifier");
 			SkillAttackModifier = 0;
 		}
-		SkillAttackModifier += AbilitySystem.GetValue(SkillAttrSet::SkillAttackModifier);
+		SkillAttackModifier += InteractSystem.GetValue(SkillAttrSet::SkillAttackModifier);
 		return BaseSkillAttack * SkillAttackModifier;
 	}
 };

@@ -16,8 +16,8 @@ class UDoTStatus : UStatusComponent
 
 		DamageResponse = UDamageResponseComponent::Get(GetOwner());
 		if (!IsValid(DamageResponse)
-			|| Interval == AbilitySystem::INVALID_VALUE
-			|| DamagePerInterval == AbilitySystem::INVALID_VALUE)
+			|| Interval == InteractSystem::INVALID_VALUE
+			|| DamagePerInterval == InteractSystem::INVALID_VALUE)
 		{
 			EndStatusEffect();
 		}

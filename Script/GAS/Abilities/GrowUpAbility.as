@@ -4,7 +4,7 @@ class UGrowUpAbility : UAbility
 
 	void ActivateAbilityChild(AActor Target) override
 	{
-		auto Survivor = Cast<ASurvivor>(AbilitySystem.GetOwner());
+		auto Survivor = Cast<ASurvivor>(InteractSystem.GetOwner());
 		if (IsValid(Survivor))
 		{
 			if (IsValid(FloatTween) && FloatTween.IsValid())

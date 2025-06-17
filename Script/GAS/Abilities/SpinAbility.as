@@ -8,7 +8,7 @@ class USpinAbility : USkillAbility
 
 	bool SetupAbilityChild() override
 	{
-		RootTransform = (AbilitySystem.GetOwner().GetRootComponent());
+		RootTransform = (InteractSystem.GetOwner().GetRootComponent());
 		if (IsValid(RootTransform))
 		{
 			return true;
@@ -62,7 +62,7 @@ class USpinAbility : USkillAbility
 		traceObjectTypes.Add(EObjectTypeQuery::Enemy);
 		TArray<AActor> ignoreActors;
 		TArray<AActor> outActors;
-		System::SphereOverlapActors(AbilitySystem.GetOwner().GetActorLocation(), Range, traceObjectTypes, nullptr, ignoreActors, outActors);
+		System::SphereOverlapActors(InteractSystem.GetOwner().GetActorLocation(), Range, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 		for (AActor overlappedActor : outActors)
 		{
@@ -73,7 +73,7 @@ class USpinAbility : USkillAbility
 				auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
 				if (IsValid(StatusResponse))
 				{
-					StatusResponse.DOnApplyStatus.ExecuteIfBound(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+					StatusResponse.DOnApplyStatus.ExecuteIfBound(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
 				}
 			}
 		}

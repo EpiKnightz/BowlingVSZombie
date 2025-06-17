@@ -9,11 +9,11 @@ class UModifier
 	UPROPERTY()
 	TArray<float32> Params;
 
-	void Calculate(const ULiteAbilitySystem AbilitySystem, float32& SourceValue)
+	void Calculate(const UInteractSystem InteractSystem, float32& SourceValue)
 	{
 		if (IsValidInput(SourceValue))
 		{
-			DoCalculateChildren(AbilitySystem, SourceValue);
+			DoCalculateChildren(InteractSystem, SourceValue);
 		}
 		else
 		{
@@ -21,7 +21,7 @@ class UModifier
 		}
 	}
 
-	void DoCalculateChildren(const ULiteAbilitySystem AbilitySystem, float32& SourceValue)
+	void DoCalculateChildren(const UInteractSystem InteractSystem, float32& SourceValue)
 	{
 	}
 

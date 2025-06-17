@@ -4,7 +4,7 @@ class UStatusAbility : UAbility
 
 	protected bool GetStatusRespComp()
 	{
-		StatusResponsePtr = UStatusResponseComponent::Get(AbilitySystem.GetOwner());
+		StatusResponsePtr = UStatusResponseComponent::Get(InteractSystem.GetOwner());
 		return IsValid(StatusResponsePtr);
 	}
 }

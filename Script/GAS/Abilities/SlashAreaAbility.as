@@ -19,21 +19,21 @@ class USlashAreaAbility : UAttackAbility
 			traceObjectTypes.Add(EObjectTypeQuery::Enemy);
 			TArray<AActor> ignoreActors;
 			TArray<AActor> outActors;
-			// AbilitySystem.SetBaseValue(AttackAttrSet::AttackRange, 165);
-			float radius = AbilitySystem.GetValue(AttackAttrSet::AttackRange);
+			// InteractSystem.SetBaseValue(AttackAttrSet::AttackRange, 165);
+			float radius = InteractSystem.GetValue(AttackAttrSet::AttackRange);
 			// Print("SlashAreaAbility: OnAnimHitNotify" + radius);
-			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), AbilitySystem.GetValue(AttackAttrSet::AttackRange), traceObjectTypes, nullptr, ignoreActors, outActors);
+			System::SphereOverlapActors(AttackResponsePtr.DGetAttackLocation.Execute(), InteractSystem.GetValue(AttackAttrSet::AttackRange), traceObjectTypes, nullptr, ignoreActors, outActors);
 
 			for (AActor overlappedActor : outActors)
 			{
 				UDamageResponseComponent DamageResponse = UDamageResponseComponent::Get(overlappedActor);
 				if (IsValid(DamageResponse))
 				{
-					DamageResponse.DOnTakeHit.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack));
+					DamageResponse.DOnTakeHit.ExecuteIfBound(InteractSystem.GetValue(AttackAttrSet::Attack));
 					auto StatusResponse = UStatusResponseComponent::Get(overlappedActor);
 					if (IsValid(StatusResponse))
 					{
-						StatusResponse.DOnApplyStatus.ExecuteIfBound(AbilitySystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
+						StatusResponse.DOnApplyStatus.ExecuteIfBound(InteractSystem.GetCurrentActorTags().Filter(GameplayTags::Status_Negative.GetSingleTagContainer()));
 					}
 				}
 			}

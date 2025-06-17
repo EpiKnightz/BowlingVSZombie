@@ -13,7 +13,7 @@ class UAttackAbility : UAbility
 
 	protected bool GetAttackRespComp()
 	{
-		AttackResponsePtr = UAttackResponseComponent::Get(AbilitySystem.GetOwner());
+		AttackResponsePtr = UAttackResponseComponent::Get(InteractSystem.GetOwner());
 		return IsValid(AttackResponsePtr);
 	}
 

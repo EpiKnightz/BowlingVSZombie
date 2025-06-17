@@ -1,13 +1,13 @@
 class UResponseComponent : UActorComponent
 {
-	protected ULiteAbilitySystem AbilitySystem;
+	protected UInteractSystem InteractSystem;
 
 	UFUNCTION()
-	void Initialize(ULiteAbilitySystem iAbilitySystem)
+	void Initialize(UInteractSystem iAbilitySystem)
 	{
 		if (IsValid(iAbilitySystem))
 		{
-			AbilitySystem = iAbilitySystem;
+			InteractSystem = iAbilitySystem;
 			if (!InitChild())
 			{
 				Deactive();

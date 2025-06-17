@@ -119,7 +119,7 @@ class ABowlingPawn : APawn
 	bool bIsAimable;
 
 	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 
 	UFCTweenBPActionFloat FloatTween;
 	FFloatEvent EOnCooldownUpdate;
@@ -145,25 +145,25 @@ class ABowlingPawn : APawn
 		// Controller is nullptr in ConstructionScript(), but is valid in BeginPlay(), so this is the proper place to init this I guess.
 		PlayerController = Cast<ABowlingPlayerController>(Controller);
 		SetupPlayerInputComponent(InputComponent);
-		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.Initialize(MovementAttrSet::MoveSpeed, 500);
-		AbilitySystem.Initialize(MovementAttrSet::Accel, 500);
+		InteractSystem.RegisterAttrSet(UAttackAttrSet);
+		InteractSystem.RegisterAttrSet(UMovementAttrSet);
+		InteractSystem.Initialize(MovementAttrSet::MoveSpeed, 500);
+		InteractSystem.Initialize(MovementAttrSet::Accel, 500);
 
 		AnimateInst = Cast<UCustomAnimInst>(HamsterMesh.GetAnimInstance());
 		OriginalPos = GetActorLocation();
 
-		DamageResponseComponent.Initialize(AbilitySystem);
-		AttackResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.Initialize(InteractSystem);
+		AttackResponseComponent.Initialize(InteractSystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAnimHitNotify");
 		AttackResponseComponent.DGetAttackLocation.BindUFunction(this, n"GetAttackLocation");
 		AttackResponseComponent.DGetAttackRotation.BindUFunction(this, n"GetAttackRotation");
 
-		StatusResponseComponent.Initialize(AbilitySystem);
-		MovementResponseComponent.Initialize(AbilitySystem);
-		TargetResponseComponent.Initialize(AbilitySystem);
+		StatusResponseComponent.Initialize(InteractSystem);
+		MovementResponseComponent.Initialize(InteractSystem);
+		TargetResponseComponent.Initialize(InteractSystem);
 		// Temporary
-		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
+		InteractSystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
 
 		DOnChangeGuideArrowTarget.BindUFunction(this, n"SetGuideArrowTarget");
 		// DOnHideArrow.BindUFunction(this, n"HideGuideArrow");
@@ -286,8 +286,8 @@ class ABowlingPawn : APawn
 						{
 							PrintError("Bowling ID not found in data table");
 						}
-						AbilitySystem.SetBaseValue(AttackAttrSet::AttackCooldown, CurrentBallData.Cooldown);
-						AbilitySystem.SetBaseValue(AttackAttrSet::Attack, CurrentBallData.Atk);
+						InteractSystem.SetBaseValue(AttackAttrSet::AttackCooldown, CurrentBallData.Cooldown);
+						InteractSystem.SetBaseValue(AttackAttrSet::Attack, CurrentBallData.Atk);
 						// Print("Attack " + CurrentBallData.Atk);
 						PredictLine.ClearInstances();
 						CurrentTouchTarget = ETouchTarget::Battlefield;
@@ -376,7 +376,7 @@ class ABowlingPawn : APawn
 					SetCooldownPercent(0);
 
 					ClearTween();
-					FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), EFCEase::InQuad);
+					FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, InteractSystem.GetValue(AttackAttrSet::AttackCooldown), EFCEase::InQuad);
 					FloatTween.ApplyEasing.AddUFunction(this, n"SetCooldownPercent");
 					FloatTween.Start();
 
@@ -423,7 +423,7 @@ class ABowlingPawn : APawn
 		if (AttackResponseComponent.DGetAttackLocation.IsBound() && AttackResponseComponent.DGetAttackRotation.IsBound())
 		{
 			ABowling SpawnedActor = Cast<ABowling>(SpawnActor(BowlingTemplate, AttackResponseComponent.DGetAttackLocation.Execute(), AttackResponseComponent.DGetAttackRotation.Execute()));
-			CurrentBallData.Atk = AbilitySystem.GetValue(AttackAttrSet::Attack);
+			CurrentBallData.Atk = InteractSystem.GetValue(AttackAttrSet::Attack);
 			SpawnedActor.SetData(CurrentBallData);
 			SpawnedActor.SetOwner(this);
 			SpawnedActor.MovementResponseComponent.InitForce(-GetActorForwardVector(), CurrentBallData.BowlingSpeed);
@@ -456,7 +456,7 @@ class ABowlingPawn : APawn
 
 		float moveAmount = targetLocation.Y - currentLocation.Y;
 		float newTimeDilation = Math::Clamp(Math::Lerp(MinSlowTime, MaxSlowTime, moveAmount / MaxSlowTimeDistance), MinSlowTime, MaxSlowTime);
-		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, AbilitySystem.GetValue(MovementAttrSet::MoveSpeed) * Gameplay::GetWorldDeltaSeconds() / newTimeDilation);
+		float newPosY = currentLocation.Y + Math::Sign(moveAmount) * Math::Clamp(Math::Abs(moveAmount), 0, InteractSystem.GetValue(MovementAttrSet::MoveSpeed) * Gameplay::GetWorldDeltaSeconds() / newTimeDilation);
 		Gameplay::SetGlobalTimeDilation(newTimeDilation);
 		SetActorLocation(FVector(currentLocation.X, Math::Clamp(newPosY, -MaxSlowTimeDistance, MaxSlowTimeDistance), currentLocation.Z));
 	}

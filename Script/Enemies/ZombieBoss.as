@@ -89,7 +89,7 @@ class AZombieBoss : AActor
 	EBossPhase CurrentPhase = EBossPhase::SummonPhase;
 
 	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 
 	private UDamageResponseComponent Target;
 
@@ -132,29 +132,29 @@ class AZombieBoss : AActor
 
 		// Collider.OnComponentHit.AddUFunction(this, n"OnHit");
 
-		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
+		InteractSystem.RegisterAttrSet(UPrimaryAttrSet);
+		InteractSystem.RegisterAttrSet(UAttackAttrSet);
+		InteractSystem.RegisterAttrSet(UMovementAttrSet);
+		InteractSystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 
-		DamageResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.Initialize(InteractSystem);
 		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		StatusResponseComponent.Initialize(AbilitySystem);
+		StatusResponseComponent.Initialize(InteractSystem);
 		StatusResponseComponent.DChangeOverlayColor.BindUFunction(ColorOverlay, n"ChangeOverlayColor");
 
-		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.Initialize(InteractSystem);
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnSummonAttackHitNotify");
 
-		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.Initialize(InteractSystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		MovementResponseComponent.SetIsBouncable(false);
 		MovementResponseComponent.SetIsAccelable(true);
 
-		CinematicResponseComponent.Initialize(AbilitySystem);
+		CinematicResponseComponent.Initialize(InteractSystem);
 		CinematicResponseComponent.EOnImpact.AddUFunction(this, n"OnImpactGround");
 
 		ZombieManager = Gameplay::GetActorOfClass(AZombieManager);
@@ -184,7 +184,7 @@ class AZombieBoss : AActor
 	{
 		if (AttrName == PrimaryAttrSet::Damage && Value > 0)
 		{
-			float HPPercentage = AbilitySystem.GetValue(PrimaryAttrSet::HP) / AbilitySystem.GetValue(PrimaryAttrSet::MaxHP);
+			float HPPercentage = InteractSystem.GetValue(PrimaryAttrSet::HP) / InteractSystem.GetValue(PrimaryAttrSet::MaxHP);
 			ZombieManager.DOnProgressChanged.ExecuteIfBound(HPPercentage);
 			if (HPPercentage <= 0.3 && CurrentPhase == EBossPhase::AttackPhase)
 			{
@@ -210,7 +210,7 @@ class AZombieBoss : AActor
 		Data.Add(MovementAttrSet::Accel, DataRow.Accel);
 		Data.Add(MovementAttrSet::Bounciness, DataRow.Bounciness);
 
-		AbilitySystem.ImportData(Data);
+		InteractSystem.ImportData(Data);
 
 		ZombieManager.DOnProgressChanged.ExecuteIfBound(1);
 
@@ -260,12 +260,12 @@ class AZombieBoss : AActor
 		{
 			case EBossPhase::SummonPhase:
 			{
-				System::SetTimer(this, n"PlaySummonAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
+				System::SetTimer(this, n"PlaySummonAnim", InteractSystem.GetValue(AttackAttrSet::AttackCooldown), false);
 				break;
 			}
 			case EBossPhase::AttackPhase:
 			{
-				System::SetTimer(this, n"PlayTripleSummonAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
+				System::SetTimer(this, n"PlayTripleSummonAnim", InteractSystem.GetValue(AttackAttrSet::AttackCooldown), false);
 				// Spawn faster
 				break;
 			}
@@ -318,7 +318,7 @@ class AZombieBoss : AActor
 				break;
 		}
 		MovementResponseComponent.InitForce(MoveVector, 1);
-		AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
+		AnimateInst.SetMoveSpeed(InteractSystem.GetValue(MovementAttrSet::MoveSpeed));
 	}
 
 	void StopMoving()
@@ -431,18 +431,39 @@ class AZombieBoss : AActor
 		// Immune to damage while roaring
 		// UOverrideMod Mod = NewObject(this, UOverrideMod);
 		// Mod.SetupOnce(0, 0);
-		// AbilitySystem.AddModifier(PrimaryAttrSet::Damage, Mod, false);
-		ImmuneMod.AddToAbilitySystem(AbilitySystem);
+		// InteractSystem.AddModifier(PrimaryAttrSet::Damage, Mod, false);
+		ImmuneMod.AddToAbilitySystem(InteractSystem);
 		// Switch mode
-		CurrentPhase++;
+		SwitchPhase();
 		ZombieManager.NextWave();
+	}
+
+	void SwitchPhase(bool bUp = true)
+	{
+		switch (CurrentPhase)
+		{
+			case EBossPhase::SummonPhase:
+			{
+				CurrentPhase = EBossPhase::AttackPhase;
+				break;
+			}
+			case EBossPhase::AttackPhase:
+			{
+				CurrentPhase = EBossPhase::BerserkPhase;
+				break;
+			}
+			case EBossPhase::BerserkPhase:
+			case EBossPhase::DeadPhase:
+			default:
+				break;
+		}
 	}
 
 	UFUNCTION()
 	void OnRoarAnimEnded()
 	{
-		// AbilitySystem.RemoveModifier(PrimaryAttrSet::Damage, this, 0);
-		ImmuneMod.RemoveFromAbilitySystem(AbilitySystem);
+		// InteractSystem.RemoveModifier(PrimaryAttrSet::Damage, this, 0);
+		ImmuneMod.RemoveFromAbilitySystem(InteractSystem);
 		switch (CurrentPhase)
 		{
 			case EBossPhase::AttackPhase:
@@ -451,7 +472,7 @@ class AZombieBoss : AActor
 				AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnTripleAttackHitNotify");
 				for (int i = 0; i < Lv2Modifiers.Num(); i++) // Need check null
 				{
-					Lv2Modifiers[i].AddToAbilitySystem(AbilitySystem);
+					Lv2Modifiers[i].AddToAbilitySystem(InteractSystem);
 				}
 				break;
 			}
@@ -461,7 +482,7 @@ class AZombieBoss : AActor
 				AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnBerserkAttackHitNotify");
 				for (int i = 0; i < Lv3Modifiers.Num(); i++)
 				{
-					Lv3Modifiers[i].AddToAbilitySystem(AbilitySystem);
+					Lv3Modifiers[i].AddToAbilitySystem(InteractSystem);
 				}
 				MovementResponseComponent.EOnBounceCue.Unbind(this, n"OnBounceCue");
 				break;
@@ -504,7 +525,7 @@ class AZombieBoss : AActor
 		}
 		else
 		{
-			// System::SetTimer(this, n"PlayAttackAnim", AbilitySystem.GetValue(AttackAttrSet::AttackCooldown), false);
+			// System::SetTimer(this, n"PlayAttackAnim", InteractSystem.GetValue(AttackAttrSet::AttackCooldown), false);
 			PlayAttackAnim();
 		}
 	}
@@ -541,7 +562,7 @@ class AZombieBoss : AActor
 	{
 		if (IsValid(Target))
 		{
-			Target.DOnTakeDamage.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack));
+			Target.DOnTakeDamage.ExecuteIfBound(InteractSystem.GetValue(AttackAttrSet::Attack));
 		}
 	}
 

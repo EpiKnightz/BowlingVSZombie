@@ -17,12 +17,12 @@ class USkillResponseComponent : UResponseComponent
 	// UFUNCTION()
 	// private void OnRemoveSkillCooldownModifier(const UObject Object, int ID)
 	//{
-	// AbilitySystem.RemoveModifier(SkillAttrSet::SkillCooldownModifier, Object, ID);
+	// InteractSystem.RemoveModifier(SkillAttrSet::SkillCooldownModifier, Object, ID);
 	//}
 
 	// UFUNCTION()
 	// private void OnChangeSkillCooldownModifier(UModifier Modifier)
 	// {
-	// 	AbilitySystem.AddModifier(SkillAttrSet::SkillCooldownModifier, Modifier);
+	// 	InteractSystem.AddModifier(SkillAttrSet::SkillCooldownModifier, Modifier);
 	// }
 };

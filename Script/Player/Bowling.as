@@ -16,7 +16,7 @@ class ABowling : AProjectile
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UNiagaraComponent EffectSystem;
-	default EffectSystem.Activate(false);
+	// default EffectSystem.Activate(false);
 	default EffectSystem.AutoActivate = false;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -59,7 +59,7 @@ class ABowling : AProjectile
 	UFMODEvent HitSFX;
 
 	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 
 	UFUNCTION(BlueprintOverride)
 	void BeginPlay()
@@ -69,18 +69,18 @@ class ABowling : AProjectile
 
 		Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.SetBaseValue(MovementAttrSet::Accel, 0);
-		AbilitySystem.RegisterAttrSet(UMultiplierBounceAttrSet);
+		InteractSystem.RegisterAttrSet(UMovementAttrSet);
+		InteractSystem.SetBaseValue(MovementAttrSet::Accel, 0);
+		InteractSystem.RegisterAttrSet(UMultiplierBounceAttrSet);
 
-		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.Initialize(InteractSystem);
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.DOnStopTimeReached.BindUFunction(this, n"K2_DestroyActor");
 		MovementResponseComponent.EOnStopCue.AddUFunction(this, n"OnStopCue");
 		MovementResponseComponent.EOnDeaccelTick.AddUFunction(this, n"OnDeaccelTick");
 
-		MultiplierResponseComponent.Initialize(AbilitySystem);
+		MultiplierResponseComponent.Initialize(InteractSystem);
 		MultiplierText = Cast<UUIMultiplierText>(WorldWidget.GetWidget());
 		if (!IsValid(MultiplierText))
 		{

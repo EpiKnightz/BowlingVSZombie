@@ -2,13 +2,13 @@ class UTriggerOnPeriodicallyFindValidTarget : UTrigger
 {
 	FActorDelegate DPeriodicActivation;
 	AActor AbilityOwner;
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 	float TriggerCooldown;
 
 	bool SetupTrigger(UAbility Ability, float TriggerParam) override
 	{
-		AbilityOwner = Ability.AbilitySystem.GetOwner();
-		AbilitySystem = Ability.AbilitySystem;
+		AbilityOwner = Ability.InteractSystem.GetOwner();
+		InteractSystem = Ability.InteractSystem;
 		auto DmgRespComp = UDamageResponseComponent::Get(AbilityOwner);
 		if (IsValid(DmgRespComp))
 		{
@@ -47,7 +47,7 @@ class UTriggerOnPeriodicallyFindValidTarget : UTrigger
 		TArray<AActor> ignoreActors;
 		ignoreActors.Add(AbilityOwner);
 		TArray<AActor> outActors;
-		System::SphereOverlapActors(AbilityOwner.GetActorLocation(), AbilitySystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
+		System::SphereOverlapActors(AbilityOwner.GetActorLocation(), InteractSystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 		float32 Distance = -1;
 		AActor NearestTarget = Gameplay::FindNearestActor(AbilityOwner.GetActorLocation(), outActors, Distance);

@@ -51,14 +51,19 @@ class AHumanlite : AActor
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent StatusWorldWidget;
+	default StatusWorldWidget.SetTickMode(ETickMode::Automatic);
 	UUIStatusBar StatusBarWidget;
 
 	UPROPERTY(DefaultComponent, Attach = Collider)
 	UWidgetComponent HPWorldWidget;
+	default HPWorldWidget.SetTickMode(ETickMode::Automatic);
 	UUIHPBar HPBarWidget;
 
 	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
+
+	UPROPERTY()
+	TSubclassOf<UAnimInstance> Testing;
 
 	protected UFCTweenBPActionFloat FloatTween;
 	protected UColorOverlay ColorOverlay;
@@ -84,25 +89,37 @@ class AHumanlite : AActor
 		HPBarWidget = Cast<UUIHPBar>(HPWorldWidget.GetWidget());
 		StatusBarWidget = Cast<UUIStatusBar>(StatusWorldWidget.GetWidget());
 
-		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.RegisterAttrSet(UAttackAttrSet);
-		AbilitySystem.RegisterAttrSet(UMovementAttrSet);
-		AbilitySystem.RegisterAttrSet(UWeaknessAttrSet);
+		InteractSystem.RegisterAttrSet(UPrimaryAttrSet);
+		InteractSystem.RegisterAttrSet(UAttackAttrSet);
+		InteractSystem.RegisterAttrSet(UMovementAttrSet);
+		InteractSystem.RegisterAttrSet(UWeaknessAttrSet);
 	}
 
 	void SetMeshes(USkeletalMesh InBodyMesh, UStaticMesh InHeadMesh, UStaticMesh InAccMesh)
 	{
 		if (IsValid(InHeadMesh))
 		{
-			HeadMesh.StaticMesh = InHeadMesh;
+			HeadMesh.SetStaticMesh(InHeadMesh);
+			for (int32 i = 0; i < InHeadMesh.StaticMaterials.Num(); i++)
+			{
+				HeadMesh.SetMaterial(i, InHeadMesh.StaticMaterials[i].MaterialInterface);
+			}
 		}
 		if (IsValid(InBodyMesh))
 		{
-			BodyMesh.SkeletalMeshAsset = InBodyMesh;
+			BodyMesh.ForceSetSkeletalMeshAsset(InBodyMesh);
+			for (int32 i = 0; i < InBodyMesh.Materials.Num(); i++)
+			{
+				BodyMesh.SetMaterial(i, InBodyMesh.Materials[i].MaterialInterface);
+			}
 		}
 		if (IsValid(InAccMesh))
 		{
-			AccessoryMesh.StaticMesh = InAccMesh;
+			AccessoryMesh.SetStaticMesh(InAccMesh);
+			for (int32 i = 0; i < InAccMesh.StaticMaterials.Num(); i++)
+			{
+				AccessoryMesh.SetMaterial(i, InAccMesh.StaticMaterials[i].MaterialInterface);
+			}
 		}
 	}
 
@@ -162,5 +179,6 @@ class AHumanlite : AActor
 		PlayDeadAnim(AnimIndex);
 	}
 
-	void PlayDeadAnim(int AnimIndex) {}
+	void PlayDeadAnim(int AnimIndex)
+	{}
 };

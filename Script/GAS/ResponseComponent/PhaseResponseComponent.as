@@ -94,7 +94,7 @@ class UPhaseResponseComponent : UResponseComponent
 			{
 				if (Modifiers[i] != nullptr)
 				{
-					Modifiers[i].AddToAbilitySystem(AbilitySystem);
+					Modifiers[i].AddToAbilitySystem(InteractSystem);
 				}
 				else
 				{

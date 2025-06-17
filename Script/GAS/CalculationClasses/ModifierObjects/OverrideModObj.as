@@ -3,10 +3,10 @@ class UOverrideModObj : UModifierObject
 	UPROPERTY()
 	float32 Value;
 
-	void AddToAbilitySystem(ULiteAbilitySystem& AbilitySystem) override
+	void AddToAbilitySystem(UInteractSystem& InteractSystem) override
 	{
 		UOverrideMod Mod = NewObject(this, UOverrideMod);
 		Mod.SetupOnce(ID, Value);
-		AbilitySystem.AddModifier(AttributeName, Mod, bForceRecalculation);
+		InteractSystem.AddModifier(AttributeName, Mod, bForceRecalculation);
 	}
 }

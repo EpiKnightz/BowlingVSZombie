@@ -98,33 +98,33 @@ class AZombie : AHumanlite
 		AnimateInst = Cast<UZombieAnimInst>(BodyMesh.GetAnimInstance());
 		// Collider.OnComponentHit.AddUFunction(this, n"ActorBeginHit");
 
-		AbilitySystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
-		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
+		InteractSystem.EOnPostSetCurrentValue.AddUFunction(this, n"OnPostSetCurrentValue");
+		InteractSystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 
-		DamageResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.Initialize(InteractSystem);
 		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnHealCue.AddUFunction(this, n"HealCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
 
-		StatusResponseComponent.Initialize(AbilitySystem);
+		StatusResponseComponent.Initialize(InteractSystem);
 		StatusResponseComponent.DChangeOverlayColor.BindUFunction(ColorOverlay, n"ChangeOverlayColor");
 
-		AttackResponseComponent.Initialize(AbilitySystem);
+		AttackResponseComponent.Initialize(InteractSystem);
 		AttackResponseComponent.SetupAttack(n"StartAttacking");
 		AttackResponseComponent.EOnAnimHitNotify.AddUFunction(this, n"OnAttackHitNotify");
 		AttackResponseComponent.EOnAnimEndNotify.AddUFunction(this, n"OnAttackEndNotify");
 		AnimateInst.OnAllMontageInstancesEnded.AddUFunction(this, n"OnAllMontageInstancesEnded");
 
-		MovementResponseComponent.Initialize(AbilitySystem);
+		MovementResponseComponent.Initialize(InteractSystem);
 		MovementResponseComponent.EOnBounceCue.AddUFunction(this, n"OnBounceCue");
 		MovementResponseComponent.EOnPreAddForceCue.AddUFunction(this, n"OnPreAddForceCue");
 		MovementResponseComponent.DIsKnockbackResisted.BindUFunction(DamageResponseComponent, n"IsKnockbackResisted");
 		// Temporary
 		MovementResponseComponent.StopLifeTime = 0;
 
-		TargetResponseComponent.Initialize(AbilitySystem);
-		PhaseResponseComponent.Initialize(AbilitySystem);
+		TargetResponseComponent.Initialize(InteractSystem);
+		PhaseResponseComponent.Initialize(InteractSystem);
 	}
 
 	UFUNCTION()
@@ -145,7 +145,7 @@ class AZombie : AHumanlite
 											  DataRow.Lv2Modifiers,
 											  DataRow.Lv3Modifiers);
 
-		AbilitySystem.ImportData(Data);
+		InteractSystem.ImportData(Data);
 
 		SetMoveSpeed(DataRow.Speed);
 		DelayMove /= AnimateInst.AnimPlayRate;
@@ -190,7 +190,7 @@ class AZombie : AHumanlite
 	{
 		if ((AttrName == PrimaryAttrSet::Damage || AttrName == PrimaryAttrSet::HP) && Value > 0)
 		{
-			float HPPercentage = AbilitySystem.GetValue(PrimaryAttrSet::HP) / AbilitySystem.GetValue(PrimaryAttrSet::MaxHP);
+			float HPPercentage = InteractSystem.GetValue(PrimaryAttrSet::HP) / InteractSystem.GetValue(PrimaryAttrSet::MaxHP);
 			PhaseResponseComponent.CheckForRankUp(HPPercentage);
 			HPBarWidget.SetHPBar(HPPercentage);
 		}
@@ -245,7 +245,7 @@ class AZombie : AHumanlite
 		}
 		if (Location.X > ENDSCREEN_X_LIMIT)
 		{
-			DOnZombieReach.ExecuteIfBound(AbilitySystem.GetValue(AttackAttrSet::Attack), GetName());
+			DOnZombieReach.ExecuteIfBound(InteractSystem.GetValue(AttackAttrSet::Attack), GetName());
 			DestroyActor();
 		}
 	}
@@ -256,7 +256,7 @@ class AZombie : AHumanlite
 		if (!IsMelee())
 		{
 			auto RangeAttackComp = URangeAttackComponent::GetOrCreate(this);
-			RangeAttackComp.Initialize(AbilitySystem);
+			RangeAttackComp.Initialize(InteractSystem);
 			RangeAttackComp.SetProjectileTemplate(iProjectileTemplate);
 			RangeCollider.SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
@@ -272,7 +272,7 @@ class AZombie : AHumanlite
 
 		AnimateInst.bIsMirror = Math::RandBool();
 		RangeCollider.SetRelativeLocation(FVector(AnimateInst.bIsMirror ? RANGE_COLLIDER_SIZE : -RANGE_COLLIDER_SIZE,
-												  AbilitySystem.GetValue(AttackAttrSet::AttackRange),
+												  InteractSystem.GetValue(AttackAttrSet::AttackRange),
 												  0));
 		ReplaceAnimation(AtkAnims);
 
@@ -442,7 +442,7 @@ class AZombie : AHumanlite
 									  FRotator::MakeFromX(Target.GetOwner().GetActorLocation() - GetActorLocation()).ZYaw - 90,
 									  0));
 			int random = Math::RandRange(0, AttackAnim.Num() - 1);
-			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / AbilitySystem.GetValue(AttackAttrSet::AttackCooldown));
+			AnimateInst.Montage_Play(AttackAnim[random], AttackAnim[random].PlayLength / InteractSystem.GetValue(AttackAttrSet::AttackCooldown));
 		}
 		else
 		{
@@ -461,7 +461,7 @@ class AZombie : AHumanlite
 									  0));
 			if (IsMelee())
 			{
-				Target.TakeHit(AbilitySystem.GetValue(AttackAttrSet::Attack));
+				Target.TakeHit(InteractSystem.GetValue(AttackAttrSet::Attack));
 			}
 			else
 			{
@@ -601,7 +601,7 @@ class AZombie : AHumanlite
 		TArray<AActor> ignoreActors;
 		ignoreActors.Add(this);
 		TArray<AActor> outActors;
-		System::SphereOverlapActors(GetActorLocation(), AbilitySystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
+		System::SphereOverlapActors(GetActorLocation(), InteractSystem.GetValue(AttackAttrSet::AttackRange) * 2, traceObjectTypes, nullptr, ignoreActors, outActors);
 
 		float32 Distance = -1;
 		AActor NearestTarget = Gameplay::FindNearestActor(GetActorLocation(), outActors, Distance);
@@ -687,11 +687,11 @@ class AZombie : AHumanlite
 	UFUNCTION()
 	void RestartMove()
 	{
-		if (AbilitySystem.GetValue(MovementAttrSet::MoveSpeed) > 0)
+		if (InteractSystem.GetValue(MovementAttrSet::MoveSpeed) > 0)
 		{
 			ResetRotation();
 			MovementResponseComponent.SetIsAccelable(true);
-			AnimateInst.SetMoveSpeed(AbilitySystem.GetValue(MovementAttrSet::MoveSpeed));
+			AnimateInst.SetMoveSpeed(InteractSystem.GetValue(MovementAttrSet::MoveSpeed));
 			SetActorTickEnabled(true);
 			if (!bIsAttacking)
 			{

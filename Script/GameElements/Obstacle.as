@@ -17,7 +17,7 @@ class AObstacle : AActor
 	FVector OriginalLoc;
 
 	UPROPERTY(DefaultComponent)
-	ULiteAbilitySystem AbilitySystem;
+	UInteractSystem InteractSystem;
 
 	UPROPERTY(DefaultComponent)
 	UDamageResponseComponent DamageResponseComponent;
@@ -33,11 +33,11 @@ class AObstacle : AActor
 	{
 		OriginalLoc = GetActorLocation();
 
-		AbilitySystem.RegisterAttrSet(UPrimaryAttrSet);
-		AbilitySystem.Initialize(PrimaryAttrSet::MaxHP, 200);
-		OldHP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
+		InteractSystem.RegisterAttrSet(UPrimaryAttrSet);
+		InteractSystem.Initialize(PrimaryAttrSet::MaxHP, 200);
+		OldHP = InteractSystem.GetValue(PrimaryAttrSet::HP);
 
-		DamageResponseComponent.Initialize(AbilitySystem);
+		DamageResponseComponent.Initialize(InteractSystem);
 		DamageResponseComponent.EOnHitCue.AddUFunction(this, n"TakeHitCue");
 		DamageResponseComponent.EOnDamageCue.AddUFunction(this, n"TakeDamageCue");
 		DamageResponseComponent.EOnDeadCue.AddUFunction(this, n"DeadCue");
@@ -46,7 +46,7 @@ class AObstacle : AActor
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Visual Cues:
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void TakeHitCue()
 	{
 		if (IsValid(FloatTween) && FloatTween.IsValid())
@@ -69,7 +69,7 @@ class AObstacle : AActor
 	UFUNCTION()
 	void TakeDamageCue()
 	{
-		float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
+		float NewHP = InteractSystem.GetValue(PrimaryAttrSet::HP);
 		if (OldHP > 150 && NewHP <= 150)
 		{
 			VisualChange(0);

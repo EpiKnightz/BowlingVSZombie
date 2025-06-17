@@ -3,10 +3,10 @@ class UMultiplierModObj : UModifierObject
 	UPROPERTY()
 	float32 Value;
 
-	void AddToAbilitySystem(ULiteAbilitySystem& AbilitySystem) override
+	void AddToAbilitySystem(UInteractSystem& InteractSystem) override
 	{
 		UMultiplierMod Mod = NewObject(this, UMultiplierMod);
 		Mod.SetupOnce(ID, Value);
-		AbilitySystem.AddModifier(AttributeName, Mod, bForceRecalculation);
+		InteractSystem.AddModifier(AttributeName, Mod, bForceRecalculation);
 	}
 }

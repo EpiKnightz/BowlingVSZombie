@@ -42,7 +42,7 @@ class UMovementResponseComponent : UResponseComponent
 
 		MovementComp.OnProjectileBounce.AddUFunction(this, n"ActorBounce");
 
-		AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
+		InteractSystem.EOnPostCalculation.AddUFunction(this, n"OnPostCalculation");
 
 		ComponentTickInterval = 0.05;
 		return true;
@@ -79,7 +79,7 @@ class UMovementResponseComponent : UResponseComponent
 	{
 		if (IsAccelable)
 		{
-			MovementComp.MaxSpeed = AbilitySystem.GetValue(MovementAttrSet::MoveSpeed);
+			MovementComp.MaxSpeed = InteractSystem.GetValue(MovementAttrSet::MoveSpeed);
 		}
 		else
 		{
@@ -97,24 +97,24 @@ class UMovementResponseComponent : UResponseComponent
 	UFUNCTION()
 	private void OnChangeMoveSpeedModifier(UModifier Modifier)
 	{
-		AbilitySystem.AddModifier(MovementAttrSet::MoveSpeed, Modifier);
+		InteractSystem.AddModifier(MovementAttrSet::MoveSpeed, Modifier);
 	}
 	UFUNCTION()
 	private void OnRemoveMoveSpeedModifier(const UObject Object, int ID)
 	{
-		AbilitySystem.RemoveModifier(MovementAttrSet::MoveSpeed, Object, ID);
+		InteractSystem.RemoveModifier(MovementAttrSet::MoveSpeed, Object, ID);
 	}
 
 	UFUNCTION()
 	private void OnChangeAccelModifier(UModifier Modifier)
 	{
-		AbilitySystem.AddModifier(MovementAttrSet::Accel, Modifier);
+		InteractSystem.AddModifier(MovementAttrSet::Accel, Modifier);
 	}
 
 	UFUNCTION()
 	private void OnRemoveAccelModifier(const UObject Object, int ID)
 	{
-		AbilitySystem.RemoveModifier(MovementAttrSet::Accel, Object, ID);
+		InteractSystem.RemoveModifier(MovementAttrSet::Accel, Object, ID);
 	}
 
 	// Called when being bounced by another actor.
@@ -124,7 +124,7 @@ class UMovementResponseComponent : UResponseComponent
 		if (!VelocityVector.IsZero() && bIsBouncable && !DIsKnockbackResisted.ExecuteIfBound())
 		{
 			EOnPreAddForceCue.Broadcast(VelocityVector);
-			MovementComp.Velocity += VelocityVector * AbilitySystem.GetValue(MovementAttrSet::Bounciness);
+			MovementComp.Velocity += VelocityVector * InteractSystem.GetValue(MovementAttrSet::Bounciness);
 			EOnPostAddForce.Broadcast();
 		}
 	}
@@ -140,7 +140,7 @@ class UMovementResponseComponent : UResponseComponent
 			if (IsValid(MovementResponse) && MovementResponse.bIsBouncable)
 			{
 				// This bounciness will be multiplier to the already existing bounciness of Movement Component. (default is 0.8)
-				float Bounciness = AbilitySystem.GetValue(MovementAttrSet::Bounciness);
+				float Bounciness = InteractSystem.GetValue(MovementAttrSet::Bounciness);
 				MovementComp.Velocity *= Bounciness;
 				MovementResponse.DOnAddForce.ExecuteIfBound(ImpactVelocity);
 				// Print("ActorBounce: " + Hit.GetActor().GetName() + " with " + ImpactVelocity.ToString() + " result in:" + MovementComp.Velocity.ToString(), 100);
@@ -175,8 +175,8 @@ class UMovementResponseComponent : UResponseComponent
 		}
 		else
 		{
-			LocalAccel = AbilitySystem.GetValue(MovementAttrSet::Accel);
-			if (LocalAccel == 0 || LocalAccel == AbilitySystem::INVALID_VALUE)
+			LocalAccel = InteractSystem.GetValue(MovementAttrSet::Accel);
+			if (LocalAccel == 0 || LocalAccel == InteractSystem::INVALID_VALUE)
 			{
 				LocalAccel = WorldDeaccel;
 				EOnDeaccelTick.Broadcast();

@@ -9,7 +9,7 @@ class UHookBackAbility : USpawnBulletAbility
 
 	void ActivateAbilityChild(AActor OtherActor) override
 	{
-		SpawnBullet(AbilitySystem.GetOwner().GetActorLocation(), AbilitySystem.GetOwner().GetActorRotation());
+		SpawnBullet(InteractSystem.GetOwner().GetActorLocation(), InteractSystem.GetOwner().GetActorRotation());
 	}
 
 	AActor SpawnBullet(FVector Location, FRotator Rotation) override
@@ -37,7 +37,7 @@ class UHookBackAbility : USpawnBulletAbility
 			}
 			float HookBackSpeed;
 			AbilityData.AbilityParams.Find(GameplayTags::AbilityParam_Speed, HookBackSpeed);
-			float HookTime = OriginalTargetLoc.DistXY(AbilitySystem.GetOwner().GetActorLocation()) / HookBackSpeed;
+			float HookTime = OriginalTargetLoc.DistXY(InteractSystem.GetOwner().GetActorLocation()) / HookBackSpeed;
 			FloatTween = UFCTweenBPActionFloat::TweenFloat(0, 1, HookTime, EFCEase::Linear); // InOutQuad
 			FloatTween.ApplyEasing.AddUFunction(this, n"GetOverHere");
 			FloatTween.OnComplete.AddUFunction(this, n"OnAbilityEnd");
@@ -48,8 +48,8 @@ class UHookBackAbility : USpawnBulletAbility
 	UFUNCTION()
 	private void GetOverHere(float32 Value)
 	{
-		FVector MoveVector = CalculateOffset(AbilitySystem.GetOwner().GetActorLocation(),
-											 AbilitySystem.GetOwner().GetActorRotation())
+		FVector MoveVector = CalculateOffset(InteractSystem.GetOwner().GetActorLocation(),
+											 InteractSystem.GetOwner().GetActorRotation())
 							 - OriginalTargetLoc;
 		Target.SetWorldLocation(OriginalTargetLoc + MoveVector * Value);
 	}

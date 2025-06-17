@@ -4,7 +4,7 @@ class URageAbility : UAbility
 
 	protected bool GetRageRespComp()
 	{
-		RageResponsePtr = URageResponseComponent::Get(AbilitySystem.GetOwner());
+		RageResponsePtr = URageResponseComponent::Get(InteractSystem.GetOwner());
 		return IsValid(RageResponsePtr);
 	}
 }

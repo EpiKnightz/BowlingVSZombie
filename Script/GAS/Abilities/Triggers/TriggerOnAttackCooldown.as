@@ -5,14 +5,14 @@ class UTriggerOnAttackCooldown : UTrigger
 
 	bool SetupTrigger(UAbility Ability, float TriggerParam) override
 	{
-		auto DmgRespComp = UDamageResponseComponent::Get(Ability.AbilitySystem.GetOwner());
+		auto DmgRespComp = UDamageResponseComponent::Get(Ability.InteractSystem.GetOwner());
 		if (IsValid(DmgRespComp))
 		{
 			DPeriodicActivation.BindUFunction(Ability, n"ActivateAbility");
 			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnFirstActivation");
 			DmgRespComp.EOnNewCardAdded.AddUFunction(this, n"OnFirstActivation");
-			TriggerCooldown = Ability.AbilitySystem.GetValue(AttackAttrSet::AttackCooldown);
-			Ability.AbilitySystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
+			TriggerCooldown = Ability.InteractSystem.GetValue(AttackAttrSet::AttackCooldown);
+			Ability.InteractSystem.EOnPostCalculation.AddUFunction(this, n"OnCooldownUpdate");
 			return true;
 		}
 		return false;
@@ -25,7 +25,7 @@ class UTriggerOnAttackCooldown : UTrigger
 		PeriodicActivation();
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void OnCooldownUpdate(FName AttrName, float Value)
 	{
 		if (AttrName == AttackAttrSet::AttackCooldown)
@@ -36,7 +36,7 @@ class UTriggerOnAttackCooldown : UTrigger
 		}
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void PeriodicActivation()
 	{
 		DPeriodicActivation.ExecuteIfBound(nullptr);

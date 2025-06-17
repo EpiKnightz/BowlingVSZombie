@@ -4,7 +4,7 @@ class URageTrigger : UTrigger
 
 	protected bool GetRageRespComp(UAbility Ability)
 	{
-		RageResponsePtr = URageResponseComponent::Get(Ability.AbilitySystem.GetOwner());
+		RageResponsePtr = URageResponseComponent::Get(Ability.InteractSystem.GetOwner());
 		return IsValid(RageResponsePtr);
 	}
 };

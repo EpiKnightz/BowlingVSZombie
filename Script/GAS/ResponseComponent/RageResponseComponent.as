@@ -19,7 +19,7 @@ class URageResponseComponent : UResponseComponent
 	void Tick(float DeltaSeconds)
 	{
 		// Becareful of this starting before actual gameplay
-		AddRage(DeltaSeconds * AbilitySystem.GetValue(RageAttrSet::RageRegen));
+		AddRage(DeltaSeconds * InteractSystem.GetValue(RageAttrSet::RageRegen));
 	}
 
 	UFUNCTION()
@@ -38,7 +38,7 @@ class URageResponseComponent : UResponseComponent
 	UFUNCTION()
 	void AddBonusRage()
 	{
-		AddRage(AbilitySystem.GetValue(RageAttrSet::RageBonus));
+		AddRage(InteractSystem.GetValue(RageAttrSet::RageBonus));
 		EOnRageHighlightCue.Broadcast();
 	}
 

@@ -4,7 +4,7 @@ class UAttackTrigger : UTrigger
 
 	protected bool GetAttackRespComp(UAbility Ability)
 	{
-		AttackResponsePtr = UAttackResponseComponent::Get(Ability.AbilitySystem.GetOwner());
+		AttackResponsePtr = UAttackResponseComponent::Get(Ability.InteractSystem.GetOwner());
 		return IsValid(AttackResponsePtr);
 	}
 };

@@ -68,36 +68,36 @@ class APowerManager : AActor
 	UFUNCTION()
 	void ApplyBowlingPower(ABowling& Bowling)
 	{
-		ApplyPower(Bowling.AbilitySystem, BowlingPowers);
+		ApplyPower(Bowling.InteractSystem, BowlingPowers);
 	}
 
 	UFUNCTION()
 	void ApplySurvivorPower(ASurvivor& Survivor)
 	{
-		ApplyPower(Survivor.AbilitySystem, SurvivorPowers);
+		ApplyPower(Survivor.InteractSystem, SurvivorPowers);
 	}
 
 	UFUNCTION()
 	void ApplyZombiePower(AZombie& Zombie)
 	{
-		ApplyPower(Zombie.AbilitySystem, ZombiePowers);
+		ApplyPower(Zombie.InteractSystem, ZombiePowers);
 	}
 
 	UFUNCTION()
 	void ApplyBossPower(AZombieBoss& Zombie)
 	{
-		ApplyPower(Zombie.AbilitySystem, ZombiePowers);
+		ApplyPower(Zombie.InteractSystem, ZombiePowers);
 	}
 
-	void ApplyPower(ULiteAbilitySystem& AbilitySystem, TArray<FGameplayTag> PowerList)
+	void ApplyPower(UInteractSystem& InteractSystem, TArray<FGameplayTag> PowerList)
 	{
 		for (auto PowerTag : PowerList)
 		{
 			FPowerDT PowerData = GetPowerData(PowerTag);
 			for (auto ModifierSpec : PowerData.ModifiersSpecList)
 			{
-				AbilitySystem.AddModifier(ModifierSpec.AffectedAttribute.GetCurrentNameOnly(),
-										  CreatePowerModifier(ModifierSpec));
+				InteractSystem.AddModifier(ModifierSpec.AffectedAttribute.GetCurrentNameOnly(),
+										   CreatePowerModifier(ModifierSpec));
 			}
 		}
 	}

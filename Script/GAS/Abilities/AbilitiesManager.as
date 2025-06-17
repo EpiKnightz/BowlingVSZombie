@@ -32,50 +32,50 @@ class AAbilitiesManager : AActor
 	}
 
 	UFUNCTION()
-	void RegisterAbilities(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	void RegisterAbilities(FGameplayTagContainer AbilitiesContainer, UInteractSystem& InteractSystem)
 	{
 		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
 		{
-			RegisterSingleAbility(AbilityID, AbilitySystem);
+			RegisterSingleAbility(AbilityID, InteractSystem);
 		}
 	}
 
 	UFUNCTION()
-	TArray<int> RegisterAbilitiesRetIDs(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	TArray<int> RegisterAbilitiesRetIDs(FGameplayTagContainer AbilitiesContainer, UInteractSystem& InteractSystem)
 	{
 		TArray<int> RegisterID;
 		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
 		{
-			RegisterID.Add(RegisterSingleAbility(AbilityID, AbilitySystem));
+			RegisterID.Add(RegisterSingleAbility(AbilityID, InteractSystem));
 		}
 		return RegisterID;
 	}
 
 	UFUNCTION()
-	int RegisterAbilitiesFirstID(FGameplayTagContainer AbilitiesContainer, ULiteAbilitySystem& AbilitySystem)
+	int RegisterAbilitiesFirstID(FGameplayTagContainer AbilitiesContainer, UInteractSystem& InteractSystem)
 	{
 		int RegisterID = -1;
 		for (FGameplayTag AbilityID : AbilitiesContainer.GameplayTags)
 		{
 			if (RegisterID == -1)
 			{
-				RegisterID = RegisterSingleAbility(AbilityID, AbilitySystem);
+				RegisterID = RegisterSingleAbility(AbilityID, InteractSystem);
 			}
 			else
 			{
-				RegisterSingleAbility(AbilityID, AbilitySystem);
+				RegisterSingleAbility(AbilityID, InteractSystem);
 			}
 		}
 		return RegisterID;
 	}
 
 	UFUNCTION()
-	int RegisterSingleAbility(FGameplayTag AbilityID, ULiteAbilitySystem& AbilitySystem)
+	int RegisterSingleAbility(FGameplayTag AbilityID, UInteractSystem& InteractSystem)
 	{
 		FAbilityDT AbilityData = GetAbilityData(AbilityID);
 		if (AbilityData.AbilityClass.IsValid())
 		{
-			return AbilitySystem.RegisterAbility(AbilityData.AbilityClass, AbilityID);
+			return InteractSystem.RegisterAbility(AbilityData.AbilityClass, AbilityID);
 		}
 		else
 		{

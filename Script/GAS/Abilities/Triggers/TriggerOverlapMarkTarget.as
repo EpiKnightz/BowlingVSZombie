@@ -6,7 +6,7 @@ class UTriggerOnOverlapMarkTarget : UAttackTrigger
 	{
 		if (GetAttackRespComp(Ability))
 		{
-			auto Collider = UCapsuleComponent::Get(Ability.AbilitySystem.GetOwner());
+			auto Collider = UCapsuleComponent::Get(Ability.InteractSystem.GetOwner());
 			if (IsValid(Collider))
 			{
 				Collider.SetCollisionResponseToChannel(ECollisionChannel::Bowling, ECollisionResponse::ECR_Overlap);

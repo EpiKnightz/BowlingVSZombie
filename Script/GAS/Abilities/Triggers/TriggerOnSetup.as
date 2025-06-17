@@ -6,7 +6,7 @@ class UTriggerOnSetup : UTrigger
 	bool SetupTrigger(UAbility Ability, float TriggerParam) override
 	{
 		DActivateAbility.BindUFunction(Ability, n"ActivateAbility");
-		auto DmgRespComp = UDamageResponseComponent::Get(Ability.AbilitySystem.GetOwner());
+		auto DmgRespComp = UDamageResponseComponent::Get(Ability.InteractSystem.GetOwner());
 		if (IsValid(DmgRespComp))
 		{
 			DmgRespComp.EOnEnterTheBattlefield.AddUFunction(this, n"OnFirstActivation");

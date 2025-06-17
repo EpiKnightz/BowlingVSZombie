@@ -1,4 +1,4 @@
-namespace AbilitySystem
+namespace InteractSystem
 {
 	const float32 INVALID_VALUE = -1000;
 }
@@ -30,11 +30,11 @@ struct FModifierContainer
 		}
 	}
 
-	void CalculateData(const ULiteAbilitySystem AbilitySystem, FName AttrName, float32& Result)
+	void CalculateData(const UInteractSystem InteractSystem, FName AttrName, float32& Result)
 	{
 		for (int i = 0; i < ModifiersArray.Num(); i++)
 		{
-			ModifiersArray[i].Calculate(AbilitySystem, Result);
+			ModifiersArray[i].Calculate(InteractSystem, Result);
 		}
 	}
 
@@ -44,7 +44,7 @@ struct FModifierContainer
 	}
 }
 
-class ULiteAbilitySystem : ULiteAbilitySystemComponent
+class UInteractSystem : ULiteAbilitySystemComponent
 {
 	private FGameplayTagContainer ActorTags;
 	private TMap<int, FGameplayTag> TempTags;
@@ -175,7 +175,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 			ModifiersMap.FindOrAdd(AttrName).AddModifier(Modifier);
 			if (bRecalculation)
 			{
-				float32 NewValue = AbilitySystem::INVALID_VALUE;
+				float32 NewValue = InteractSystem::INVALID_VALUE;
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 				CalculateCurrent(AttrName, NewValue, i);
 				EOnPostAddModifier.Broadcast(AttrName, NewValue);
@@ -192,7 +192,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 			if (ModifiersMap.Contains(AttrName))
 			{
 				ModifiersMap.FindOrAdd(AttrName).RemoveModifier(Object, ID);
-				float32 NewValue = AbilitySystem::INVALID_VALUE;
+				float32 NewValue = InteractSystem::INVALID_VALUE;
 				AttrSetContainer[i].GetBaseValue(AttrName, NewValue);
 				CalculateCurrent(AttrName, NewValue, i);
 				EOnPostRemoveModifier.Broadcast(AttrName, NewValue);
@@ -246,7 +246,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float32 GetValue(FName AttrName, bool bForceRecalculation = false)
 	{
-		float32 Result = AbilitySystem::INVALID_VALUE;
+		float32 Result = InteractSystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
@@ -270,17 +270,17 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float32 GetPercentageDiff(FName AttrName)
 	{
-		float32 Result1 = AbilitySystem::INVALID_VALUE;
-		float32 Result2 = AbilitySystem::INVALID_VALUE;
+		float32 Result1 = InteractSystem::INVALID_VALUE;
+		float32 Result2 = InteractSystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
 			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
 			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
 		}
-		if (Result1 == AbilitySystem::INVALID_VALUE || Result2 == AbilitySystem::INVALID_VALUE)
+		if (Result1 == InteractSystem::INVALID_VALUE || Result2 == InteractSystem::INVALID_VALUE)
 		{
-			return AbilitySystem::INVALID_VALUE;
+			return InteractSystem::INVALID_VALUE;
 		}
 		return Result1 / Result2;
 	}
@@ -288,17 +288,17 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	float32 GetFlatDiff(FName AttrName)
 	{
-		float32 Result1 = AbilitySystem::INVALID_VALUE;
-		float32 Result2 = AbilitySystem::INVALID_VALUE;
+		float32 Result1 = InteractSystem::INVALID_VALUE;
+		float32 Result2 = InteractSystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{
 			AttrSetContainer[i].GetCurrentValue(AttrName, Result1);
 			AttrSetContainer[i].GetBaseValue(AttrName, Result2);
 		}
-		if (Result1 == AbilitySystem::INVALID_VALUE || Result2 == AbilitySystem::INVALID_VALUE)
+		if (Result1 == InteractSystem::INVALID_VALUE || Result2 == InteractSystem::INVALID_VALUE)
 		{
-			return AbilitySystem::INVALID_VALUE;
+			return InteractSystem::INVALID_VALUE;
 		}
 		return Result1 - Result2;
 	}
@@ -306,7 +306,7 @@ class ULiteAbilitySystem : ULiteAbilitySystemComponent
 	UFUNCTION()
 	private float32 GetBaseValue(FName AttrName)
 	{
-		float32 Result = AbilitySystem::INVALID_VALUE;
+		float32 Result = InteractSystem::INVALID_VALUE;
 		int i = GetSetIdx(AttrName);
 		if (i >= 0)
 		{

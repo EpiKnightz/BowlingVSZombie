@@ -2,21 +2,21 @@ class UVulnerableStatus : UStatusComponent
 {
 	void DoInitChildren() override
 	{
-		auto AbilitySystem = ULiteAbilitySystem::Get(GetOwner());
-		if (IsValid(AbilitySystem))
+		auto InteractSystem = UInteractSystem::Get(GetOwner());
+		if (IsValid(InteractSystem))
 		{
 			auto Mod = NewObject(this, ModClass);
 			Mod.SetupOnce(ModID, FindAttrValue(PrimaryAttrSet::FullDamage));
-			AbilitySystem.AddModifier(PrimaryAttrSet::Damage, Mod, false);
+			InteractSystem.AddModifier(PrimaryAttrSet::Damage, Mod, false);
 		}
 	}
 
 	void EndStatusEffect() override
 	{
-		auto AbilitySystem = ULiteAbilitySystem::Get(GetOwner());
-		if (IsValid(AbilitySystem))
+		auto InteractSystem = UInteractSystem::Get(GetOwner());
+		if (IsValid(InteractSystem))
 		{
-			AbilitySystem.RemoveModifier(PrimaryAttrSet::Damage, this, ModID);
+			InteractSystem.RemoveModifier(PrimaryAttrSet::Damage, this, ModID);
 		}
 		Super::EndStatusEffect();
 	}

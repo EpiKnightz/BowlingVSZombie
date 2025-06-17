@@ -11,7 +11,7 @@ class URangeAttackComponent : UResponseComponent
 			auto ProjDataComp = UProjectileDataComponent::Get(Actor);
 			if (IsValid(ProjDataComp))
 			{
-				ProjDataComp.SetAttack(AbilitySystem.GetValue(AttackAttrSet::Attack));
+				ProjDataComp.SetAttack(InteractSystem.GetValue(AttackAttrSet::Attack));
 			}
 			if (IsValid(Target))
 			{

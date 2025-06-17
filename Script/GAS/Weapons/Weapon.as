@@ -151,7 +151,7 @@ class UWeapon : UStaticMeshComponent
 			WeaponVFX = Data.WeaponVFX;
 			AttackAnim = Data.AttackAnim;
 
-			auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+			auto AbilitySys = UInteractSystem::Get(Owner);
 			if (IsValid(AbilitySys))
 			{
 				// IMPORTANT: Only the basic attack id is saved. Don't remove other ids
@@ -175,7 +175,7 @@ class UWeapon : UStaticMeshComponent
 	{
 		if (BasicAttackID != -1)
 		{
-			auto AbilitySys = ULiteAbilitySystem::Get(Owner);
+			auto AbilitySys = UInteractSystem::Get(Owner);
 			if (IsValid(AbilitySys))
 			{
 				// 	AbilitySys.RemoveModifier(AttackAttrSet::Attack, this, 1);

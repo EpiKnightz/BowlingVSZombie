@@ -43,7 +43,7 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			if (Damage > (AbilitySystem.HasAttrSet(MovementAttrSet::KnockbackResistance) ? AbilitySystem.GetValue(MovementAttrSet::KnockbackResistance) : 0))
+			if (Damage > (InteractSystem.HasAttrSet(MovementAttrSet::KnockbackResistance) ? InteractSystem.GetValue(MovementAttrSet::KnockbackResistance) : 0))
 			{
 				EOnHitCue.Broadcast();
 			}
@@ -58,7 +58,7 @@ class UDamageResponseComponent : UResponseComponent
 			{
 				TakeDamage(Damage, Element);
 				// should not apply status here. Only return true value if the damage is taken.
-				// AbilitySystem.ApplyStatusEffects(StatusEffect);
+				// InteractSystem.ApplyStatusEffects(StatusEffect);
 				return true;
 			}
 			else if (Damage < 0)
@@ -74,8 +74,8 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			AbilitySystem.SetBaseValue(PrimaryAttrSet::Damage, CalculateWeakness(Damage, Element));
-			// AbilitySystem.Calculate(PrimaryAttrSet::Damage);
+			InteractSystem.SetBaseValue(PrimaryAttrSet::Damage, CalculateWeakness(Damage, Element));
+			// InteractSystem.Calculate(PrimaryAttrSet::Damage);
 			if (CheckIsAlive())
 			{
 				EOnDamageCue.Broadcast();
@@ -93,9 +93,9 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	float CalculateWeakness(float Damage, FGameplayTag Element)
 	{
-		if (AbilitySystem.HasAttrSet(WeaknessAttrSet::VoidWeaknessMultiplier))
+		if (InteractSystem.HasAttrSet(WeaknessAttrSet::VoidWeaknessMultiplier))
 		{
-			return Damage * AbilitySystem.GetValue(WeaknessMap[Element]);
+			return Damage * InteractSystem.GetValue(WeaknessMap[Element]);
 		}
 		return Damage;
 	}
@@ -105,8 +105,8 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP) + Heal;
-			AbilitySystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
+			float NewHP = InteractSystem.GetValue(PrimaryAttrSet::HP) + Heal;
+			InteractSystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
 			EOnHealCue.Broadcast();
 			return true;
 		}
@@ -118,9 +118,9 @@ class UDamageResponseComponent : UResponseComponent
 	{
 		if (!bIsDead)
 		{
-			float NewHP = AbilitySystem.GetValue(PrimaryAttrSet::HP) - Amount;
-			AbilitySystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
-			// AbilitySystem.Calculate(PrimaryAttrSet::HP);
+			float NewHP = InteractSystem.GetValue(PrimaryAttrSet::HP) - Amount;
+			InteractSystem.SetBaseValue(PrimaryAttrSet::HP, NewHP);
+			// InteractSystem.Calculate(PrimaryAttrSet::HP);
 			if (CheckIsAlive())
 			{
 				return true;
@@ -137,14 +137,14 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	private bool RemoveHPPercent(float Value)
 	{
-		float Amount = AbilitySystem.GetValue(PrimaryAttrSet::MaxHP) * Value;
+		float Amount = InteractSystem.GetValue(PrimaryAttrSet::MaxHP) * Value;
 		return (RemoveHP(Amount));
 	}
 
 	UFUNCTION()
 	bool CheckIsAlive()
 	{
-		if (AbilitySystem.GetValue(PrimaryAttrSet::HP) <= 0)
+		if (InteractSystem.GetValue(PrimaryAttrSet::HP) <= 0)
 		{
 			return false;
 		}
@@ -157,8 +157,8 @@ class UDamageResponseComponent : UResponseComponent
 	UFUNCTION()
 	bool IsDamaged()
 	{
-		float HP = AbilitySystem.GetValue(PrimaryAttrSet::HP);
-		return (HP > 0 && HP < AbilitySystem.GetValue(PrimaryAttrSet::MaxHP));
+		float HP = InteractSystem.GetValue(PrimaryAttrSet::HP);
+		return (HP > 0 && HP < InteractSystem.GetValue(PrimaryAttrSet::MaxHP));
 	}
 
 	UFUNCTION()

@@ -2,7 +2,7 @@ class UOverrideMod : UModifier
 {
 	FBoolReturnDelegate DIsValid;
 
-	void DoCalculateChildren(const ULiteAbilitySystem AbilitySystem, float32& SourceValue) override
+	void DoCalculateChildren(const UInteractSystem InteractSystem, float32& SourceValue) override
 	{
 		SourceValue = Params[0];
 	}
