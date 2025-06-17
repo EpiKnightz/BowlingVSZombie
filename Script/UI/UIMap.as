@@ -181,11 +181,15 @@ class UUIMap : UUserWidget
 		System::SetTimer(this, n"PullClearData", 1.2, false);
 	}
 
-	void SetupStop(UUIMapButton& Stop, FGameplayTag MapElementID, int MapPos, bool bIsZombied, UTexture2D ZombieIcon, float AnimDelay, bool bIsActive, bool bIsHidden, float32 IconSize = NORMAL_ICON_SIZE)
+	void SetupStop(UUIMapButton& Stop, FGameplayTag MapElementID, int MapPos, bool bIsZombied, UTexture2D ZombieIcon, float AnimDelay, bool bIsActive, bool bIsHidden, FName ClickFuntion = NAME_None, float32 IconSize = NORMAL_ICON_SIZE)
 	{
 		DataToUI(MapElementID, Stop, MapPos);
 		Stop.SetZombieMark(bIsZombied, ZombieIcon, AnimDelay, IconSize);
 		Stop.SetActive(bIsActive, bIsHidden);
+		if (ClickFuntion != NAME_None)
+		{
+			Stop.OnLockClicked.BindUFunction(this, ClickFuntion);
+		}
 	}
 
 	UFUNCTION()
@@ -210,9 +214,9 @@ class UUIMap : UUserWidget
 			RandomArray.Add(Result);
 		}
 
-		SetupStop(LeftStop0, NormalEleArray[RandomArray[0]], 1, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.2, 0.3), true, LeftCount >= 1 ? false : true);
-		SetupStop(LeftStop1, NormalEleArray[RandomArray[1]], 2, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.6, 0.7), true, LeftCount >= 2 ? false : true);
-		SetupStop(LeftStop2, NormalEleArray[RandomArray[2]], 3, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(1, 1.1), true, LeftCount >= 3 ? false : true);
+		SetupStop(LeftStop0, NormalEleArray[RandomArray[0]], 1, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.2, 0.3), true, LeftCount >= 1 ? false : true, n"LeftButtonClicked");
+		SetupStop(LeftStop1, NormalEleArray[RandomArray[1]], 2, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.6, 0.7), true, LeftCount >= 2 ? false : true, n"LeftButtonClicked");
+		SetupStop(LeftStop2, NormalEleArray[RandomArray[2]], 3, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(1, 1.1), true, LeftCount >= 3 ? false : true, n"LeftButtonClicked");
 		// DataToUI(NormalEleArray[RandomArray[0]], LeftStop0, 1);
 		// DataToUI(NormalEleArray[RandomArray[1]], LeftStop1, 2);
 		// DataToUI(NormalEleArray[RandomArray[2]], LeftStop2, 3);
@@ -248,9 +252,9 @@ class UUIMap : UUserWidget
 			RandomArray.Add(Result);
 		}
 
-		SetupStop(RightStop0, NormalEleArray[RandomArray[0]], 4, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.2, 0.3), true, RightCount >= 1 ? false : true);
-		SetupStop(RightStop1, NormalEleArray[RandomArray[1]], 5, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.6, 0.7), true, RightCount >= 2 ? false : true);
-		SetupStop(RightStop2, NormalEleArray[RandomArray[2]], 6, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(1, 1.1), true, RightCount >= 3 ? false : true);
+		SetupStop(RightStop0, NormalEleArray[RandomArray[0]], 4, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.2, 0.3), true, RightCount >= 1 ? false : true, n"RightButtonClicked");
+		SetupStop(RightStop1, NormalEleArray[RandomArray[1]], 5, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(0.6, 0.7), true, RightCount >= 2 ? false : true, n"RightButtonClicked");
+		SetupStop(RightStop2, NormalEleArray[RandomArray[2]], 6, Math::RandomBoolFromStream(MapRandomStream), NormalZombieIcon, Math::RandRange(1, 1.1), true, RightCount >= 3 ? false : true, n"RightButtonClicked");
 		// DataToUI(NormalEleArray[RandomArray[0]], RightStop0, 4);
 		// DataToUI(NormalEleArray[RandomArray[1]], RightStop1, 5);
 		// DataToUI(NormalEleArray[RandomArray[2]], RightStop2, 6);
@@ -267,8 +271,8 @@ class UUIMap : UUserWidget
 	UFUNCTION()
 	void RandomMid(int OtherCount = 0)
 	{
-		SetupStop(MidStop0, EliteEleArray[MapRandomStream.RandRange(0, EliteEleArray.Num() - 1)], 7, true, EliteZombieIcon, Math::RandRange(OtherCount * 0.25, OtherCount * 0.3), true, false, ELITE_ICON_SIZE);
-		SetupStop(LastStop, BossEleArray[MapRandomStream.RandRange(0, BossEleArray.Num() - 1)], 8, true, BossZombieIcon, Math::RandRange(OtherCount * 0.4, OtherCount * 0.45), true, false, BOSS_ICON_SIZE);
+		SetupStop(MidStop0, EliteEleArray[MapRandomStream.RandRange(0, EliteEleArray.Num() - 1)], 7, true, EliteZombieIcon, Math::RandRange(OtherCount * 0.25, OtherCount * 0.3), true, false, NAME_None, ELITE_ICON_SIZE);
+		SetupStop(LastStop, BossEleArray[MapRandomStream.RandRange(0, BossEleArray.Num() - 1)], 8, true, BossZombieIcon, Math::RandRange(OtherCount * 0.4, OtherCount * 0.45), true, false, NAME_None, BOSS_ICON_SIZE);
 		// DataToUI(EliteEleArray[MapRandomStream.RandRange(0, EliteEleArray.Num() - 1)], MidStop0, 7);
 		// DataToUI(BossEleArray[MapRandomStream.RandRange(0, BossEleArray.Num() - 1)], LastStop, 8);
 
@@ -281,14 +285,14 @@ class UUIMap : UUserWidget
 	UFUNCTION()
 	void SetupTutorial()
 	{
-		SetupStop(LeftStop0, NormalEleArray[5], 1, true, NormalZombieIcon, Math::RandRange(0.2, 0.3), true, false);
-		SetupStop(LeftStop1, NormalEleArray[2], 2, true, NormalZombieIcon, Math::RandRange(0.6, 0.7), true, false);
-		SetupStop(LeftStop2, NormalEleArray[3], 3, false, NormalZombieIcon, Math::RandRange(1, 1.1), true, false);
-		SetupStop(RightStop0, NormalEleArray[1], 4, true, NormalZombieIcon, Math::RandRange(0.2, 0.3), true, false);
-		SetupStop(RightStop1, NormalEleArray[0], 5, true, NormalZombieIcon, Math::RandRange(0.6, 0.7), true, false);
-		SetupStop(RightStop2, NormalEleArray[4], 6, false, NormalZombieIcon, Math::RandRange(1, 1.1), true, false);
-		SetupStop(MidStop0, EliteEleArray[0], 7, true, EliteZombieIcon, Math::RandRange(0.75, 0.9), true, false, ELITE_ICON_SIZE);
-		SetupStop(LastStop, BossEleArray[0], 8, true, BossZombieIcon, Math::RandRange(1.2, 1.35), true, false, BOSS_ICON_SIZE);
+		SetupStop(LeftStop0, NormalEleArray[5], 1, true, NormalZombieIcon, Math::RandRange(0.2, 0.3), true, false, n"LeftButtonClicked");
+		SetupStop(LeftStop1, NormalEleArray[2], 2, true, NormalZombieIcon, Math::RandRange(0.6, 0.7), true, false, n"LeftButtonClicked");
+		SetupStop(LeftStop2, NormalEleArray[3], 3, false, NormalZombieIcon, Math::RandRange(1, 1.1), true, false, n"LeftButtonClicked");
+		SetupStop(RightStop0, NormalEleArray[1], 4, true, NormalZombieIcon, Math::RandRange(0.2, 0.3), true, false, n"RightButtonClicked");
+		SetupStop(RightStop1, NormalEleArray[0], 5, true, NormalZombieIcon, Math::RandRange(0.6, 0.7), true, false, n"RightButtonClicked");
+		SetupStop(RightStop2, NormalEleArray[4], 6, false, NormalZombieIcon, Math::RandRange(1, 1.1), true, false, n"RightButtonClicked");
+		SetupStop(MidStop0, EliteEleArray[0], 7, true, EliteZombieIcon, Math::RandRange(0.75, 0.9), true, false, NAME_None, ELITE_ICON_SIZE);
+		SetupStop(LastStop, BossEleArray[0], 8, true, BossZombieIcon, Math::RandRange(1.2, 1.35), true, false, NAME_None, BOSS_ICON_SIZE);
 	}
 
 	UFUNCTION()

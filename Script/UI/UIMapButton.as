@@ -19,11 +19,11 @@ class UUIMapButton : UUserWidget
 
 	private int CurrentMapPosition = -1;
 	private EMapElement CurrentMapElementType = EMapElement::None;
+	FVoidDelegate OnLockClicked;
 
 	UFUNCTION(BlueprintOverride)
 	void Construct()
 	{
-		ButtonBuilding.OnClicked.AddUFunction(this, n"OnClicked");
 		ZombieMark.SetRenderScale(FVector2D::ZeroVector);
 	}
 
@@ -52,7 +52,22 @@ class UUIMapButton : UUserWidget
 
 	void SetLock(bool bLocked = false)
 	{
-		ButtonBuilding.SetVisibility(bLocked ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Visible);
+
+		if (bLocked)
+		{
+			if (OnLockClicked.IsBound())
+			{
+				ButtonBuilding.OnClicked.AddUFunction(OnLockClicked.UObject, OnLockClicked.FunctionName);
+			}
+			else
+			{
+				ButtonBuilding.SetVisibility(bLocked ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Visible);
+			}
+		}
+		else
+		{
+			ButtonBuilding.OnClicked.AddUFunction(this, n"OnClicked");
+		}
 	}
 
 	UFUNCTION()
