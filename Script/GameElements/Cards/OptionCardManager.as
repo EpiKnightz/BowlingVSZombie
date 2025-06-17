@@ -8,9 +8,9 @@ class AOptionCardManager : AActor
 	TSubclassOf<AOptionCard> CardTemplate;
 
 	// This is to display the card in the game, from left to right: 0, 1, 2
-	int CurrentID = 0;
+	int CurrentDisplayOrder = 0;
 	FCardDT SelectedCardData;
-	TMap<int, AOptionCard> CardSelectionMap;
+	TMap<int, AOptionCard> CardDisplayOrderMap;
 	int CurrentSelectionID = 0;
 	TMap<int, FCardDT> CardInventory;
 
@@ -69,6 +69,11 @@ class AOptionCardManager : AActor
 		CardInventory.Add(CurrentSelectionID, Card);
 		CurrentSelectionID++;
 		EOnCardAdded.Broadcast(Card);
+	}
+
+	void RemoveCard(int ID)
+	{
+		CardInventory.Remove(ID);
 	}
 
 	UFUNCTION(BlueprintOverride)
@@ -133,8 +138,9 @@ class AOptionCardManager : AActor
 		// Retry until we get a different ID, or exceeded MAX_RANDOM_RETRY
 		int CurrentRetry = 0;
 
-		while ((NewSpawnedID == LastSpawnedID
-				|| (ForceCardType != ECardType::None && CardInventory[NewSpawnedID].CardType != ForceCardType))
+		while (LastSpawnedID >= 0
+			   && ((NewSpawnedID == LastSpawnedID || CardInventory[LastSpawnedID].ItemID == CardInventory[NewSpawnedID].ItemID)
+				   || (ForceCardType != ECardType::None && CardInventory[NewSpawnedID].CardType != ForceCardType))
 			   && CurrentRetry < MAX_RANDOM_RETRY
 			   && CardInventory.Num() > 1)
 		{
@@ -187,10 +193,11 @@ class AOptionCardManager : AActor
 		{
 			ForceCardType = ECardType::Survivor;
 		}
-		Card.Init(CurrentID, this, GetRandomCard(ForceCardType));
-		CardSelectionMap.Add(CurrentID, Card);
-		CurrentID++;
-		if (CurrentID < 3)
+		Card.Init(CurrentDisplayOrder, this, GetRandomCard(ForceCardType));
+
+		CardDisplayOrderMap.Add(CurrentDisplayOrder, Card);
+		CurrentDisplayOrder++;
+		if (CurrentDisplayOrder < 3)
 		{
 			System::SetTimer(this, n"SpawnCard", 0.5 * TIME_SCALE_WHEN_SPAWNED_CARD, false);
 		}
@@ -202,14 +209,15 @@ class AOptionCardManager : AActor
 	}
 
 	UFUNCTION()
-	void OnCardClicked(int ID, FCardDT CardData)
+	void OnCardClicked(int DisplayOrder, FCardDT CardData)
 	{
 		SelectedCardData = CardData;
-		for (int i = 0; i < CardSelectionMap.Num(); i++)
+		for (int i = 0; i < CardDisplayOrderMap.Num(); i++)
 		{
-			if (i != ID)
+			if (i != DisplayOrder)
 			{
-				CardSelectionMap.FindOrAdd(i).Outro();
+				// Shouldn't it be Find only here?
+				CardDisplayOrderMap.FindOrAdd(i).Outro();
 			}
 		}
 	}
@@ -236,9 +244,9 @@ class AOptionCardManager : AActor
 	UFUNCTION()
 	private void OnAnyDragReleased()
 	{
-		if (CurrentID != 0)
+		if (CurrentDisplayOrder != 0)
 		{
-			CurrentID = 0;
+			CurrentDisplayOrder = 0;
 			if (AttentionStack > 0)
 			{
 				OnAttentionClicked();

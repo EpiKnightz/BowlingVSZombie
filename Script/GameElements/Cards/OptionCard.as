@@ -30,7 +30,8 @@ class AOptionCard : AActor
 	FVoidEvent EOnDragReleased;
 
 	private ATemplateSequenceActor TemplSequActor;
-	private int ID;
+	private int DisplayOrder; //  Can only be 0, 1, 2
+	private int InventoryID;
 
 	UPROPERTY()
 	FTransform SurvivorTransform;
@@ -70,9 +71,9 @@ class AOptionCard : AActor
 
 	// ID can be 0, 1 or 2 for Left, Middle and Right cards
 	UFUNCTION()
-	void Init(int iID, AOptionCardManager OptionCardManager, FCardDT iCardData)
+	void Init(int iDisplayOrder, AOptionCardManager OptionCardManager, FCardDT iCardData)
 	{
-		ID = iID;
+		DisplayOrder = iDisplayOrder;
 		CardWidget.DGetAbilityDataFromTag = OptionCardManager.DGetAbilityDataFromTag;
 
 		switch (iCardData.CardType)
@@ -148,7 +149,7 @@ class AOptionCard : AActor
 			}
 		}
 
-		UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[ID], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
+		UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[DisplayOrder], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
 		TemplSequActor.SetBinding(this);
 		TemplSequActor.GetSequencePlayer().SetPlayRate(1 / Gameplay::GetGlobalTimeDilation());
 		TemplSequActor.GetSequencePlayer().Play();
@@ -161,7 +162,7 @@ class AOptionCard : AActor
 	{
 		if (OtherActor == this)
 		{
-			DOnCardClicked.ExecuteIfBound(ID, CardData);
+			DOnCardClicked.ExecuteIfBound(DisplayOrder, CardData);
 			switch (CardData.CardType)
 			{
 				case ECardType::Survivor:
