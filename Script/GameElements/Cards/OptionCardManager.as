@@ -7,6 +7,30 @@ class AOptionCardManager : AActor
 	UPROPERTY()
 	TSubclassOf<AOptionCard> CardTemplate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor CommonColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor RareColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor EpicColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
+	FLinearColor LegendColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor FireColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor WaterColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor ForestColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor EarthColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor AetherColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor NetherColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Element)
+	FLinearColor VoidColor;
+
 	// This is to display the card in the game, from left to right: 0, 1, 2
 	int CurrentDisplayOrder = 0;
 	FCardDT SelectedCardData;
@@ -193,7 +217,9 @@ class AOptionCardManager : AActor
 		{
 			ForceCardType = ECardType::Survivor;
 		}
-		Card.Init(CurrentDisplayOrder, this, GetRandomCard(ForceCardType));
+		FCardDT ChosenCard = GetRandomCard(ForceCardType);
+		Card.Init(CurrentDisplayOrder, this, ChosenCard);
+		Card.SetCardColor(GetRarityColor(ChosenCard.Rarity), GetElementColor(ChosenCard.DescriptionTags));
 
 		CardDisplayOrderMap.Add(CurrentDisplayOrder, Card);
 		CurrentDisplayOrder++;
@@ -239,6 +265,71 @@ class AOptionCardManager : AActor
 				Survivor.OnNewCardAdded();
 			}
 		}
+	}
+
+	FLinearColor GetRarityColor(ERarity Rarity)
+	{
+		FLinearColor ReturnColor;
+		switch (Rarity)
+		{
+			case ERarity::Common:
+				ReturnColor = CommonColor;
+				break;
+			case ERarity::Rare:
+				ReturnColor = RareColor;
+				break;
+			case ERarity::Epic:
+				ReturnColor = EpicColor;
+				break;
+			case ERarity::Legendary:
+				ReturnColor = LegendColor;
+				break;
+			default:
+				ReturnColor = FLinearColor::DPink;
+				break;
+		}
+		return ReturnColor;
+	}
+
+	TArray<FLinearColor> GetElementColor(FGameplayTagContainer DescriptionTags)
+	{
+		TArray<FLinearColor> ReturnColor;
+		FGameplayTagContainer Filtered = DescriptionTags.Filter(GameplayTags::Description_Element.SingleTagContainer);
+		if (Filtered.IsEmpty() || Filtered.Num() > 2)
+		{
+			ReturnColor.Add(FLinearColor::DPink);
+			return ReturnColor;
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Void))
+		{
+			ReturnColor.Add(VoidColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Nether))
+		{
+			ReturnColor.Add(NetherColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Aether))
+		{
+			ReturnColor.Add(AetherColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Earth))
+		{
+			ReturnColor.Add(EarthColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Forest))
+		{
+			ReturnColor.Add(ForestColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Water))
+		{
+			ReturnColor.Add(WaterColor);
+		}
+		if (DescriptionTags.HasTagExact(GameplayTags::Description_Element_Fire))
+		{
+			ReturnColor.Add(FireColor);
+		}
+
+		return ReturnColor;
 	}
 
 	UFUNCTION()

@@ -42,4 +42,10 @@ class UColorOverlay
 			DynamicMat.SetVectorParameterValue(n"OverlayColor", Color);
 		}
 	}
+
+	UFUNCTION()
+	void ChangeSubColor(FLinearColor Color)
+	{
+		DynamicMat.SetVectorParameterValue(n"SubColor", Color);
+	}
 };

@@ -11,10 +11,11 @@ enum ECardType
 enum ERarity
 {
 	Null = -1,
-	Silver = 0,
-	Gold = 1,
-	Epic = 2,
-	Mythic = 3
+	Common = 0,	   // White
+	Rare = 1,	   // Blue
+	Epic = 2,	   // Purple
+	Legendary = 3, // Gold
+	Mythic = 4	   // Cosmetic Only, Red
 }
 
 struct FCardDT
@@ -38,7 +39,7 @@ struct FCardDT
 	int Cost = 0;
 
 	UPROPERTY()
-	ERarity Rarity = ERarity::Silver;
+	ERarity Rarity = ERarity::Common;
 
 	UPROPERTY()
 	FGameplayTagContainer DescriptionTags;
@@ -72,6 +73,7 @@ struct FCardDT
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			Rarity = Other.Rarity;
 			DescriptionTags = Other.DescriptionTags;
 		}
 	}
@@ -87,6 +89,7 @@ struct FCardDT
 			ItemID = Other.SurvivorID;
 			Cost = Other.Cost;
 			Star = Other.Star;
+			Rarity = Other.Rarity;
 			DescriptionTags = Other.DescriptionTags;
 		}
 		return this;

@@ -20,6 +20,9 @@ class AOptionCard : AActor
 	default TextWidget.ReceivesDecals = false;
 	UUICard CardWidget;
 
+	UPROPERTY(DefaultComponent, Attach = CardMesh)
+	UStaticMeshComponent CardBG;
+
 	UPROPERTY()
 	TArray<UTemplateSequence> IntroSequences;
 
@@ -46,6 +49,7 @@ class AOptionCard : AActor
 	// TSubclassOf<ASurvivor> CompanionClass;
 
 	protected UColorOverlay ColorOverlay;
+	protected UMaterialInstanceDynamic CardBGMat;
 	protected AActor Target;
 	private ASurvivor SpawnedSurvivor;
 	private AActor SpawnedWeaponActor;
@@ -67,14 +71,17 @@ class AOptionCard : AActor
 		ColorOverlay = NewObject(this, UColorOverlay);
 		ColorOverlay.SetupDynamicMaterial(CardMesh.GetMaterial(0));
 		CardMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+		CardBGMat = CardBG.CreateDynamicMaterialInstance(0);
+		CardBG.SetMaterial(0, CardBGMat);
 	}
 
 	// ID can be 0, 1 or 2 for Left, Middle and Right cards
 	UFUNCTION()
-	void Init(int iDisplayOrder, AOptionCardManager OptionCardManager, FCardDT iCardData)
+	void Init(int iDisplayOrder, AOptionCardManager OptionCardManager, FCardDT& iCardData)
 	{
 		DisplayOrder = iDisplayOrder;
 		CardWidget.DGetAbilityDataFromTag = OptionCardManager.DGetAbilityDataFromTag;
+		SetTimeScale(Gameplay::GetGlobalTimeDilation());
 
 		switch (iCardData.CardType)
 		{
@@ -148,6 +155,7 @@ class AOptionCard : AActor
 				break;
 			}
 		}
+		iCardData = CardData;
 
 		UTemplateSequencePlayer::CreateTemplateSequencePlayer(IntroSequences[DisplayOrder], FMovieSceneSequencePlaybackSettings(), TemplSequActor);
 		TemplSequActor.SetBinding(this);
@@ -155,6 +163,22 @@ class AOptionCard : AActor
 		TemplSequActor.GetSequencePlayer().Play();
 		TemplSequActor.GetSequencePlayer().OnFinished.AddUFunction(CardWidget, n"PlayIntroAnim");
 		EOnCardInit.Broadcast(CardData);
+	}
+
+	void SetCardColor(FLinearColor RarityColor, TArray<FLinearColor> ElementColor)
+	{
+		CardWidget.SetRarityColor(RarityColor);
+		ColorOverlay.ChangeOverlayColor(ElementColor[0]);
+		if (ElementColor.Num() >= 2)
+		{
+			FLinearColor SubColor = ElementColor[1];
+			SubColor.A = 1; // Enable dual color
+			ColorOverlay.ChangeSubColor(SubColor);
+		}
+		else
+		{
+			ColorOverlay.ChangeSubColor(FLinearColor::Transparent);
+		}
 	}
 
 	UFUNCTION()
@@ -289,6 +313,12 @@ class AOptionCard : AActor
 		TextWidget.SetVisibility(false);
 		Widget::SetInputMode_GameOnly(Gameplay::GetPlayerController(0));
 		DestroyActor();
+	}
+
+	void SetTimeScale(float32 NewTimeScale)
+	{
+		ColorOverlay.DynamicMat.SetScalarParameterValue(n"TimeScale", NewTimeScale);
+		CardBGMat.SetScalarParameterValue(n"TimeScale", NewTimeScale);
 	}
 
 	// UFUNCTION()

@@ -1,3 +1,4 @@
+const float RAGE_BONUS_AVG_INTERVAL = 1.5;
 class UUICard : UUserWidget
 {
 	UPROPERTY(meta = (BindWidget))
@@ -93,7 +94,29 @@ class UUICard : UUserWidget
 		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_RageRegen.GetSingleTagContainer());
 		RAGEIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnRAGEClicked");
 
-		CurrentColor = FLinearColor::Gray;
+		// switch (CardData.Rarity)
+		// {
+		// 	case ERarity::Silver:
+		// 		CurrentColor = SilverColor;
+		// 		break;
+		// 	case ERarity::Gold:
+		// 		CurrentColor = GoldColor;
+		// 		break;
+		// 	case ERarity::Epic:
+		// 		CurrentColor = EpicColor;
+		// 		break;
+		// 	case ERarity::Mythic:
+		// 		CurrentColor = MythicColor;
+		// 		break;
+		// 	default:
+		// 		CurrentColor = FLinearColor::White;
+		// 		break;
+		// }
+	}
+
+	void SetRarityColor(FLinearColor Color)
+	{
+		CurrentColor = Color;
 	}
 
 	FString GenDescFromTags(FGameplayTagContainer AbilitiesTags)
@@ -125,7 +148,7 @@ class UUICard : UUserWidget
 		TextHP.GetParent().SetVisibility(ESlateVisibility::Visible);
 		TextHP.SetCurrentValue(SurvivorData.HP);
 		TextRAGE.GetParent().SetVisibility(ESlateVisibility::Visible);
-		TextRAGE.SetCurrentValue(SurvivorData.RageRegen + SurvivorData.RageBonus / 1.5);
+		TextRAGE.SetCurrentValue(SurvivorData.RageRegen + SurvivorData.RageBonus / RAGE_BONUS_AVG_INTERVAL);
 		if (CardDescription.Text.IsEmptyOrWhitespace())
 		{
 			CardDescription.SetText(FText::FromString(GenDescFromTags(SurvivorData.AbilitiesTags) + "\n\n <span style=\"Italic\">"
