@@ -44,10 +44,10 @@ struct FWeaponDT
 	UPROPERTY(BlueprintReadWrite, Category = Animation)
 	UAnimMontage AttackAnim;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = WeaponTags, meta = (Categories = "Ability"))
 	FGameplayTagContainer WeaponAbilities;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = WeaponTags, meta = (Categories = "Status,Description"))
 	FGameplayTagContainer EffectTags;
 
 	bool IsValid()

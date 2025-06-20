@@ -1,26 +1,26 @@
 struct FSurvivorDT
 {
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = Survivor, meta = (Categories = "Survivor"))
 	FGameplayTag SurvivorID;
 
 	// FString is for friendly name
-	UPROPERTY()
+	UPROPERTY(Category = Survivor)
 	FString Name = "SWAT";
 
 	// FText is for localization, for user facing classes
-	UPROPERTY(meta = (MultiLine = true))
+	UPROPERTY(Category = Survivor, meta = (MultiLine = true))
 	FText Description = FText::FromString("Description");
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = Description, meta = (Categories = "Description"))
 	FGameplayTagContainer DescriptionTags;
 
-	UPROPERTY(Category = Skills)
+	UPROPERTY(EditDefaultsOnly, Category = Skills, meta = (Categories = "Ability"))
 	FGameplayTagContainer AbilitiesTags;
 
-	UPROPERTY(Category = Skills)
+	UPROPERTY(EditDefaultsOnly, Category = Skills, meta = (Categories = "Weapon"))
 	FGameplayTag WeaponTag;
 
-	UPROPERTY(Category = Skills)
+	UPROPERTY(EditDefaultsOnly, Category = Skills, meta = (Categories = "Status,Description"))
 	FGameplayTagContainer EffectTags;
 
 	UPROPERTY(Category = BaseStats)
@@ -71,6 +71,9 @@ struct FSurvivorDT
 
 	UPROPERTY(meta = (ClampMin = "1", ClampMax = "5", UIMin = "1", UIMax = "5"), Category = Metagame)
 	int Star = 1;
+
+	UPROPERTY(Category = Metagame)
+	ERarity Rarity = ERarity::Common;
 
 	UPROPERTY(Category = Metagame)
 	int Cost = 100;

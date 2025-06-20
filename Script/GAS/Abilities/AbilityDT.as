@@ -1,6 +1,6 @@
 struct FAbilityDT
 {
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = Ability, meta = (Categories = "Ability"))
 	FGameplayTag AbilityID;
 
 	UPROPERTY()
@@ -30,7 +30,7 @@ struct FAbilityDT
 	UPROPERTY()
 	TSubclassOf<UAbility> AbilityClass;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = AbilityParam, meta = (Categories = "AbilityParam,Status"))
 	TMap<FGameplayTag, float> AbilityParams;
 
 	UPROPERTY()

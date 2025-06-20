@@ -26,23 +26,23 @@ struct FLevelConfigsDT
 	UPROPERTY()
 	UDataTable SpawnSequenceDT;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Bowling"))
 	FItemPoolConfigDT BowlingsPoolConfig;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Survivor"))
 	FItemPoolConfigDT SurvivorsPoolConfig;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Weapon"))
 	FItemPoolConfigDT WeaponsPoolConfig;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Ability"))
 	FItemPoolConfigDT AbilitiesPoolConfig;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Power"))
 	FItemPoolConfigDT PowerPoolConfig;
 
 	// Possible rewards: Power, Survivor, Weapon, Ability
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = DefaultItems, meta = (Categories = "Survivor,Weapon,Ability,Power"))
 	FGameplayTagContainer RewardConfigsDT;
 
 	FGameplayTag GetRandomReward()

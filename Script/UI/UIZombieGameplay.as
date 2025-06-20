@@ -71,20 +71,20 @@ class UUIZombieGameplay : UUserWidget
 
 	FVoidEvent EOnAttentionClicked;
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void UpdateLevelProgress(float NewProgress)
 	{
 		ProgressText.SetCurrentValue(NewProgress);
 		LevelProgress.SetValue(NewProgress);
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void UpdateCooldownPercent(float NewPercent)
 	{
 		CooldownBar.SetPercent(NewPercent);
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void UpdateAttentionPercent(float NewPercent)
 	{
 		AttentionBar.SetPercent(NewPercent);
@@ -162,10 +162,9 @@ class UUIZombieGameplay : UUserWidget
 		// To be implemented in Blueprint
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void UpdateCombo(int NewValue)
 	{
-		// To be implemented in Blueprint
 		if (NewValue > 0)
 		{
 			ComboText.SetCurrentValue(NewValue);
@@ -197,7 +196,7 @@ class UUIZombieGameplay : UUserWidget
 		}
 	}
 
-	UFUNCTION(BlueprintEvent)
+	UFUNCTION()
 	void UpdateCoin(int NewValue)
 	{
 		if (NewValue > 0)
