@@ -1,4 +1,5 @@
 const float RAGE_BONUS_AVG_INTERVAL = 1.5;
+const float KEYWORD_ICON_SIZE = 40;
 class UUICard : UUserWidget
 {
 	UPROPERTY(meta = (BindWidget))
@@ -17,14 +18,6 @@ class UUICard : UUserWidget
 	UPROPERTY(meta = (BindWidget))
 	UImage Star_4;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
-	FLinearColor SilverColor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
-	FLinearColor GoldColor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
-	FLinearColor EpicColor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rarity)
-	FLinearColor MythicColor;
 	UPROPERTY(BlueprintReadOnly, Category = Rarity)
 	FLinearColor CurrentColor = FLinearColor::White;
 
@@ -51,6 +44,11 @@ class UUICard : UUserWidget
 	UPROPERTY(meta = (BindWidget))
 	UCommonNumericTextBlock TextRAGE;
 
+	UPROPERTY(meta = (BindWidget))
+	UWrapBox KeywordBox;
+	UPROPERTY(meta = (BindWidget))
+	USizeBox DescriptionBox;
+
 	UPROPERTY(NotEditable, Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation IntroAnim;
 
@@ -67,6 +65,8 @@ class UUICard : UUserWidget
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UUIKeywordDescription> KeywordPopup;
+
+	private FName IconName;
 
 	UFUNCTION(BlueprintCallable)
 	void SetCardData(FCardDT CardData)
@@ -93,25 +93,6 @@ class UUICard : UUserWidget
 
 		FilteredTags = CardData.DescriptionTags.Filter(GameplayTags::Description_Misc_RageRegen.GetSingleTagContainer());
 		RAGEIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnRAGEClicked");
-
-		// switch (CardData.Rarity)
-		// {
-		// 	case ERarity::Silver:
-		// 		CurrentColor = SilverColor;
-		// 		break;
-		// 	case ERarity::Gold:
-		// 		CurrentColor = GoldColor;
-		// 		break;
-		// 	case ERarity::Epic:
-		// 		CurrentColor = EpicColor;
-		// 		break;
-		// 	case ERarity::Mythic:
-		// 		CurrentColor = MythicColor;
-		// 		break;
-		// 	default:
-		// 		CurrentColor = FLinearColor::White;
-		// 		break;
-		// }
 	}
 
 	void SetRarityColor(FLinearColor Color)
@@ -154,6 +135,33 @@ class UUICard : UUserWidget
 			CardDescription.SetText(FText::FromString(GenDescFromTags(SurvivorData.AbilitiesTags) + "\n\n <span style=\"Italic\">"
 													  + SurvivorData.Description.ToString() + "</>"));
 		}
+		if (SurvivorData.EffectTags.IsEmpty())
+		{
+			DescriptionBox.HeightOverride = DescriptionBox.MaxDesiredHeight;
+			KeywordBox.SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			DescriptionBox.HeightOverride = DescriptionBox.MinDesiredHeight;
+			KeywordBox.SetVisibility(ESlateVisibility::Visible);
+
+			for (FGameplayTag Tag : SurvivorData.EffectTags.GameplayTags)
+			{
+				FName IconTagName = Tag.GetCurrentNameOnly();
+				FKeywordDT KeywordRow;
+				if (KeywordDataTable.FindRow(IconTagName, KeywordRow))
+				{
+					UImage KeywordIcon = NewObject(KeywordBox, UImage, IconTagName);
+					KeywordIcon.OnMouseButtonDownNameEvent.BindUFunction(this, n"GetIconName");
+					KeywordIcon.OnMouseButtonDownEvent.BindUFunction(this, n"OnIconClicked");
+					KeywordIcon.SetBrushSize(FVector2D(KEYWORD_ICON_SIZE, KEYWORD_ICON_SIZE));
+					KeywordIcon.SetBrushFromTexture(KeywordRow.Icon);
+					// KeywordIcon.SetDesiredSizeOverride(FVector2D(KEYWORD_ICON_SIZE, KEYWORD_ICON_SIZE));
+					KeywordIcon.SetVisibility(ESlateVisibility::Visible);
+					KeywordBox.AddChildToWrapBox(KeywordIcon);
+				}
+			}
+		}
 	}
 
 	UFUNCTION()
@@ -182,6 +190,28 @@ class UUICard : UUserWidget
 			}
 		}
 		Icon.SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	UFUNCTION()
+	private void GetIconName(FString ButtonName)
+	{
+		IconName = FName(ButtonName);
+	}
+
+	UFUNCTION()
+	private FEventReply OnIconClicked(FGeometry MyGeometry, const FPointerEvent&in MouseEvent)
+	{
+		if (!IconName.IsNone())
+		{
+			FEventReply Reply = OnClicked(IconName);
+			IconName = FName();
+			return Reply;
+		}
+		else
+		{
+			// PrintError("IconName is None");
+			return FEventReply::Unhandled();
+		}
 	}
 
 	UFUNCTION()
