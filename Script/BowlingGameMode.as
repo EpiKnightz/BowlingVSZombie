@@ -276,19 +276,22 @@ class ABowlingGameMode : AGameMode
 		LatentInfo.Linkage = 0;
 		LatentInfo.UUID = 1;
 
-		switch (GameInst.GetCurrentLevel())
+		if (GameInst.RunData.RunTags.HasTag(GameplayTags::Map_Tutorial))
 		{
-			case 1:
-				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
-				break;
-			case 2:
-				Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
-				// PlayOpeningSequence();
-				break;
-			case 3:
-				Gameplay::LoadStreamLevel(n"M_Level3", true, true, LatentInfo);
-				break;
-			default:
+			switch (GameInst.GetCurrentLevel())
+			{
+				case 1:
+					Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
+					break;
+					// case 2:
+					//  	Gameplay::LoadStreamLevel(n"M_Level1a", true, true, LatentInfo);
+					//  	// PlayOpeningSequence();
+					//  	break;
+					// case 3:
+					//	Gameplay::LoadStreamLevel(n"M_Level3", true, true, LatentInfo);
+					//	break;
+				default:
+			}
 		}
 	}
 
@@ -383,27 +386,37 @@ class ABowlingGameMode : AGameMode
 			{
 				FGameplayTag Reward = TutorialConfigsData.GetRandomReward();
 				FCardDT RewardCard;
+				bool bIsAddDuplicate = false;
 				if (Reward.MatchesTag(GameplayTags::Power))
 				{
+					// TODO: Manually prevent power duplication
 					RewardCard = PowerManager.GetPowerData(Reward);
 				}
 				else if (Reward.MatchesTag(GameplayTags::Survivor))
 				{
 					RewardCard = SurvivorManager.GetSurvivorData(Reward);
+					bIsAddDuplicate = true;
 				}
 				else if (Reward.MatchesTag(GameplayTags::Weapon))
 				{
 					RewardCard = WeaponsManager.GetWeaponData(Reward);
+					bIsAddDuplicate = true;
 				}
 				else if (Reward.MatchesTag(GameplayTags::Ability))
 				{
 					RewardCard = AbilitiesManager.GetAbilityData(Reward);
+					bIsAddDuplicate = true;
 				}
 				else if (Reward.MatchesTag(GameplayTags::Bowling))
 				{
 					RewardCard = BowlingPawn.GetBowlingData(Reward);
 				}
 				EOnRewardCollected.Broadcast(RewardCard);
+				if (bIsAddDuplicate) // Add 2 more duplicate of a reward item
+				{
+					EOnRewardCollected.Broadcast(RewardCard);
+					EOnRewardCollected.Broadcast(RewardCard);
+				}
 				// Todo: Move this to event maybe?
 				GameInst.ChangeInvCoinAmount(CoinTotal);
 				GameInst.SetRunHP(RunHP);

@@ -35,6 +35,7 @@ class UBowlingGameInstance : UGameInstance
 		RunData.MaxRunHP = 100;
 		RunData.CurrentRunHP = 100;
 		RunData.RunCoinTotal = 200;
+		RunData.CurrentCardInventory.Empty();
 		RunData.RunTags.AddTag(GameplayTags::Map_Tutorial);
 		RunData.ClearedLevels.Empty();
 		SaveRun();
@@ -75,14 +76,16 @@ class UBowlingGameInstance : UGameInstance
 	UFUNCTION()
 	void AddCardToInventory(FCardDT Reward)
 	{
-		RunData.CurrentCardInventory.AddUnique(Reward);
+		// Doing a pool-like system so allowing duplicates now
+		RunData.CurrentCardInventory.Add(Reward);
 		SaveRun();
 	}
 
 	UFUNCTION()
 	void OnShopItemBought(FCardDT Item)
 	{
-		RunData.CurrentCardInventory.AddUnique(Item);
+		// Doing a pool-like system so allowing duplicates now
+		RunData.CurrentCardInventory.Add(Item);
 		ChangeInvCoinAmount(-Item.Cost);
 		SaveRun();
 	}
