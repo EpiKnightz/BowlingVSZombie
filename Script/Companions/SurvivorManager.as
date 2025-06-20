@@ -66,7 +66,7 @@ class ASurvivorManager : AActor
 	UFUNCTION()
 	FSurvivorDT GetRankedSurvivorData(FGameplayTag SurvivorID, int Rank)
 	{
-		FGameplayTag RankedSurvivorID = FGameplayTag::RequestGameplayTag(FName(SurvivorID.ToString() + ".Lv" + Rank));
+		FGameplayTag RankedSurvivorID = FGameplayTag::RequestGameplayTag(FName(SurvivorID.ToString() + ".R" + Rank));
 		return GetSurvivorData(RankedSurvivorID);
 	}
 

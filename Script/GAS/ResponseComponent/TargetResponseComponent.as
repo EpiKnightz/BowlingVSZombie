@@ -7,7 +7,9 @@ class UTargetResponseComponent : UResponseComponent
 	UFUNCTION()
 	void SetID(FGameplayTag iID)
 	{
-		if (iID.GetCurrentNameOnly().ToString().Contains("Lv"))
+		bool bIsMatch = false;
+		RegexCppBP::RegexMatch(iID.GetCurrentNameOnly().ToString(), "^R[0-9]*", false, bIsMatch);
+		if (bIsMatch)
 		{
 			TargetID = iID.RequestDirectParent();
 		}
