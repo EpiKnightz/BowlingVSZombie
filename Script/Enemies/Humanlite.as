@@ -16,7 +16,7 @@ class AHumanlite : AActor
 	default BodyMesh.CollisionProfileName = n"NoCollision";
 	default BodyMesh.ReceivesDecals = false;
 
-	UPROPERTY(DefaultComponent, Attach = BodyMesh, AttachSocket = "Bip001-Neck")
+	UPROPERTY(DefaultComponent, Attach = BodyMesh)
 	UStaticMeshComponent HeadMesh;
 	default HeadMesh.CollisionEnabled = ECollisionEnabled::NoCollision;
 	default HeadMesh.CollisionProfileName = n"NoCollision";
@@ -79,6 +79,7 @@ class AHumanlite : AActor
 		ColorOverlay = NewObject(this, UColorOverlay);
 		ColorOverlay.SetupDynamicMaterial(BodyMesh.GetMaterial(0));
 		BodyMesh.SetMaterial(0, ColorOverlay.DynamicMat);
+		HeadMesh.AttachTo(BodyMesh, n"Bip001-Neck");
 		HeadMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 		// AccessoryMesh.SetMaterial(0, ColorOverlay.DynamicMat);
 	}
