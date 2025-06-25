@@ -22,9 +22,11 @@
 - [Contributing](#acknowledgement)
 
 ## 🧐 About <a name = "about"></a>
-Personal game project trying to blend Slingshot RPG gameplay with Plant vs Zombie theme and quirkiness. Added on top are Card summoning system that inspired by Monster Train & Gacha games. Plus the strategic layer of roguelike game. Quite a mouthful there, I know.
+Personal game project trying to blend Slingshot RPG gameplay with Plants vs Zombies theme and quirkiness. Added on top are Card summoning system inspired by Monster Train & Gacha games. Plus the strategic layer of roguelike game. Quite a mouthful there, I know.
 
-Probably (~~certainly~~) suffering from overscope but learning is learning.
+Probably (~~certainly~~) suffering from overscope, but learning is learning.
+
+Note: Due to licensing, no assets are committed. This is purely code-side that I made, while there are other implementations on Engine/Game C++ side as well to make it works.
 
 
 ## ⛏️ Made Using <a name = "built_using"></a>
