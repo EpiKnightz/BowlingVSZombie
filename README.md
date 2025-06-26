@@ -30,10 +30,10 @@ Probably (~~certainly~~) suffering from overscope, but learning is learning.
 
 Note: Due to licensing, no assets are committed. This is purely code-side that I made, while there are other implementations on Engine/Game C++ side as well to make it works.
 
-## 🧐 Videos Demo <a name = "video"></a>
+## :tv: Videos Demo <a name = "video"></a>
 Jun 26th: https://youtu.be/v3Ci-rmDB_0
 
-## APK Demo: <a name = "apk"></a>
+## :video_game: APK Demo: <a name = "apk"></a>
 Jun 26th: https://app.box.com/s/0yzqpeskfhgqjv8ecnj1cw5vv7s2ckzs
 (Note: Only Left map nodes has proper tutorial design data for now. Click Option in main menu to reset save file)
 
